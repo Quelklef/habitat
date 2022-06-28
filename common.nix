@@ -172,11 +172,6 @@ home-manager-generic = {
   home-manager.users.lark = {
     home.file.".background-image".source = ./files/background.png;
     home.file.".ssh".source = linked (stateloc + /ssh);
-    programs.git = {
-      enable = true;
-      userName = "Maynard";
-      userEmail = "eli.t.maynard@gmail.com";
-    };
   };
 };
 
@@ -249,6 +244,8 @@ git = {
       user.name = "Maynard";
       user.email = "elimaynard923@gmail.com";
       init.defaultBranch = "main";
+      core.sshCommand = "ssh -F '${builtins.toString (stateloc + /ssh/config)}'";
+      # ^ nb idk why this is needed, but w/e
     };
   };
 };
