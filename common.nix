@@ -164,7 +164,6 @@ i3 = {
     scrot  # .. for screenshots
     xclip  # .. for screenshots
     acpi  # .. for battery info in status bar
-    # xdotool
   ];
 
   # Enables 'light' command which is used in i3 config to manage backlight

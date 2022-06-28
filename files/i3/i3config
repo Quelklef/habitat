@@ -5,20 +5,18 @@ set $mod Mod4
 
 font pango:monospace 8
 
+set $refresh_i3status bash -c "pgrep -f i3-status | xargs kill -s USR1"
+
 # Use pactl to adjust volume in PulseAudio.
-set $refresh_i3status killall -SIGUSR1 i3status
 bindsym XF86AudioRaiseVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ +10% && $refresh_i3status
 bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -10% && $refresh_i3status
-bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle && $refresh_i3status
-bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle && $refresh_i3status
+bindsym XF86AudioMute        exec --no-startup-id pactl set-sink-mute   @DEFAULT_SINK@ toggle && $refresh_i3status
+bindsym XF86AudioMicMute     exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle && $refresh_i3status
 
 # Brightness control via keys
 # nb. Check which key codes are correct with 'nix-shell -p xorg.xev --run xev'
-bindsym XF86MonBrightnessUp   exec --no-startup-id light -A 10
-bindsym XF86MonBrightnessDown exec --no-startup-id light -U 10
-
-# TODO: volume display in i3status
-# TODO: brightness display in i3status
+bindsym XF86MonBrightnessUp   exec --no-startup-id light -A 10 && $refresh_i3status
+bindsym XF86MonBrightnessDown exec --no-startup-id light -U 10 && $refresh_i3status
 
 # Use Mouse+$mod to drag floating windows to their wanted position
 floating_modifier $mod
@@ -81,17 +79,17 @@ bindsym $mod+Shift+r restart
 
 # resize window (you can also use the mouse for that)
 mode "resize" {
-        # These bindings trigger as soon as you enter the resize mode
+  # These bindings trigger as soon as you enter the resize mode
 
-        bindsym h resize shrink width 5 px or 5 ppt
-        bindsym j resize grow height 5 px or 5 ppt
-        bindsym k resize shrink height 5 px or 5 ppt
-        bindsym l resize grow width 5 px or 5 ppt
+  bindsym h resize shrink width 5 px or 5 ppt
+  bindsym j resize grow height 5 px or 5 ppt
+  bindsym k resize shrink height 5 px or 5 ppt
+  bindsym l resize grow width 5 px or 5 ppt
 
-        # back to normal: Enter or Escape or $mod+r
-        bindsym Return mode "default"
-        bindsym Escape mode "default"
-        bindsym $mod+r mode "default"
+  # back to normal: Enter or Escape or $mod+r
+  bindsym Return mode "default"
+  bindsym Escape mode "default"
+  bindsym $mod+r mode "default"
 }
 
 bindsym $mod+r mode "resize"
@@ -108,7 +106,7 @@ bar {
   colors {
     background #111111
     statusline #ffffff
-    separator #666666
+    separator  #666666
 
     focused_workspace  #660022 #660022 #ffffff
     active_workspace   #5f676a #5f676a #ffffff
@@ -117,6 +115,14 @@ bar {
     binding_mode       #ffaa00 #ffaa00 #000000
   }
 }
+
+# class                 border  backgr. text    indicator child_border
+client.focused          #285577 #285577 #ffffff #2e9ef4   #cc0066
+client.focused_inactive #5f676a #5f676a #ffffff #484e50   #5f676a
+client.unfocused        #222222 #222222 #888888 #292d2e   #222222
+client.urgent           #900000 #900000 #ffffff #900000   #900000
+client.placeholder      #0c0c0c #0c0c0c #ffffff #000000   #0c0c0c
+client.background       #ffffff
 
 
 
@@ -175,14 +181,6 @@ mode "screenshot" {
 for_window [class=".*"] border pixel 2
 gaps inner 4
 smart_borders on
-
-# class                 border  backgr. text    indicator child_border
-client.focused          #4c7899 #285577 #ffffff #2e9ef4   #cc0066
-client.focused_inactive #333333 #5f676a #ffffff #484e50   #5f676a
-client.unfocused        #333333 #222222 #888888 #292d2e   #222222
-client.urgent           #2f343a #900000 #ffffff #900000   #900000
-client.placeholder      #000000 #0c0c0c #ffffff #000000   #0c0c0c
-client.background       #ffffff
 
 # Use grave to switch to most recent workspace
 bindsym $mod+grave workspace back_and_forth
