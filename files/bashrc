@@ -1,0 +1,198 @@
+# ~/.bashrc: executed by bash(1) for non-login shells.
+# see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
+# for examples
+
+# If not running interactively, don't do anything
+case $- in
+    *i*) ;;
+      *) return ;;
+esac
+
+# bash history options
+shopt -s histappend
+HISTCONTROL=ignoreboth
+HISTSIZE=1000
+HISTFILESIZE=2000
+
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+# enable "**"
+shopt -s globstar
+
+# make less more friendly for non-text input files, see lesspipe(1)
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+# enable color support of ls and also add handy aliases
+if [ -x /usr/bin/dircolors ]; then
+  test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+  alias grep='grep --color=auto'
+fi
+
+# enable programmable completion features (you don't need to enable
+# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+# sources /etc/bash.bashrc).
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+  fi
+fi
+
+
+# =========================================================================== #
+
+
+T_RESET="\[$(tput sgr0)\]"
+T_BOLD="\[$(tput bold)\]"
+
+T_FG_BLACK="\[$(tput setaf 0)\]"
+T_FG_RED="\[$(tput setaf 1)\]"
+T_FG_GREEN="\[$(tput setaf 2)\]"
+T_FG_YELLOW="\[$(tput setaf 3)\]"
+T_FG_BLUE="\[$(tput setaf 4)\]"
+T_FG_MAGENTA="\[$(tput setaf 5)\]"
+T_FG_CYAN="\[$(tput setaf 6)\]"
+T_FG_WHITE="\[$(tput setaf 7)\]"
+
+T_BG_BLACK="\[$(tput setab 0)\]"
+T_BG_RED="\[$(tput setab 1)\]"
+T_BG_GREEN="\[$(tput setab 2)\]"
+T_BG_YELLOW="\[$(tput setab 3)\]"
+T_BG_BLUE="\[$(tput setab 4)\]"
+T_BG_MAGENTA="\[$(tput setab 5)\]"
+T_BG_CYAN="\[$(tput setab 6)\]"
+T_BG_WHITE="\[$(tput setab 7)\]"
+
+# Set up PS1_PREFIXES for PS1
+PS1_PREFIXES=()
+function ps1_push {
+  local prefix="$1"
+
+  # If already in PS1_PREFIXES, move it to the left
+  for (( idx = "${#PS1_PREFIXES[@]}" - 1; idx >= 1; idx-- )); do
+    if [ "${PS1_PREFIXES[idx]}" = "$prefix" ]; then
+      local left_idx=$((idx-1))
+      local left_val="${PS1_PREFIXES[left_idx]}"
+      PS1_PREFIXES[left_idx]=${PS1_PREFIXES[idx]}
+      PS1_PREFIXES[idx]=$left_val
+    fi
+  done
+
+  # If prefix isn't leftmost item, prepend
+  if ! [ "${PS1_PREFIXES[0]}" = "$prefix" ]; then
+    PS1_PREFIXES=( "$prefix" "${PS1_PREFIXES[@]}" )
+  fi
+}
+
+# Calc conglomerate PS1 prefix
+function ps1_prefix {
+  echo -n $T_FG_BLUE
+  local prefixes=( ${PS1_PREFIXES[@]} )
+  [ -n "$IN_NIX_SHELL" ] && prefixes+=("ns")
+  [ -n "$VIRTUAL_ENV" ] && prefixes+=("py")  # python virtual env
+  [ -n "$LPG_IN_SHELL" ] && prefixes+=("lpg@$(basename ${LPG_LOC})")
+
+  if [ -n "$prefixes" ]; then
+    echo -n "❮ "
+    for prefix in "${prefixes[@]}"; do
+      echo -n "$prefix "
+    done
+    echo -n "❯ "
+  fi
+
+  echo -n $T_RESET
+}
+
+# Set PS1
+PROMPT_COMMAND=__prompt
+function __prompt {
+  local exit="$?"
+  local nl=$'\n'
+
+  # The expected value for $SHLVL on terminal startup
+  # This is relatively fragile and can change with system changes
+  local nul_shlvl=3
+
+  local t_err=
+  [ "$exit" = 0 ] && t_err=${T_FG_GREEN} || t_err=${T_FG_BOLD}${T_FG_RED}
+  local rule=${t_err}'▎'${T_RESET}
+
+  PS1=
+  PS1+=${nl}
+  PS1+=${rule}
+  case "$(id -un)" in
+    root) PS1+=${T_BOLD}${T_BG_RED}${T_FG_BLACK}' root '${T_RESET} ;;
+    *) PS1+=${T_FG_GREEN}$(id -un) ;;
+  esac
+  PS1+=' '
+  [ "$SHLVL" -gt $nul_shlvl ] && { PS1+=${T_FG_YELLOW}'↑ '; }
+  PS1+=$(ps1_prefix)
+  PS1+=${T_FG_CYAN}'\w'
+  PS1+=${nl}
+  PS1+=${rule}${T_BOLD}${T_FG_RED}'λ'${T_RESET}' '
+
+  PS2=${l1}${rule}${T_FG_CYAN}'… '${T_RESET}
+}
+
+
+alias ls="ls --color=auto --group-directories-first"
+alias tree="tree -C"
+alias ag="clear && ag --depth -1 --hidden -W 100"
+function mkdirf { mkdir "$1"; cd "$1"; } # "mkdir follow"
+
+export VISUAL=kak
+export EDITOR="$VISUAL"
+
+# Color in manpages
+# https://serverfault.com/a/12391
+export LESS_TERMCAP_mb=$'\E[01;31m'
+export LESS_TERMCAP_md=$'\E[01;31m'
+export LESS_TERMCAP_me=$'\E[0m'
+export LESS_TERMCAP_se=$'\E[0m'
+export LESS_TERMCAP_so=$'\E[01;44;33m'
+export LESS_TERMCAP_ue=$'\E[0m'
+export LESS_TERMCAP_us=$'\E[01;32m'
+
+export TERM=alacritty
+export TERMINAL=$TERM
+
+
+# trash-cli doesn't play nice cross-partition
+# we'll do it ourselves
+
+export TRASH_LOC=/per/state/trash
+
+alias del="trash"
+
+function trash {
+  [ "$#" = 1 ] || { echo >&2 "Expecting exactly 1 argument"; return 1; }
+  local src=$(realpath "$1")
+
+  [ -e "$src" ] || { echo >&2 "Nothing at $src"; return 1; }
+
+  local src_name=$(basename "$src")
+  local dest=$TRASH_LOC/$(date +%s.%N-%Y-%m-%d_%H-%M-%S)-$src_name
+
+  mkdir -p "$TRASH_LOC"
+
+  cp -r $src $dest
+  [ $? = 0 ] || {
+    echo >&2 "Failed to copy $src"
+    rm -rf $dest
+    return 1
+  }
+
+  rm -rf $src
+  [ $? = 0 ] || {
+    echo >&2 "Failed to delete $src. Partial deletion may have ocurred"
+    echo >&2 "A copy of $src was made at $dest"
+    return 1
+  }
+}
+
+function trash-empty {
+  rm -rf "$TRASH_LOC"/*
+}

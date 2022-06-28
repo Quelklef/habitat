@@ -1,0 +1,189 @@
+# i3 config file (v4)
+# See https://i3wm.org/docs/userguide.html for a complete reference!
+
+set $mod Mod4
+
+font pango:monospace 8
+
+# Use pactl to adjust volume in PulseAudio.
+set $refresh_i3status killall -SIGUSR1 i3status
+bindsym XF86AudioRaiseVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ +10% && $refresh_i3status
+bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -10% && $refresh_i3status
+bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle && $refresh_i3status
+bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle && $refresh_i3status
+
+# Brightness control via keys
+# nb. Check which key codes are correct with 'nix-shell -p xorg.xev --run xev'
+bindsym XF86MonBrightnessUp   exec --no-startup-id light -A 10
+bindsym XF86MonBrightnessDown exec --no-startup-id light -U 10
+
+# TODO: volume display in i3status
+# TODO: brightness display in i3status
+
+# Use Mouse+$mod to drag floating windows to their wanted position
+floating_modifier $mod
+
+# start a terminal
+bindsym $mod+Return exec /per/config/files/i3/alacritty-with-random-theme.sh
+
+# kill focused window
+bindsym $mod+q kill
+
+# change focus
+bindsym $mod+h focus left
+bindsym $mod+j focus down
+bindsym $mod+k focus up
+bindsym $mod+l focus right
+
+# move focused window
+bindsym $mod+Shift+h move left
+bindsym $mod+Shift+j move down
+bindsym $mod+Shift+k move up
+bindsym $mod+Shift+l move right
+
+# split in horizontal/vertical
+bindsym $mod+n split h
+bindsym $mod+m split v
+# change container layout (stacked, tabbed, toggle split)
+bindsym $mod+Shift+c layout stacking
+bindsym $mod+Shift+v layout tabbed
+bindsym $mod+Shift+b layout toggle split
+# move up and down the tree
+bindsym $mod+a focus parent
+bindsym $mod+d focus child
+
+# enter fullscreen mode for the focused container
+bindsym $mod+f fullscreen toggle
+
+# toggle tiling / floating
+bindsym $mod+Shift+space floating toggle
+
+# change focus between tiling / floating windows
+bindsym $mod+space focus mode_toggle
+
+# Define names for default workspaces for which we configure key bindings later on.
+# We use variables to avoid repeating the names in multiple places.
+set $ws1 "1"
+set $ws2 "2"
+set $ws3 "3"
+set $ws4 "4"
+set $ws5 "5"
+set $ws6 "6"
+set $ws7 "7"
+set $ws8 "8"
+set $ws9 "9"
+set $ws10 "10"
+
+# reload the configuration file
+#bindsym $mod+Shift+r reload
+# restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
+bindsym $mod+Shift+r restart
+
+# resize window (you can also use the mouse for that)
+mode "resize" {
+        # These bindings trigger as soon as you enter the resize mode
+
+        bindsym h resize shrink width 5 px or 5 ppt
+        bindsym j resize grow height 5 px or 5 ppt
+        bindsym k resize shrink height 5 px or 5 ppt
+        bindsym l resize grow width 5 px or 5 ppt
+
+        # back to normal: Enter or Escape or $mod+r
+        bindsym Return mode "default"
+        bindsym Escape mode "default"
+        bindsym $mod+r mode "default"
+}
+
+bindsym $mod+r mode "resize"
+
+bar {
+  status_command /per/config/files/i3/i3-status.sh
+  i3bar_command i3bar --transparency
+
+  strip_workspace_numbers yes
+
+  separator_symbol " • "
+  position bottom
+
+  colors {
+    background #111111
+    statusline #ffffff
+    separator #666666
+
+    focused_workspace  #660022 #660022 #ffffff
+    active_workspace   #5f676a #5f676a #ffffff
+    inactive_workspace #111111 #111111 #888888
+    urgent_workspace   #ffaa00 #ffaa00 #000000
+    binding_mode       #ffaa00 #ffaa00 #000000
+  }
+}
+
+
+
+
+# Bindings for workspace groups
+# https://github.com/infokiller/i3-workspace-groups#i3-config
+
+set $exec_i3wg exec --no-startup-id i3-workspace-groups
+
+# Switch active workspace group
+bindsym $mod+w exec --no-startup-id i3-switch-active-workspace-group
+# Assign workspace to a group
+bindsym $mod+Shift+w exec --no-startup-id i3-assign-workspace-to-group
+
+# Rename/renumber workspace. Uses Super+Alt+n
+bindsym Mod1+Mod4+n exec --no-startup-id i3-rename-workspace
+
+bindsym $mod+1 $exec_i3wg workspace-number 1
+bindsym $mod+2 $exec_i3wg workspace-number 2
+bindsym $mod+3 $exec_i3wg workspace-number 3
+bindsym $mod+4 $exec_i3wg workspace-number 4
+bindsym $mod+5 $exec_i3wg workspace-number 5
+bindsym $mod+6 $exec_i3wg workspace-number 6
+bindsym $mod+7 $exec_i3wg workspace-number 7
+bindsym $mod+8 $exec_i3wg workspace-number 8
+bindsym $mod+9 $exec_i3wg workspace-number 9
+bindsym $mod+0 $exec_i3wg workspace-number 10
+
+bindsym $mod+Shift+1 $exec_i3wg move-to-number 1
+bindsym $mod+Shift+2 $exec_i3wg move-to-number 2
+bindsym $mod+Shift+3 $exec_i3wg move-to-number 3
+bindsym $mod+Shift+4 $exec_i3wg move-to-number 4
+bindsym $mod+Shift+5 $exec_i3wg move-to-number 5
+bindsym $mod+Shift+6 $exec_i3wg move-to-number 6
+bindsym $mod+Shift+7 $exec_i3wg move-to-number 7
+bindsym $mod+Shift+8 $exec_i3wg move-to-number 8
+bindsym $mod+Shift+9 $exec_i3wg move-to-number 9
+bindsym $mod+Shift+0 $exec_i3wg move-to-number 10
+
+
+# p for print screen
+bindsym $mod+p mode "screenshot"
+mode "screenshot" {
+
+  # full / select
+  set $scrot scrot -q 100 -e 'xclip -selection clipboard -t image/png -i $f; rm $f'
+  bindsym f exec "$scrot"; mode "default"
+  bindsym s exec "setxkbmap -option grab:break_actions; xdotool key XF86Ungrab; $scrot -s -f -l color=#00ff00"; mode "default"
+  # ^ https://stackoverflow.com/a/51789019
+
+  bindsym Escape mode "default"
+
+}
+
+
+for_window [class=".*"] border pixel 2
+gaps inner 4
+smart_borders on
+
+# class                 border  backgr. text    indicator child_border
+client.focused          #4c7899 #285577 #ffffff #2e9ef4   #cc0066
+client.focused_inactive #333333 #5f676a #ffffff #484e50   #5f676a
+client.unfocused        #333333 #222222 #888888 #292d2e   #222222
+client.urgent           #2f343a #900000 #ffffff #900000   #900000
+client.placeholder      #000000 #0c0c0c #ffffff #000000   #0c0c0c
+client.background       #ffffff
+
+# Use grave to switch to most recent workspace
+bindsym $mod+grave workspace back_and_forth
+bindsym $mod+Shift+grave move container to workspace back_and_forth

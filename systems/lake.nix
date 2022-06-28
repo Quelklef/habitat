@@ -1,0 +1,99 @@
+{ lib, config, pkgs, modulesPath, ... }@args: let
+
+common =
+  import ../common.nix
+  { stateloc = /per/state;
+    secrets = (import /per/secrets.nix).nixos;
+  }
+  args;
+
+inherit (common.mylib) linked;
+
+folded = { imports = lib.attrsets.attrValues parts; };
+
+parts = {
+
+common = common.folded;
+
+# =============================================================================
+# either mostly- or fully- extracted from nixos-generate-config
+hardware = {
+  imports = [ (modulesPath + "/installer/scan/not-detected.nix") ];
+
+  boot.initrd.availableKernelModules = [ "xhci_pci" "nvme" "usb_storage" "sd_mod" "rtsx_usb_sdmmc" ];
+  boot.initrd.kernelModules = [ ];
+  boot.kernelModules = [ "kvm-intel" ];
+  boot.extraModulePackages = [ ];
+
+  fileSystems."/" = { fsType = "zfs"; device = "rpool/eyd/root"; };
+  fileSystems."/nix" = { fsType = "zfs"; device = "rpool/eyd/nix"; };
+  fileSystems."/per" = { fsType = "zfs"; device = "rpool/eyd/per"; };
+  fileSystems."/boot" = { fsType = "vfat"; device = "/dev/disk/by-uuid/FBA2-298E"; };
+
+  swapDevices = [
+    { device = "/dev/disk/by-uuid/d5ea672c-51ca-43d4-9c5a-4b104b25b598"; }
+  ];
+
+  networking.useDHCP = lib.mkDefault true;
+
+  powerManagement.cpuFreqGovernor = lib.mkDefault "performance";
+  hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+};
+
+# =============================================================================
+boot = {
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.grub.device = "/dev/nvme0n1";
+  boot.zfs.devNodes = "/dev/disk/by-path";
+  networking.hostId = "00c06c06";  # required by zfs
+};
+
+# =============================================================================
+base = {
+  networking.hostName = "lake";
+  system.stateVersion = "22.05";
+  time.timeZone = "America/New_York";
+
+  environment.etc."nixos/configuration.nix".text = "import /per/config/systems/lake.nix";
+  # ^ nb
+  # This causes the warning "something's wrong at /nix/store/XXX...XXX.pl line 120."
+  # I don't think it's an issue.
+  # If anything does go wrong, can always manually '-I nixos-config='
+
+  environment.interactiveShellInit = ''
+    export NIX_PATH="$NIX_PATH:secrets=/per/secrets.nix"
+  '';
+};
+
+# =============================================================================
+cpu-control = {
+  environment.systemPackages = with pkgs; [ cpufrequtils ];
+  environment.interactiveShellInit = ''
+    alias perf.fast="perf.set performance"
+    alias perf.slow="perf.set powersave"
+
+    function perf.set {
+      for i in {0..7}; do
+        sudo cpufreq-set -g "$1" -c $i
+      done
+    }
+
+    function perf.which {
+      cpufreq-info | grep 'The governor' | awk -F\" '{print $2}'
+    }
+  '';
+};
+
+# =============================================================================
+disable-screenpad = {
+  home-manager.users.lark = {
+    xsession.enable = true;
+    xsession.initExtra = ''
+      # This is a bit of a hack. Ideally, invocation would be handled by systemd, not xsession
+      xrandr --output HDMI-1 --off
+    '';
+  };
+};
+
+}; in folded
