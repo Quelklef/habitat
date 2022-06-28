@@ -1,4 +1,4 @@
-{ pkgs, stateloc }: pkgs.writeScriptBin "del" ''
+#!/usr/bin/env bash
 
 # trash-cli doesn't play nice cross-partition
 # we'll do it ourselves
@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-trash_loc=${builtins.toString (stateloc + /trash)}
+trash_loc=$TRASH_LOC
 
 [ "$#" = 1 ] || { echo >&2 "Expecting exactly 1 argument"; return 1; }
 src=$(realpath "$1")
@@ -31,5 +31,3 @@ rm -rf $src
   echo >&2 "A copy of $src was made at $dest"
   return 1
 }
-
-''

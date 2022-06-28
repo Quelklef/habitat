@@ -4,15 +4,52 @@
 
 { lib, config, pkgs, ... }: let
 
-mylib = {
+mylib = rec {
 
-  # Takes a path and returns a derivation producing a symlink to that path
-  # github.com/nix-community/home-manager/blob/e622bad16372aa5ada79a7fa749ec78715dffc54/modules/files.nix#L64-L69
+  /*
+
+  Takes a path and returns a derivation producing a symlink to that path
+
+  Derived from github.com/nix-community/home-manager/blob/e622bad16372aa5ada79a7fa749ec78715dffc54/modules/files.nix#L64-L69
+
+  Useful for:
+  1. Linking program state such as ~/.config/google-chrome elsewhere
+     Integral to the success of opt-in state!
+  2. Linking scripts and program configuration, so that a change can
+     be seen immediately without requiring a rebuild.
+     Also see 'linkedBin'
+
+  */
   linked = path:
     with lib;
     pkgs.runCommandLocal
       (baseNameOf (toString path)) {}
       ''ln -s ${escapeShellArg (toString path)} $out'';
+
+  /*
+
+  Like 'link', but:
+  1. Appends the given 'packages' to PATH
+  2. Executes the given 'env' before running the script
+  3. Removes the filename from the script name (eg, .sh)
+
+  Example:
+    linkedBin
+      (with pkgs; [ mypkg ])
+      "SOME_VAR=some-val"
+      ./my-script.sh
+
+  */
+  linkedBin = packages: env: path:
+    with lib;
+    let name = lib.pipe path [ toString baseNameOf (strings.splitString ".") lists.head ];
+    in pkgs.writeScriptBin name ''
+      #!/usr/bin/env bash
+      _path_append=${lib.strings.makeBinPath packages}
+      [ -n "$_path_append" ] && PATH="''${PATH:+''${PATH}:}''${_path_append}"
+      ${env + "\n"}
+      source ${linked path}
+    '';
 
 };
 
@@ -89,13 +126,11 @@ generic-system-config = {
     entr
     nix-prefetch-git
     nix-prefetch
-    (import ./files/scripts/del.nix { inherit pkgs stateloc; })
-    (import ./files/scripts/loom-put.nix { inherit pkgs; })
+    (linkedBin (with pkgs; [ nodejs curl ]) "" ./files/scripts/loom-put.sh)
+    (linkedBin [] "TRASH_LOC=${builtins.toString (stateloc + /trash)}" ./files/scripts/del.sh)
   ];
 
   environment.interactiveShellInit = ''
-    export STATELOC=${builtins.toString stateloc}
-
     if [ -n "$BASH" ]; then
       # source bashrc on bash only
       source ${builtins.toString ./files/bashrc}

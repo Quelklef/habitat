@@ -1,9 +1,5 @@
-{ pkgs }: pkgs.writeScriptBin "loom-put" ''
-
+#!/usr/bin/env bash
 set -euo pipefail
-
-node=${pkgs.nodejs}/bin/node
-curl=${pkgs.curl}/bin/curl
 
 # teehee
 SECRET=$(nix eval --impure --expr '(import <secrets>).notion-loombot-secret' | cut -d\" -f2)
@@ -33,7 +29,7 @@ case "$prio" in
 esac 
 
 str_to_json() {
-  echo -n "$1" | $node -e 'console.log(JSON.stringify(require("fs").readFileSync(0, "utf-8")))'
+  echo -n "$1" | node -e 'console.log(JSON.stringify(require("fs").readFileSync(0, "utf-8")))'
 }
 
 json_prio=$(str_to_json "$prio")
@@ -45,10 +41,10 @@ payload=$(cat <<EOF
     {
       "parent": { "database_id": "4608ac8f08a540a1ad9ab993e632f3f1" },
       "properties": {
-        "Title": { "title": [{ "text": { "content": ''${json_title} } }] },
-        "Priority": { "select": { "name": ''${json_prio} } },
+        "Title": { "title": [{ "text": { "content": ${json_title} } }] },
+        "Priority": { "select": { "name": ${json_prio} } },
         "Loom time": { "date": {
-          "start": ''${json_now},
+          "start": ${json_now},
           "end": "9999-01-01T00:00:00Z"
         } }
       },
@@ -61,7 +57,7 @@ payload=$(cat <<EOF
               {
                 "type": "text",
                 "text": {
-                  "content": ''${json_body}
+                  "content": ${json_body}
                 }
               }
             ]
@@ -72,17 +68,15 @@ payload=$(cat <<EOF
 EOF
 )
 
-echo "$payload" | $node -e '
+echo "$payload" | node -e '
   const j = require("fs").readFileSync(0, "utf-8");
   console.log(JSON.stringify(JSON.parse(j), null, 2));
 '
 
-$curl \
+curl \
   -X POST \
   'https://api.notion.com/v1/pages' \
-  -H "Authorization: Bearer ''${SECRET}" \
+  -H "Authorization: Bearer ${SECRET}" \
   -H "Content-Type: application/json" \
   -H "Notion-Version: 2022-02-22" \
   --data "$payload"
-
-''
