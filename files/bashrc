@@ -138,13 +138,8 @@ function __prompt {
 }
 
 
-alias ls="ls --color=auto --group-directories-first"
-alias tree="tree -C"
-alias ag="clear && ag --depth -1 --hidden -W 100"
-function mkdirf { mkdir "$1"; cd "$1"; } # "mkdir follow"
+# =========================================================================== #
 
-export VISUAL=kak
-export EDITOR="$VISUAL"
 
 # Color in manpages
 # https://serverfault.com/a/12391
@@ -156,43 +151,34 @@ export LESS_TERMCAP_so=$'\E[01;44;33m'
 export LESS_TERMCAP_ue=$'\E[0m'
 export LESS_TERMCAP_us=$'\E[01;32m'
 
+export VISUAL=kak
+export EDITOR="$VISUAL"
+
 export TERM=alacritty
 export TERMINAL=$TERM
 
+# enable aliases on sudo
+alias sudo='sudo '
 
-# trash-cli doesn't play nice cross-partition
-# we'll do it ourselves
+alias ls="ls --color=auto --group-directories-first"
+alias tree="tree -C"
+alias ag="clear && ag --depth -1 --hidden -W 100"
+function mkdirf { mkdir "$1"; cd "$1"; } # "mkdir follow"
 
-export TRASH_LOC=/per/state/trash
+alias kak="XDG_CONFIG_HOME=$XDG_CONFIG_HOME kak"
 
-alias del="trash"
-
-function trash {
-  [ "$#" = 1 ] || { echo >&2 "Expecting exactly 1 argument"; return 1; }
-  local src=$(realpath "$1")
-
-  [ -e "$src" ] || { echo >&2 "Nothing at $src"; return 1; }
-
-  local src_name=$(basename "$src")
-  local dest=$TRASH_LOC/$(date +%s.%N-%Y-%m-%d_%H-%M-%S)-$src_name
-
-  mkdir -p "$TRASH_LOC"
-
-  cp -r $src $dest
-  [ $? = 0 ] || {
-    echo >&2 "Failed to copy $src"
-    rm -rf $dest
+function kak {
+  [ "$#" = 1 ] || {
+    echo >&2 "Expected exactly 1 argument."
+    echo >&2 "Do you want 'command kak'?"
     return 1
   }
 
-  rm -rf $src
-  [ $? = 0 ] || {
-    echo >&2 "Failed to delete $src. Partial deletion may have ocurred"
-    echo >&2 "A copy of $src was made at $dest"
+  [ -w "$1" ] || {
+    echo >&2 "Refusing to open non-writable $1"
+    echo >&2 "Do you want 'sudo kak' or 'command kak'?"
     return 1
   }
-}
 
-function trash-empty {
-  rm -rf "$TRASH_LOC"/*
+  command kak "$@"
 }

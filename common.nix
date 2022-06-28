@@ -89,16 +89,17 @@ generic-system-config = {
     entr
     nix-prefetch-git
     nix-prefetch
+    (import ./files/scripts/del.nix { inherit pkgs stateloc; })
+    (import ./files/scripts/loom-put.nix { inherit pkgs; })
   ];
 
   environment.interactiveShellInit = ''
-    # TODO: bashrc assumes state location is /per/state
-    source ${toString ./files/bashrc}
+    export STATELOC=${builtins.toString stateloc}
 
-    # fer fucks sake
-    function skak {
-      sudo bash -c "XDG_CONFIG_HOME=$XDG_CONFIG_HOME kak $@"
-    }
+    if [ -n "$BASH" ]; then
+      # source bashrc on bash only
+      source ${builtins.toString ./files/bashrc}
+    fi
   '';
 
 };

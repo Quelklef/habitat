@@ -2,6 +2,7 @@
 
 disabled_themes=(
   /home/lark/.config/alacritty/themes/xterm.yaml
+  /home/lark/.config/alacritty/themes/low_contrast.yaml
   /home/lark/.config/alacritty/themes/terminal_app.yaml
   /home/lark/.config/alacritty/themes/high_contrast.yaml
   /home/lark/.config/alacritty/themes/pencil_light.yaml
