@@ -1,9 +1,12 @@
 { lib, config, pkgs, modulesPath, ... }@args: let
 
+user = "lark";
+
 common =
   import ../common.nix
   { stateloc = /per/state;
     secrets = (import /per/secrets.nix).nixos;
+    inherit user;
   }
   args;
 
@@ -45,8 +48,12 @@ boot = {
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.grub.device = "/dev/nvme0n1";
+  boot.supportedFilesystems = [ "zfs" ];
   boot.zfs.devNodes = "/dev/disk/by-path";
   networking.hostId = "00c06c06";  # required by zfs
+
+  # erase your darlings
+  boot.initrd.postDeviceCommands = lib.mkAfter "zfs rollback -r rpool/eyd/root@blank";
 };
 
 # =============================================================================
@@ -87,7 +94,7 @@ cpu-control = {
 
 # =============================================================================
 disable-screenpad = {
-  home-manager.users.lark = {
+  home-manager.users.${user} = {
     xsession.enable = true;
     xsession.initExtra = ''
       # This is a bit of a hack. Ideally, invocation would be handled by systemd, not xsession

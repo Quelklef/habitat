@@ -1,5 +1,6 @@
-{ stateloc  # Opt-in state directory location
+{ stateloc # Opt-in state directory location
 , secrets  # Password hashes, etc
+, user     # User name
 }:
 
 { lib, config, pkgs, ... }: let
@@ -61,21 +62,14 @@ folded = { imports = lib.attrsets.attrValues parts; };
 parts = with mylib; {
 
 # =============================================================================
-# Boot- and erase your darlings- related config
-boot = {
-  boot.supportedFilesystems = [ "zfs" ];
-  boot.initrd.postDeviceCommands = lib.mkAfter "zfs rollback -r rpool/eyd/root@blank";
-};
-
-# =============================================================================
 generic-system-config = {
 
   users = {
     mutableUsers = false;
     users.root.hashedPassword = secrets.password;
-    users.lark = {
+    users.${user} = {
       isNormalUser = true;
-      home = "/home/lark";
+      home = "/home/${user}";
       extraGroups = [ "wheel" "networkmanager" ];
       hashedPassword = secrets.password;
     };
@@ -175,7 +169,7 @@ home-manager-init = {
       };
     in import "${home-manager}/nixos")
   ];
-  home-manager.users.lark = {
+  home-manager.users.${user} = {
     targets.genericLinux.enable = true;
     xdg.enable = true;
   };
@@ -183,7 +177,7 @@ home-manager-init = {
 
 # =============================================================================
 home-manager-generic = {
-  home-manager.users.lark = {
+  home-manager.users.${user} = {
     home.file.".background-image".source = ./files/background.png;
     home.file.".ssh".source = linked (stateloc + /ssh);
   };
@@ -197,7 +191,7 @@ i3 = {
     package = pkgs.i3-gaps;
   };
 
-  home-manager.users.lark = {
+  home-manager.users.${user} = {
     home.file.".i3/config".source = linked ./files/i3/i3config;
     home.file.".i3/i3status-config".source = linked ./files/i3/i3status-config;
   };
@@ -213,7 +207,7 @@ i3 = {
   # Enables 'light' command which is used in i3 config to manage backlight
   # nb. Might require a reboot before 'light' can be used without sudo
   programs.light.enable = true;
-  users.users.lark.extraGroups = [ "video" ];
+  users.users.${user}.extraGroups = [ "video" ];
 
   # TODO: a fair amount of the i3 config (i3-status.sh in particular)
   # is system-specific (eg assumes existence of a battery) and therefore
@@ -233,7 +227,7 @@ lightdm = {
     # Use auto-login instead of greeter
     # (I keep the greeter config around just in case)
     autoLogin.enable = true;
-    autoLogin.user = "lark";
+    autoLogin.user = user;
     lightdm.greeter.enable = false;
   };
 
@@ -277,7 +271,7 @@ git = {
 # =============================================================================
 chrome = {
   environment.systemPackages = with pkgs; [ google-chrome ];
-  home-manager.users.lark = {
+  home-manager.users.${user} = {
     xdg.configFile."google-chrome".source = linked (stateloc + /google-chrome);
   };
 };
@@ -285,7 +279,7 @@ chrome = {
 # =============================================================================
 thunderbird = {
   environment.systemPackages = with pkgs; [ thunderbird ];
-  home-manager.users.lark = {
+  home-manager.users.${user} = {
     home.file.".thunderbird".source = linked (stateloc + /thunderbird);
   };
   environment.interactiveShellInit = ''alias thunderbird="thunderbird --profile ~/.thunderbird/q2te5qzd.default-release"'';
@@ -295,7 +289,7 @@ thunderbird = {
 # =============================================================================
 telegram = {
   environment.systemPackages = with pkgs; [ tdesktop ];
-  home-manager.users.lark = {
+  home-manager.users.${user} = {
     xdg.dataFile."TelegramDesktop".source = linked (stateloc + /telegram);
   };
 };
@@ -303,7 +297,7 @@ telegram = {
 # =============================================================================
 discord = {
   environment.systemPackages = with pkgs; [ discord ];
-  home-manager.users.lark = {
+  home-manager.users.${user} = {
     xdg.configFile."discord".source = linked (stateloc + /discord);
   };
 };
@@ -311,7 +305,7 @@ discord = {
 # =============================================================================
 kakoune = {
   environment.systemPackages = with pkgs; [ xsel ];
-  home-manager.users.lark = {
+  home-manager.users.${user} = {
     xdg.configFile."kak/kakrc".source = linked ./files/kakrc;
   };
 };
@@ -319,7 +313,7 @@ kakoune = {
 # =============================================================================
 alacritty = {
   environment.systemPackages = with pkgs; [ alacritty ];
-  home-manager.users.lark = {
+  home-manager.users.${user} = {
     xdg.configFile."alacritty/alacritty.yml".source = linked ./files/alacritty.yml;
     xdg.configFile."alacritty/themes" = {
       recursive = true;
@@ -339,7 +333,7 @@ alacritty = {
 # =============================================================================
 ulauncher = {
   environment.systemPackages = with pkgs; [ ulauncher ];
-  home-manager.users.lark = {
+  home-manager.users.${user} = {
     xdg.dataFile."ulauncher".source = linked (stateloc + /ulauncher/home.local.share);
     xdg.configFile."ulauncher".source = linked (stateloc + /ulauncher/home.config);
     xsession.enable = true;
@@ -358,7 +352,7 @@ ulauncher = {
 nixops = {
   environment.systemPackages = with pkgs; [ nixops ];
   nixpkgs.config.permittedInsecurePackages = [ "python2.7-pyjwt-1.7.1" ];
-  home-manager.users.lark = {
+  home-manager.users.${user} = {
     home.file.".nixops".source = linked (stateloc + /nixops);
   };
 };
@@ -366,13 +360,13 @@ nixops = {
 # =============================================================================
 z = {
   # https://github.com/rupa/z
-  home-manager.users.lark = {
+  home-manager.users.${user} = {
     programs.bash = {
       enable = true;
       # This has to happen specifically in the home-manager bashrc, idk why
       bashrcExtra = ''
         export _Z_DATA=${builtins.toString (stateloc + /z/zfile)}
-        export _Z_OWNER=lark
+        export _Z_OWNER=${user}
         mkdir -p "$(dirname "$_Z_DATA")"
         source ${builtins.fetchurl
                     { url = "https://raw.githubusercontent.com/rupa/z/master/z.sh";
