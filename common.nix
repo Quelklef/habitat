@@ -153,6 +153,20 @@ automatic-system-cleanup = {
 };
 
 # =============================================================================
+# fixes unicode not working on a tty
+tty-unicode-fix = {
+  security.wrappers.fbterm = {
+    setuid = true;
+    owner = "root";
+    group = "root";
+    source = "${pkgs.fbterm}/bin/fbterm";
+  };
+  environment.interactiveShellInit = ''
+    grep -q /dev/tty <(tty) && exec fbterm
+  '';
+};
+
+# =============================================================================
 home-manager-init = {
   imports = [
     (let home-manager = builtins.fetchGit
