@@ -174,7 +174,9 @@ function kak {
     return 1
   }
 
-  [ -w "$1" ] || {
+  [ \( -e "$1" -a ! -w "$1" \) \
+    -o \( ! -e "$1" -a ! -w "$(dirname "$1")" \) \
+  ] && {
     echo >&2 "Refusing to open non-writable $1"
     echo >&2 "Do you want 'sudo kak' or 'command kak'?"
     return 1
