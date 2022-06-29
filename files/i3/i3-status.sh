@@ -17,7 +17,9 @@ function loop {
 
 function status {
 
-  local stat_time=$(date +'%a %Y-%m-%d %H:%M:%S %z')
+  local stat_time_a=$(date +'%a %Y-%m-%d')
+  local stat_time_b=$(date +'%H:%M:%S')
+  local stat_time_c=$(date +'%z')
 
   local vol_l=$(amixer sget Master | grep 'Left:' | awk -F'[][]' '{ print $2 }')
   local vol_r=$(amixer sget Master | grep 'Right:' | awk -F'[][]' '{ print $2 }')
@@ -49,11 +51,13 @@ function status {
 
   cat << EOF
 [
-  { "full_text": "${stat_time}" },
+  { "full_text": "${stat_time_a}", "separator": false, "separator_block_width": 8 },
+  { "full_text": "${stat_time_b}", "separator": false, "separator_block_width": 8, "color": "#ffaacc" },
+  { "full_text": "${stat_time_c}" },
   { "full_text": "${stat_volume}" },
   { "full_text": "${stat_backlight}" },
   { "full_text": "${stat_battery}", "urgent": ${stat_batt_urgent} },
-  { "full_text": "${stat_cpu}" },
+  { "full_text": "${stat_cpu}", "separator": false, "separator_block_width": 8 },
   { "full_text": "" }
 ]
 EOF

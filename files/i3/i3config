@@ -100,7 +100,7 @@ bar {
 
   strip_workspace_numbers yes
 
-  separator_symbol " • "
+  separator_symbol " "
   position bottom
 
   colors {
