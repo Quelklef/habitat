@@ -223,31 +223,41 @@ i3 = {
 
 # =============================================================================
 lightdm = {
-  services.xserver = {
-    displayManager.defaultSession = "none+i3";
-    displayManager.lightdm = {
+  services.xserver.displayManager = {
+    defaultSession = "none+i3";
+    lightdm = {
       enable = true;
       background = ./files/background.png;
-      greeters.tiny.enable = true;
-
-      # making changes to this is a pain. Recommendation:
-      # 1. clone https://github.com/tobiohlala/lightdm-tiny-greeter and cd
-      # 2. nix-shell -p pkg-config wrapGAppsHook lightdm gtk3 glib
-      # 3. make && sudo make install
-      # 4. cp /etc/lightdm/lightdm.conf ./conf
-      # 5. modify ./conf and set greeters-directory = /usr/share/xgreeters
-      # 6. run lightdm --config=./conf --test-mode --debug
-      # 7. it doesnt' work
-      # 8. give up and use nixos-rebuild switch && systemctl restart display-manager
-
-      # I want to eventually move to a greeter which is HTML/CSS based, so that I
-      # can really go crazy with customization
-
-      greeters.tiny.label.user = "Username";
-      greeters.tiny.label.pass = "Password";
-      greeters.tiny.extraConfig = builtins.readFile ./files/lightdm-tiny-config.h;
     };
+
+    # Use auto-login instead of greeter
+    # (I keep the greeter config around just in case)
+    autoLogin.enable = true;
+    autoLogin.user = "lark";
+    lightdm.greeter.enable = false;
   };
+
+  services.xserver.displayManager.lightdm.greeters.tiny = {
+    enable = true;
+
+    # making changes to this is a pain. Recommendation:
+    # 1. clone https://github.com/tobiohlala/lightdm-tiny-greeter and cd
+    # 2. nix-shell -p pkg-config wrapGAppsHook lightdm gtk3 glib
+    # 3. make && sudo make install
+    # 4. cp /etc/lightdm/lightdm.conf ./conf
+    # 5. modify ./conf and set greeters-directory = /usr/share/xgreeters
+    # 6. run lightdm --config=./conf --test-mode --debug
+    # 7. it doesnt' work
+    # 8. give up and use nixos-rebuild switch && systemctl restart display-manager
+
+    # I want to eventually move to a greeter which is HTML/CSS based, so that I
+    # can really go crazy with customization
+
+    label.user = "Username";
+    label.pass = "Password";
+    extraConfig = builtins.readFile ./files/lightdm-tiny-config.h;
+  };
+
 };
 
 # =============================================================================
