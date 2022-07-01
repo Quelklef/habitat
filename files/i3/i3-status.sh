@@ -11,7 +11,7 @@ function loop {
   while true; do
     status
     echo ','
-    sleep 1.2
+    sleep 1
   done
 }
 
@@ -24,10 +24,10 @@ function status {
   local vol_l=$(amixer sget Master | grep 'Left:' | awk -F'[][]' '{ print $2 }')
   local vol_r=$(amixer sget Master | grep 'Right:' | awk -F'[][]' '{ print $2 }')
   local vol_amt=$({ [ "$vol_l" = "$vol_r" ] && echo "$vol_l" || echo "$vol_l/$vol_r"; })
-  local stat_volume="vol $vol_amt"
+  local stat_volume="V.$vol_amt"
 
   local bright_n=$(light | xargs printf "%0.f")
-  local stat_backlight="bli ${bright_n}%"
+  local stat_backlight="L.${bright_n}%"
 
   local batt_all=$(acpi -i | grep '0:')
   local batt_degred=$(echo "$batt_all" | tail -n1 | awk -F' = ' '{ print $2 }')
@@ -43,11 +43,11 @@ function status {
     
   })
 
-  local stat_battery="bat ${batt_percent}% (×$batt_degred)${batt_charging}"
+  local stat_battery="B.${batt_percent}% (×$batt_degred)${batt_charging}"
   local stat_batt_urgent=$( [ "$batt_percent" -le 10 ] && echo true || echo false )
 
   local cpu_mode=$(cpufreq-info | grep 'The gov' | head -n1 | awk -F\" '{ print $2 }')
-  local stat_cpu="cpu $cpu_mode"
+  local stat_cpu="C.$cpu_mode"
 
   cat << EOF
 [
