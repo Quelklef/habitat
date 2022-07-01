@@ -80,17 +80,30 @@ base = {
 };
 
 # =============================================================================
-cpu-control = {
-  environment.systemPackages = with pkgs; [ cpufrequtils ];
-  environment.interactiveShellInit = ''
-    alias perf.fast="perf.set performance"
-    alias perf.slow="perf.set powersave"
+cpu-control = let
 
-    function perf.set {
+  scriptname = "set-cpu-governors";
+
+in {
+
+  environment.systemPackages = with pkgs; [ cpufrequtils ];
+
+  security.wrappers.${scriptname} = {
+    source = pkgs.writeScript scriptname ''
+      #!${pkgs.bash}/bin/bash
+      gov="$1"
       for i in {0..7}; do
-        sudo cpufreq-set -g "$1" -c $i
+        sudo cpufreq-set -g "$gov" -c $i
       done
-    }
+    '';
+    setuid = true;  # nb Set +s so it can be run from ulauncher
+    owner = "root";
+    group = "root";
+  };
+
+  environment.interactiveShellInit = ''
+    alias perf.fast="set-cpu-governors performance"
+    alias perf.slow="set-cpu-governors powersave"
 
     function perf.which {
       cpufreq-info | grep 'The governor' | awk -F\" '{print $2}'
