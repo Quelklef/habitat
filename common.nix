@@ -86,6 +86,8 @@ generic-system-config = {
   services.xserver.libinput.touchpad.tappingDragLock = false;
   services.xserver.libinput.mouse.tappingDragLock = false;
 
+  # WANT: bluetooth
+
   # enable x
   services.xserver.enable = true;
 
@@ -118,6 +120,7 @@ generic-system-config = {
     htop
     silver-searcher
     entr
+    unzip
     nix-prefetch-git
     nix-prefetch
     (linkedBin (with pkgs; [ nodejs curl ]) "" ./files/scripts/loom-put.sh)

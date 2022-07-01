@@ -52,8 +52,11 @@ boot = {
   boot.zfs.devNodes = "/dev/disk/by-path";
   networking.hostId = "00c06c06";  # required by zfs
 
-  # erase your darlings
-  boot.initrd.postDeviceCommands = lib.mkAfter "zfs rollback -r rpool/eyd/root@blank";
+  # WANT: ability to disable eyd for single reboot
+  #       wasn't able to figure out a good way to do this tho
+  boot.initrd.postDeviceCommands = lib.mkAfter ''
+    zfs rollback -r rpool/eyd/root@blank
+  '';
 };
 
 # =============================================================================
@@ -71,6 +74,9 @@ base = {
   environment.interactiveShellInit = ''
     export NIX_PATH="$NIX_PATH:secrets=/per/secrets.nix"
   '';
+
+  # Disable ipv6; it's messing with npm n stuff
+  boot.kernel.sysctl."net.ipv6.conf.eth0.disable_ipv6" = true;
 };
 
 # =============================================================================

@@ -1,5 +1,6 @@
 # Set colors
 colorscheme tomorrow-night
+set-face global Default rgb:c5c8c6,default,default  # inherit transparent background
 
 # Use a cat instead of clippy
 set global ui_options ncurses_assistant=cat
@@ -60,6 +61,11 @@ map global goto B b
 map global goto C c
 map global goto A a
 map global goto F f
+
+# <a-l> to rewrite current line
+# <a-L> to rewrite line from cursor
+map global normal <a-l> <semicolon>giGlc
+map global normal <a-L> <semicolon>Glc
 
 # Wrap lines
 addhl global/ wrap
