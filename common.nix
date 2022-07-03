@@ -86,7 +86,14 @@ generic-system-config = {
   services.xserver.libinput.touchpad.tappingDragLock = false;
   services.xserver.libinput.mouse.tappingDragLock = false;
 
-  # WANT: bluetooth
+  # bluetooth
+  hardware.bluetooth.enable = true;
+  # To connect:
+  # > bluetoothctl
+  # > scan on
+  # turn on device discovert mode)
+  # > pair <hex>
+  # > connect <hex>
 
   # enable x
   services.xserver.enable = true;
