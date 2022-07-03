@@ -127,9 +127,10 @@ generic-system-config = {
     htop
     silver-searcher
     entr
-    unzip
-    nix-prefetch-git
-    nix-prefetch
+    pv
+    zip unzip
+    nix-prefetch nix-prefetch-git
+    ntfs3g
     (linkedBin (with pkgs; [ nodejs curl ]) "" ./files/scripts/loom-put.sh)
     (linkedBin [] "TRASH_LOC=${builtins.toString (stateloc + /trash)}" ./files/scripts/del.sh)
   ];
