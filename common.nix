@@ -115,10 +115,6 @@ generic-system-config = {
     experimental-features = nix-command flakes
   '';
 
-  # need tailscale for work
-  services.tailscale.enable = true;
-  networking.firewall.checkReversePath = "loose";
-
   # plug-in packages
   environment.systemPackages = with pkgs; [
     vim
@@ -155,6 +151,29 @@ automatic-system-cleanup = {
     '';
     startAt = "06:00";
   };
+};
+
+# =============================================================================
+cachix = {
+  imports = [ ./cachix/cachix.nix ];
+  environment = {
+    systemPackages = with pkgs; [ cachix ];
+    interactiveShellInit = let
+      cachix-dir = builtins.toString ./cachix;
+    in ''
+      function cachix {
+        echo >&2 "Use 'command cachix', and remember to point it to '${cachix-dir}'"
+        return 1
+      }
+    '';
+  };
+};
+
+# =============================================================================
+work-stuff = {
+  # tailscale
+  services.tailscale.enable = true;
+  networking.firewall.checkReversePath = "loose";
 };
 
 # =============================================================================
