@@ -91,7 +91,7 @@ generic-system-config = {
   # To connect:
   # > bluetoothctl
   # > scan on
-  # turn on device discovert mode)
+  # turn on device discovery mode
   # > pair <hex>
   # > connect <hex>
 
@@ -100,6 +100,8 @@ generic-system-config = {
 
   # internet
   networking.networkmanager.enable = true;
+  networking.networkmanager.wifi.scanRandMacAddress = false;
+    # ^ seems to be needed for some networks
   environment.etc."NetworkManager/system-connections".source =
     linked (stateloc + /etc.NetworkManager.system-connections);
 
@@ -122,11 +124,16 @@ generic-system-config = {
     wget
     htop
     silver-searcher
+    colordiff
     entr
     pv
     zip unzip
     nix-prefetch nix-prefetch-git
     ntfs3g
+    sshfs rclone
+    drive
+    bc
+    ghc nodejs python3  # for one-off uses
     (linkedBin (with pkgs; [ nodejs curl ]) "" ./files/scripts/loom-put.sh)
     (linkedBin [] "TRASH_LOC=${builtins.toString (stateloc + /trash)}" ./files/scripts/del.sh)
   ];
@@ -137,6 +144,8 @@ generic-system-config = {
       source ${builtins.toString ./files/bashrc}
     fi
   '';
+
+  networking.firewall.allowedTCPPorts = [ 8000 ];
 
 };
 
@@ -150,6 +159,7 @@ automatic-system-cleanup = {
       $bin/nix-collect-garbage
     '';
     startAt = "06:00";
+    enable = false;  # seems to wipe out stuff I need for work, so disable. WANT: fix!
   };
 };
 

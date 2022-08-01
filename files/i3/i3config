@@ -180,7 +180,7 @@ mode "screenshot" {
 
 for_window [class=".*"] border pixel 2
 gaps inner 4
-smart_borders on
+# smart_borders on
 
 # Use grave to switch to most recent workspace
 bindsym $mod+grave workspace back_and_forth

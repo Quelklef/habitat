@@ -5,6 +5,7 @@ disabled_themes=(
   /home/lark/.config/alacritty/themes/low_contrast.yaml
   /home/lark/.config/alacritty/themes/terminal_app.yaml
   /home/lark/.config/alacritty/themes/high_contrast.yaml
+  /home/lark/.config/alacritty/themes/tango_dark.yaml
   /home/lark/.config/alacritty/themes/pencil_light.yaml
   /home/lark/.config/alacritty/themes/gruvbox_light.yaml
   /home/lark/.config/alacritty/themes/solarized_light.yaml
