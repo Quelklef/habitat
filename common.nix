@@ -120,7 +120,6 @@ generic-system-config = {
   # plug-in packages
   environment.systemPackages = with pkgs; [
     vim
-    kakoune
     wget
     htop
     silver-searcher
@@ -344,10 +343,9 @@ discord = {
 
 # =============================================================================
 kakoune = {
-  environment.systemPackages = with pkgs; [ xsel ];
-  home-manager.users.${user} = {
-    xdg.configFile."kak/kakrc".source = linked ./files/kakrc;
-  };
+  environment.systemPackages = [
+    (import ./files/kakoune/kakoune.nix { inherit pkgs; linked = true; })
+  ];
 };
 
 # =============================================================================
