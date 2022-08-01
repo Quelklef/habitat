@@ -24,7 +24,7 @@ pkgs.stdenv.mkDerivation {
     cat <<EOF > $out/bin/kak
 
     export XDG_CONFIG_HOME=$(realpath $out/xch)
-    export PATH=\''${PATH}\''${PATH+:}${pkgs.xsel}/bin/xsel
+    export PATH=\''${PATH}\''${PATH+:}${pkgs.xsel}/bin
     ${pkgs.kakoune}/bin/kak "\$@"
 
     EOF
