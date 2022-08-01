@@ -31,7 +31,7 @@ function status {
 
   local batt_all=$(acpi -i | grep '0:')
   local batt_degred=$(echo "$batt_all" | tail -n1 | awk -F' = ' '{ print $2 }')
-  local batt_percent=$(echo "$batt_all" | head -n1 | grep -oP '\d+(?=%)')
+  local batt_percent=$(echo "$batt_all" | head -n1 | grep -oP '\d+(?=%)' | xargs printf '%03d')
 
   local batt_charging=$({
     batt_time() { echo "$batt_all" | grep -oP '\d{2}:\d{2}(?=:)'; }
@@ -40,7 +40,6 @@ function status {
       *Discharging*) echo -n ' ↓'; batt_time ;;
       *'Not charging'*) echo ' ---:--' ;;
     esac
-    
   })
 
   local stat_battery="B.${batt_percent}% (×$batt_degred)${batt_charging}"
