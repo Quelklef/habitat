@@ -185,27 +185,3 @@ function kak {
   command kak "$@"
 }
 
-
-
-# dragon (remote directory)
-
-dgn_loc=/per/dgn
-
-function dgn.up {(
-  set -euo pipefail
-  [ -e $dgn_loc ] && { echo >&2 "Refusing to overwrite $dgn_loc"; return 1; }
-  sudo mkdir $dgn_loc
-  sudo chown "$USER":users $dgn_loc
-  sshfs \
-    -o auto_cache,no_readahead,Compression=yes \
-    -p23 u309918@u309918.your-storagebox.de:/home $dgn_loc
-  echo ok
-)}
-
-function dgn.down {(
-  set -euo pipefail
-  [ -e $dgn_loc ] || { echo >&2 "Already down"; return 0; }
-  fusermount -u $dgn_loc
-  sudo rm -r $dgn_loc
-  echo ok
-)}

@@ -179,6 +179,39 @@ cachix = {
 };
 
 # =============================================================================
+# Remote directory
+dragon = {
+  # Allows sshfs to use allow_root
+  programs.fuse.userAllowOther = true;
+
+  environment.interactiveShellInit = ''
+    [ -n "$BASH" ] && source ${builtins.toString ./files/dragon.sh}
+  '';
+};
+
+# =============================================================================
+# System backups
+kopia = {
+  environment.systemPackages = with pkgs; [ kopia ];
+
+  # nb Some to-be-backed-up files are root-owned, so use kopia with root
+  #    (Also kopia config is in root's $XDG_CONFIG_HOME)
+
+  home-manager.users.root = {
+    xdg.configFile."kopia".source = linked (stateloc + /kopia);
+  };
+
+  systemd.services.backup = {
+    enable = false;  # temp disabled
+    description = "Regular system backup";
+    startAt = "hourly";
+    script = ''
+      ${pkgs.kopia}/bin/kopia snapshot ${stateloc}
+    '';
+  };
+};
+
+# =============================================================================
 work-stuff = {
   # tailscale
   services.tailscale.enable = true;
@@ -208,6 +241,10 @@ home-manager-init = {
       };
     in import "${home-manager}/nixos")
   ];
+  home-manager.users.root = {
+    targets.genericLinux.enable = true;
+    xdg.enable = true;
+  };
   home-manager.users.${user} = {
     targets.genericLinux.enable = true;
     xdg.enable = true;
