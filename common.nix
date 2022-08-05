@@ -138,10 +138,8 @@ generic-system-config = {
   ];
 
   environment.interactiveShellInit = ''
-    if [ -n "$BASH" ]; then
-      # source bashrc on bash only
-      source ${builtins.toString ./files/bashrc}
-    fi
+    # source bashrc on bash only
+    [ -n "$BASH" ] && source ${builtins.toString ./files/bashrc}
   '';
 
   networking.firewall.allowedTCPPorts = [ 8000 ];
