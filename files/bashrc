@@ -165,8 +165,6 @@ alias tree="tree -C"
 alias ag="clear && ag --depth -1 --hidden -W 100"
 function mkdirf { mkdir "$1"; cd "$1"; } # "mkdir follow"
 
-alias kak="XDG_CONFIG_HOME=$XDG_CONFIG_HOME kak"
-
 function kak {
   [ "$#" = 1 ] || {
     echo >&2 "Expected exactly 1 argument."
