@@ -166,15 +166,16 @@ alias ag="clear && ag --depth -1 --hidden -W 100"
 function mkdirf { mkdir "$1"; cd "$1"; } # "mkdir follow"
 
 function kak {
-  [ "$#" = 1 ] || {
-    echo >&2 "Expected exactly 1 argument."
+  [ "$#" = 0 -o "$#" = 1 ] || {
+    echo >&2 "Expected at most 1 argument."
     echo >&2 "Do you want 'command kak'?"
     return 1
   }
 
-  [ \( -e "$1" -a ! -w "$1" \) \
-    -o \( ! -e "$1" -a ! -w "$(dirname "$1")" \) \
-  ] && {
+  [ "$#" = 1 ] \
+  && [ \( -e "$1" -a ! -w "$1" \) \
+    -o \( ! -e "$1" -a ! -w "$(dirname "$1")" \) ] \
+  && {
     echo >&2 "Refusing to open non-writable $1"
     echo >&2 "Do you want 'sudo kak' or 'command kak'?"
     return 1
