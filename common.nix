@@ -204,7 +204,7 @@ kopia = {
     description = "Regular system backup";
     startAt = "hourly";
     script = ''
-      ${pkgs.kopia}/bin/kopia snapshot ${stateloc}
+      ${pkgs.kopia}/bin/kopia snapshot ${builtins.toString stateloc}
     '';
   };
 };
