@@ -3,6 +3,18 @@
 , user     # User name
 }:
 
+if !(builtins.isString stateloc)
+then builtins.throw ''
+  The supplied state location '${builtins.toString stateloc}' is a ${builtins.typeOf stateloc}, but must be a string. This is to mitigate the risk of accidentally copying the entire state location to the nix store, should this nix expression mistakenly coercing the path it to a string. (This has happened before!)
+''
+else if !(
+  builtins.substring 0 1 stateloc == "/"
+  && builtins.substring (builtins.stringLength stateloc - 1) (builtins.stringLength stateloc) stateloc != "/"
+) then builtins.throw ''
+  The state location must start with a slash and must not end with a slash; the supplied value '${builtins.toString stateloc}' does not respect this
+''
+else
+
 { lib, config, pkgs, ... }: let
 
 mylib = rec {
@@ -103,7 +115,7 @@ generic-system-config = {
   networking.networkmanager.wifi.scanRandMacAddress = false;
     # ^ seems to be needed for some networks
   environment.etc."NetworkManager/system-connections".source =
-    linked (stateloc + /etc.NetworkManager.system-connections);
+    linked (stateloc + "/etc.NetworkManager.system-connections");
 
   # compositor; basically optional
   services.picom.enable = true;
@@ -134,7 +146,7 @@ generic-system-config = {
     bc
     ghc nodejs python3  # for one-off uses
     (linkedBin (with pkgs; [ nodejs curl ]) "" ./files/scripts/loom-put.sh)
-    (linkedBin [] "TRASH_LOC=${builtins.toString (stateloc + /trash)}" ./files/scripts/del.sh)
+    (linkedBin [] ''TRASH_LOC=${stateloc + "/trash"}'' ./files/scripts/del.sh)
   ];
 
   environment.interactiveShellInit = ''
@@ -196,7 +208,7 @@ kopia = {
   #    (Also kopia config is in root's $XDG_CONFIG_HOME)
 
   home-manager.users.root = {
-    xdg.configFile."kopia".source = linked (stateloc + /kopia);
+    xdg.configFile."kopia".source = linked (stateloc + "/kopia");
   };
 
   systemd.services.backup = {
@@ -204,7 +216,7 @@ kopia = {
     description = "Regular system backup";
     startAt = "hourly";
     script = ''
-      ${pkgs.kopia}/bin/kopia snapshot ${builtins.toString stateloc}
+      ${pkgs.kopia}/bin/kopia snapshot ${stateloc}
     '';
   };
 };
@@ -253,7 +265,7 @@ home-manager-init = {
 home-manager-generic = {
   home-manager.users.${user} = {
     home.file.".background-image".source = ./files/background.png;
-    home.file.".ssh".source = linked (stateloc + /ssh);
+    home.file.".ssh".source = linked (stateloc + "/ssh");
   };
 };
 
@@ -335,7 +347,9 @@ git = {
       user.name = "Maynard";
       user.email = "elimaynard923@gmail.com";
       init.defaultBranch = "main";
-      core.sshCommand = "ssh -F '${builtins.toString (stateloc + /ssh/config)}'";
+      core.sshCommand = ''
+        ssh -F '${stateloc + "/ssh/config"}'
+      '';
       # ^ nb idk why this is needed, but w/e
     };
   };
@@ -345,7 +359,7 @@ git = {
 chrome = {
   environment.systemPackages = with pkgs; [ google-chrome ];
   home-manager.users.${user} = {
-    xdg.configFile."google-chrome".source = linked (stateloc + /google-chrome);
+    xdg.configFile."google-chrome".source = linked (stateloc + "/google-chrome");
   };
 };
 
@@ -353,7 +367,7 @@ chrome = {
 thunderbird = {
   environment.systemPackages = with pkgs; [ thunderbird ];
   home-manager.users.${user} = {
-    home.file.".thunderbird".source = linked (stateloc + /thunderbird);
+    home.file.".thunderbird".source = linked (stateloc + "/thunderbird");
   };
   environment.interactiveShellInit = ''alias thunderbird="thunderbird --profile ~/.thunderbird/q2te5qzd.default-release"'';
   # ^ Not totally sure why this is necessary but whatever
@@ -363,7 +377,7 @@ thunderbird = {
 telegram = {
   environment.systemPackages = with pkgs; [ tdesktop ];
   home-manager.users.${user} = {
-    xdg.dataFile."TelegramDesktop".source = linked (stateloc + /telegram);
+    xdg.dataFile."TelegramDesktop".source = linked (stateloc + "/telegram");
   };
 };
 
@@ -371,7 +385,7 @@ telegram = {
 discord = {
   environment.systemPackages = with pkgs; [ discord ];
   home-manager.users.${user} = {
-    xdg.configFile."discord".source = linked (stateloc + /discord);
+    xdg.configFile."discord".source = linked (stateloc + "/discord");
   };
 };
 
@@ -406,8 +420,8 @@ alacritty = {
 ulauncher = {
   environment.systemPackages = with pkgs; [ ulauncher ];
   home-manager.users.${user} = {
-    xdg.dataFile."ulauncher".source = linked (stateloc + /ulauncher/home.local.share);
-    xdg.configFile."ulauncher".source = linked (stateloc + /ulauncher/home.config);
+    xdg.dataFile."ulauncher".source = linked (stateloc + "/ulauncher/home.local.share");
+    xdg.configFile."ulauncher".source = linked (stateloc + "/ulauncher/home.config");
     xsession.enable = true;
     xsession.initExtra = ''
       # This is a bit of a hack. Ideally, invocation would be handled by systemd, not xsession
@@ -425,7 +439,7 @@ nixops = {
   environment.systemPackages = with pkgs; [ nixops ];
   nixpkgs.config.permittedInsecurePackages = [ "python2.7-pyjwt-1.7.1" ];
   home-manager.users.${user} = {
-    home.file.".nixops".source = linked (stateloc + /nixops);
+    home.file.".nixops".source = linked (stateloc + "/nixops");
   };
 };
 
@@ -437,7 +451,7 @@ z = {
       enable = true;
       # This has to happen specifically in the home-manager bashrc, idk why
       bashrcExtra = ''
-        export _Z_DATA=${builtins.toString (stateloc + /z/zfile)}
+        export _Z_DATA=${stateloc + "/z/zfile"}
         export _Z_OWNER=${user}
         mkdir -p "$(dirname "$_Z_DATA")"
         source ${builtins.fetchurl
@@ -455,10 +469,10 @@ steam = {
   hardware.opengl.driSupport32Bit = true;  # https://github.com/NixOS/nixpkgs/issues/47932#issuecomment-447508411
 
   home-manager.users.${user} = {
-    home.file.".steam".source = linked (stateloc + /steam/home.steam);
-    home.file.".steampath".source = linked (stateloc + /steam/home.steampath);
-    home.file.".steampid".source = linked (stateloc + /steampid/home.steampid);
-    xdg.dataFile."Steam".source = linked (stateloc + /steam/home.local.share.steam);
+    home.file.".steam".source = linked (stateloc + "/steam/home.steam");
+    home.file.".steampath".source = linked (stateloc + "/steam/home.steampath");
+    home.file.".steampid".source = linked (stateloc + "/steampid/home.steampid");
+    xdg.dataFile."Steam".source = linked (stateloc + "/steam/home.local.share.steam");
   };
 };
 

@@ -4,7 +4,7 @@ user = "lark";
 
 common =
   import ../common.nix
-  { stateloc = /per/state;
+  { stateloc = builtins.toString /per/state;
     secrets = (import /per/secrets.nix).nixos;
     inherit user;
   }
