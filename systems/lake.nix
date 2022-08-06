@@ -76,7 +76,7 @@ base = {
   '';
 
   # Disable ipv6; it's messing with npm n stuff
-  boot.kernel.sysctl."net.ipv6.conf.eth0.disable_ipv6" = true;
+  # boot.kernel.sysctl."net.ipv6.conf.eth0.disable_ipv6" = true;
 };
 
 # =============================================================================
@@ -102,8 +102,8 @@ in {
   };
 
   environment.interactiveShellInit = ''
-    alias perf.fast="set-cpu-governors performance"
-    alias perf.slow="set-cpu-governors powersave"
+    alias perf.fast="${scriptname} performance"
+    alias perf.slow="${scriptname} powersave"
 
     function perf.which {
       cpufreq-info | grep 'The governor' | awk -F\" '{print $2}'

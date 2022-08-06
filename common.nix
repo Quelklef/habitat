@@ -273,8 +273,7 @@ i3 = {
   # packages used by i3 config
   environment.systemPackages = with pkgs; [
     (import ./files/i3/i3wsgroups.nix { inherit pkgs; })  # .. for workspace groups
-    scrot  # .. for screenshots
-    xclip  # .. for screenshots
+    scrot xclip  # .. for screenshots
     acpi  # .. for battery info in status bar
   ];
 
@@ -283,7 +282,7 @@ i3 = {
   programs.light.enable = true;
   users.users.${user}.extraGroups = [ "video" ];
 
-  # TODO: a fair amount of the i3 config (i3-status.sh in particular)
+  # WANT: a fair amount of the i3 config (i3-status.sh in particular)
   # is system-specific (eg assumes existence of a battery) and therefore
   # really belongs in ./systems/lake
 
