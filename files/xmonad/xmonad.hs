@@ -1,52 +1,32 @@
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE DerivingStrategies         #-}
-{-# LANGUAGE ExistentialQuantification  #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE NamedFieldPuns             #-}
-{-# LANGUAGE OverloadedLabels           #-}
-{-# LANGUAGE PartialTypeSignatures      #-}
-{-# LANGUAGE RankNTypes                 #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE TypeOperators              #-}
-
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE OverloadedLabels      #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 
 import           Control.Category                   ((>>>))
 import           Control.Lens                       ((%~), (&), (.~), (^.))
 import           Control.Monad.Writer               (Writer, execWriter, tell)
 import           Data.Foldable                      (for_)
 import           Data.Function                      (on, (&))
-import           Data.Generics.Labels               ()
-import           Data.List                          (elemIndex, nub)
+import           Data.List                          (elemIndex)
 import           Data.Map                           (Map)
 import qualified Data.Map                           as Map
 import           Data.Maybe                         (catMaybes, fromMaybe)
-import           GHC.Generics                       (Generic)
-import           Text.Printf                        (printf)
-import qualified XMonad                             as XMonad
 import           XMonad
-import           XMonad.Config.Prime                (ExtensionClass, Message)
 import           XMonad.Hooks.EwmhDesktops          (ewmh)
 import           XMonad.Hooks.ManageDocks           (avoidStruts, docks)
 import           XMonad.Hooks.StatusBar             (statusBarGeneric,
                                                      statusBarProp, withSB,
                                                      xmonadPropLog)
 import           XMonad.Hooks.StatusBar.PP          (PP (..), dynamicLogString)
-import           XMonad.Layout                      ((|||))
 import qualified XMonad.Layout.BinarySpacePartition as LBSP
-import           XMonad.Layout.LayoutModifier       (LayoutModifier (handleMess),
-                                                     ModifiedLayout (..))
 import qualified XMonad.Layout.Tabbed               as LT
 import qualified XMonad.Layout.WindowNavigation     as LWN
 import qualified XMonad.StackSet                    as W
-import qualified XMonad.Util.ExtensibleConf         as XC
-import qualified XMonad.Util.ExtensibleState        as XS
 import           XMonad.Util.EZConfig               (mkKeymap)
-import qualified XMonad.Util.Themes                 as Themes
 import           XMonad.Util.WorkspaceCompare       (mkWsSort)
+
+import qualified W2                                 as W2
+import           W2                                 (Coord (XY), W2 (W2), (!?))
 
 
 main :: IO ()
@@ -56,44 +36,28 @@ main =
     & docks
     & ewmh
     & withSB myStatusBar
-    & w2c w2Config
+    & W2.withW2 w2Config
     & xmonad
 
   where
 
   myStatusBar = statusBarGeneric "xmobar" $ do
-    w2 <- w2get
+    w2 <- W2.getW2
     str <- dynamicLogString (mkPP w2)
-    let prefix =
-          case (w2 ^. #w2config ^. #yAxis) !? (w2 ^. #w2state . #loc . #y) of
-            Nothing    -> "?!"
-            Just yName -> yName <> ": "
-    xmonadPropLog $ prefix <> str
+    let yLabel = W2.getYLabel w2
+    xmonadPropLog $ yLabel <> ": "<> str
 
   mkPP :: W2 -> PP
-  mkPP w2 = let
-
-    XY x y = w2 ^. #w2state . #loc
-
-    row :: [String]
-    row = catMaybes $ toWsName (w2config w2) . flip XY y <$> toIndices (w2 ^. #w2config . #xAxis)
-
-    -- WANT: this is pretty hacky :~/
-    unformat :: String -> String
-    unformat = reverse >>> takeWhile (/= ':') >>> reverse
-
-    in def
-      { ppCurrent = unformat >>> wrap "[" "]"
-      , ppHidden = unformat >>> wrap "(" ")"
-      , ppHiddenNoWindows = const "..."
-      , ppSort = do
-          sort <- (mkWsSort . pure) (compare `on` flip elemIndex row)
-          pure $ filter (W.tag >>> (`elem` row))
-                 >>> sort
-      , ppUrgent = wrap "!" "!"
-      , ppSep = "  -  "
-      , ppTitle = take 150
-      }
+  mkPP w2 =
+    let w2PP = W2.augmentPP w2 def
+    in w2PP
+        { ppCurrent = ppCurrent w2PP >>> wrap "[" "]"
+        , ppHidden = ppHidden w2PP >>> wrap "(" ")"
+        , ppHiddenNoWindows = const "..."
+        , ppUrgent = wrap "!" "!"
+        , ppSep = "  -  "
+        , ppTitle = take 150
+        }
 
   wrap l r s = l <> s <> r
 
@@ -110,7 +74,6 @@ mkConfig = def
       (LBSP.emptyBSP ||| myTabbed ||| Full)
       & avoidStruts
       & LWN.windowNavigation
-  , workspaces = w2GetWorkspaces w2Config
   }
 
   where
@@ -118,11 +81,11 @@ mkConfig = def
   myTabbed = LT.tabbed LT.shrinkText def
 
 
-w2Config :: W2Config
-w2Config = W2Config
-  { glue = column w2Config 0 "α" <> column w2Config 3 "γ"
-  , xAxis = show <$> [1 .. 6]
-  , yAxis = show <$> [1 .. 4]
+w2Config :: W2.W2Config
+w2Config = W2.W2Config
+  { W2.glue = W2.column w2Config 0 "α" <> W2.column w2Config 3 "γ"
+  , W2.xLabels = show <$> [1 .. 6]
+  , W2.yLabels = show <$> [1 .. 4]
   }
 
 
@@ -162,11 +125,11 @@ myKeys conf@(XConfig { XMonad.modMask = mod }) =
 --        bind (mod .|. mask) key (windows $ fun workspace)
 
     -- workspaces
-    bind' "M-w"   $ incY
-    bind' "M-S-w" $ decY
+    bind' "M-w"   $ W2.incY
+    bind' "M-S-w" $ W2.decY
     for_ (zip [0 .. 10] [xK_1 .. xK_9]) $ \(x, key) -> do
-      bind mod                 key (setX x)
-      bind (mod .|. shiftMask) key (moveWindowToX x)
+      bind mod                 key (W2.setX x)
+      bind (mod .|. shiftMask) key (W2.moveWindowToX x)
 
     -- resize
     bind' "M-C-l" $ sendMessage (LBSP.ExpandTowards LBSP.R)
@@ -232,133 +195,3 @@ compile config bindings = let
 
   in oldsMap <> newsMap
 
-
-
-
--------------------------------------------------------------------------------
--- Two-dimensional workspaces                                                --
--------------------------------------------------------------------------------
-
-
--- Allows a workspace to appear at multiple coordinates
---
--- To have two coordinates p1 and p2 share a workspace, assign
--- them the same value in in the Glue map. (Except Nothing)
---
--- nb. I much prefer the more definition
---   data Glue a = forall rep. Eq rep => Glue (a -> rep)
--- which allows general construction of equivalence relations
--- But we can't use that because we need stuff like
--- a Show Glue instance =(
-newtype Glue = Glue (Map Coord String)
-  deriving (Show, Read, Eq, Ord)
-  deriving newtype (Monoid, Semigroup)
-
--- Glue a column together
-column :: W2Config -> Int -> String -> Glue
-column (W2Config { yAxis }) x name =
-  toIndices yAxis & foldMap (\y -> Glue $ Map.singleton (XY x y) name)
-
-
-instance ExtensionClass W2State where
-  initialValue = def
-
-data Coord = XY { x :: Int, y :: Int }
-  deriving (Show, Read, Eq, Ord, Generic)
-
-data W2Config = W2Config
-  { glue  :: Glue
-  , xAxis :: [String]
-  , yAxis :: [String]
-  } deriving (Show, Read, Eq, Ord, Generic)
-
-instance Semigroup W2Config where
-  ca <> cb = cb
-
-instance Default W2Config where
-  def = W2Config
-    { glue = mempty
-    , xAxis = show <$> [1 .. 5]
-    , yAxis = show <$> [1 .. 5]
-    }
-
-w2GetWorkspaces :: W2Config -> [String]
-w2GetWorkspaces config@(W2Config { xAxis, yAxis }) =
-  (do
-    y <- toIndices yAxis
-    x <- toIndices xAxis
-    maybeToList . toWsName config $ XY x y)
-  & nub  -- account for duplicate names due to gluing
-
-  where
-  maybeToList = \case { Nothing -> []; Just a -> [a]; }
-
-toIndices :: [a] -> [Int]
-toIndices xs = take (length xs) [0..]
-
-toWsName :: W2Config -> Coord -> Maybe String
-toWsName (W2Config { xAxis, yAxis, glue = Glue glue }) (XY x y) =
-
-  case (xAxis !? x, yAxis !? y) of
-
-    (Just x', Just y') ->
-      -- in-bounds
-      case Map.lookup (XY x y) glue of
-        Just name -> Just name
-        Nothing   -> Just $ y' <> ":" <> x'
-
-    _ ->
-      -- out-of-bounds
-      Nothing
-
-(!?) :: [a] -> Int -> Maybe a
-xs !? n
-  | n >= 0 && n < length xs = Just (xs !! n)
-  | otherwise = Nothing
-
-data W2State = W2State
-  { loc :: Coord
-  } deriving (Show, Read, Eq, Ord, Generic)
-
-instance Default W2State where
-  def = W2State { loc = XY 0 0 }
-
-data W2 = W2
-  { w2config :: W2Config
-  , w2state  :: W2State
-  } deriving (Show, Read, Eq, Ord, Generic)
-
-w2get :: X W2
-w2get = W2 <$> (fromMaybe def <$> XC.ask) <*> XS.get
-
-mapCoord :: (Coord -> Coord) -> X ()
-mapCoord f = do
-  w2 <- w2get
-  let w2' = w2 & #w2state . #loc %~ f
-  let wsName = toWsName (w2config w2) (w2' ^. #w2state . #loc)
-  case wsName of
-    Nothing -> pure ()  -- moved out-of-bounds
-    Just ws -> do
-      XS.put (w2state w2')
-      windows (W.greedyView ws)
-
-incX, decX, incY, decY :: X ()
-incX = mapCoord $ #x %~ (+1)
-decX = mapCoord $ #x %~ (+(-1))
-incY = mapCoord $ #y %~ (+1)
-decY = mapCoord $ #y %~ (+(-1))
-
-setX, setY :: Int -> X ()
-setX x = mapCoord $ #x .~ x
-setY y = mapCoord $ #y .~ y
-
-moveWindowToX :: Int -> X ()
-moveWindowToX x = do
-  w2 <- w2get
-  let y = w2 ^. #w2state . #loc . #y
-  case toWsName (w2config w2) (XY x y) of
-    Nothing   -> pure ()
-    Just name -> windows (W.shift name)
-
-w2c :: W2Config -> XConfig l -> XConfig l
-w2c config = XC.once id config

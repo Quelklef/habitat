@@ -349,7 +349,8 @@ in lib.mkIf true {
 
   home-manager.users.${user} = {
     home.file.".xmonad/xmonad.hs".source = linked ./files/xmonad/xmonad.hs;
-    xdg.configFile."xmobar/xmobar.hs".source = linked ./files/xmonad/xmobar.hs;
+    home.file.".xmonad/lib".source = linked ./files/xmonad/lib;
+    xdg.configFile."xmobar/xmobar.hs".source = linked ./files/xmobar/xmobar.hs;
   };
 
   # Enables 'light' command which is used in xmonad config to manage backlight
@@ -363,11 +364,13 @@ in lib.mkIf true {
     (pkgs.writeScriptBin "my-xmobar" ''${my-xmobar}/bin/xmobar "$@"'')
 
     # script to rebuild + rerun config on file change. only really half-works
-    # WANT: this requires a manual restart when xmobar is changed =(
     (pkgs.writeScriptBin "xmonad-devt" ''
-      entr=${pkgs.entr}/bin/entr
-      echo ~/.xmonad/xmonad.hs | $entr -cs '${my-xmonad}/bin/xmonad --recompile && ${my-xmonad}/bin/xmonad --restart' &
-      echo ~/.config/xmobar/xmobar.hs | $entr -cr ${my-xmobar}/bin/xmobar -r &
+      path_append=${pkgs.lib.strings.makeBinPath (with pkgs; [ entr stylish-haskell ])}
+      export PATH=''${PATH:+$PATH}''${PATH:+:}''${path_append}
+      src=${toString ./files}
+      find $src/{xmonad,xmobar} -name '*.hs' | entr -c bash -c "stylish-haskell -i \$(find $src/{xmonad,xmobar} -name '*.hs')" &
+      find $src/xmonad -name '*.hs' | entr -cs '${my-xmonad}/bin/xmonad --recompile && ${my-xmonad}/bin/xmonad --restart' &
+      find $src/xmobar -name '*.hs' | entr -cs 'pkill xmobar && ${my-xmobar}/bin/xmobar' &
       wait
     '')
 
