@@ -16,7 +16,6 @@
 
 import           Control.Category                   ((>>>))
 import           Control.Lens                       ((%~), (&), (.~), (^.))
-import           Control.Monad                      (when, (>=>))
 import           Control.Monad.Writer               (Writer, execWriter, tell)
 import           Data.Foldable                      (for_)
 import           Data.Function                      (on, (&))
@@ -24,15 +23,8 @@ import           Data.Generics.Labels               ()
 import           Data.List                          (elemIndex, nub)
 import           Data.Map                           (Map)
 import qualified Data.Map                           as Map
-import           Data.Maybe                         (catMaybes)
-import           Data.Void                          (Void)
+import           Data.Maybe                         (catMaybes, fromMaybe)
 import           GHC.Generics                       (Generic)
-import           System.Environment                 (getArgs)
-import           System.Exit                        (ExitCode (ExitSuccess),
-                                                     exitWith)
-import           System.FilePath                    ((</>))
-import           System.Info                        (arch, os)
-import           System.Posix.Process               (executeFile)
 import           Text.Printf                        (printf)
 import qualified XMonad                             as XMonad
 import           XMonad
@@ -50,6 +42,7 @@ import           XMonad.Layout.LayoutModifier       (LayoutModifier (handleMess)
 import qualified XMonad.Layout.Tabbed               as LT
 import qualified XMonad.Layout.WindowNavigation     as LWN
 import qualified XMonad.StackSet                    as W
+import qualified XMonad.Util.ExtensibleConf         as XC
 import qualified XMonad.Util.ExtensibleState        as XS
 import           XMonad.Util.EZConfig               (mkKeymap)
 import qualified XMonad.Util.Themes                 as Themes
@@ -63,20 +56,21 @@ main =
     & docks
     & ewmh
     & withSB myStatusBar
+    & w2c w2Config
     & xmonad
 
   where
 
   myStatusBar = statusBarGeneric "xmobar" $ do
-    w2 :: W2 Window <- XS.get
+    w2 <- w2get
     str <- dynamicLogString (mkPP w2)
     let prefix =
-          case (w2 ^. #w2config . #yAxis) !? (w2 ^. #w2state . #loc . #y) of
+          case (w2 ^. #w2config ^. #yAxis) !? (w2 ^. #w2state . #loc . #y) of
             Nothing    -> "?!"
             Just yName -> yName <> ": "
     xmonadPropLog $ prefix <> str
 
-  mkPP :: W2 Window -> PP
+  mkPP :: W2 -> PP
   mkPP w2 = let
 
     XY x y = w2 ^. #w2state . #loc
@@ -116,7 +110,6 @@ mkConfig = def
       (LBSP.emptyBSP ||| myTabbed ||| Full)
       & avoidStruts
       & LWN.windowNavigation
-      & w2 w2Config
   , workspaces = w2GetWorkspaces w2Config
   }
 
@@ -124,12 +117,13 @@ mkConfig = def
 
   myTabbed = LT.tabbed LT.shrinkText def
 
-  w2Config :: W2Config
-  w2Config = W2Config
-    { glue = column w2Config 0 "α" <> column w2Config 3 "γ"
-    , xAxis = show <$> [1 .. 6]
-    , yAxis = show <$> [1 .. 4]
-    }
+
+w2Config :: W2Config
+w2Config = W2Config
+  { glue = column w2Config 0 "α" <> column w2Config 3 "γ"
+  , xAxis = show <$> [1 .. 6]
+  , yAxis = show <$> [1 .. 4]
+  }
 
 
 myKeys :: XConfig Layout -> Map (KeyMask, KeySym) (X ())
@@ -168,11 +162,11 @@ myKeys conf@(XConfig { XMonad.modMask = mod }) =
 --        bind (mod .|. mask) key (windows $ fun workspace)
 
     -- workspaces
-    bind' "M-w"   $ sendMessage incY
-    bind' "M-S-w" $ sendMessage decY
+    bind' "M-w"   $ incY
+    bind' "M-S-w" $ decY
     for_ (zip [0 .. 10] [xK_1 .. xK_9]) $ \(x, key) -> do
-      bind mod                 key (sendMessage $ setX x)
-      bind (mod .|. shiftMask) key (sendMessage $ moveWindowToX x)
+      bind mod                 key (setX x)
+      bind (mod .|. shiftMask) key (moveWindowToX x)
 
     -- resize
     bind' "M-C-l" $ sendMessage (LBSP.ExpandTowards LBSP.R)
@@ -266,17 +260,8 @@ column (W2Config { yAxis }) x name =
   toIndices yAxis & foldMap (\y -> Glue $ Map.singleton (XY x y) name)
 
 
-data W2 a = W2
-  { w2config :: W2Config
-  , w2state  :: W2State
-  }
-  deriving (Show, Read)  -- xmonad demands it
-  deriving (Typeable)
-  deriving (Generic)
-
--- Allows (W2 Window) to be read from and written into the X monad
-instance ExtensionClass (W2 Window) where
-  initialValue = undefined  -- tee-hee
+instance ExtensionClass W2State where
+  initialValue = def
 
 data Coord = XY { x :: Int, y :: Int }
   deriving (Show, Read, Eq, Ord, Generic)
@@ -286,6 +271,16 @@ data W2Config = W2Config
   , xAxis :: [String]
   , yAxis :: [String]
   } deriving (Show, Read, Eq, Ord, Generic)
+
+instance Semigroup W2Config where
+  ca <> cb = cb
+
+instance Default W2Config where
+  def = W2Config
+    { glue = mempty
+    , xAxis = show <$> [1 .. 5]
+    , yAxis = show <$> [1 .. 5]
+    }
 
 w2GetWorkspaces :: W2Config -> [String]
 w2GetWorkspaces config@(W2Config { xAxis, yAxis }) =
@@ -325,56 +320,45 @@ data W2State = W2State
   { loc :: Coord
   } deriving (Show, Read, Eq, Ord, Generic)
 
-initialState :: W2State
-initialState = W2State
-  { loc = XY 0 0
-  }
+instance Default W2State where
+  def = W2State { loc = XY 0 0 }
 
-instance LayoutModifier W2 Window where
-  handleMess w2 msg =
-    case fromMessage msg of
-      Nothing         -> pure Nothing
-      Just (WithW2 f) ->
-          f w2 >>= \case
-            Nothing -> pure Nothing
-            Just w2' -> do
-              XS.put w2'  -- record state
-              pure (Just w2')
+data W2 = W2
+  { w2config :: W2Config
+  , w2state  :: W2State
+  } deriving (Show, Read, Eq, Ord, Generic)
 
-data W2Message = WithW2 (forall a. W2 a -> X (Maybe (W2 a)))
-  deriving (Typeable)
+w2get :: X W2
+w2get = W2 <$> (fromMaybe def <$> XC.ask) <*> XS.get
 
-instance Message W2Message
-
-w2exec :: (forall a. W2 a -> X ()) -> W2Message
-w2exec f = WithW2 (\w2 -> Nothing <$ f w2)
-
-mapCoord :: (Coord -> Coord) -> W2Message
-mapCoord f = WithW2 $ \w2 -> do
+mapCoord :: (Coord -> Coord) -> X ()
+mapCoord f = do
+  w2 <- w2get
   let w2' = w2 & #w2state . #loc %~ f
-  let wsName = toWsName (w2' ^. #w2config) (w2' ^. #w2state . #loc)
+  let wsName = toWsName (w2config w2) (w2' ^. #w2state . #loc)
   case wsName of
-    Nothing -> pure Nothing  -- moved out-of-bounds
+    Nothing -> pure ()  -- moved out-of-bounds
     Just ws -> do
+      XS.put (w2state w2')
       windows (W.greedyView ws)
-      pure (Just w2')
 
-incX, decX, incY, decY :: W2Message
+incX, decX, incY, decY :: X ()
 incX = mapCoord $ #x %~ (+1)
 decX = mapCoord $ #x %~ (+(-1))
 incY = mapCoord $ #y %~ (+1)
 decY = mapCoord $ #y %~ (+(-1))
 
-setX, setY :: Int -> W2Message
+setX, setY :: Int -> X ()
 setX x = mapCoord $ #x .~ x
 setY y = mapCoord $ #y .~ y
 
-moveWindowToX :: Int -> W2Message
-moveWindowToX x = w2exec $ \w2 -> do
+moveWindowToX :: Int -> X ()
+moveWindowToX x = do
+  w2 <- w2get
   let y = w2 ^. #w2state . #loc . #y
   case toWsName (w2config w2) (XY x y) of
     Nothing   -> pure ()
     Just name -> windows (W.shift name)
 
-w2 :: W2Config -> l a -> ModifiedLayout W2 l a
-w2 config layout = ModifiedLayout (W2 config initialState) layout
+w2c :: W2Config -> XConfig l -> XConfig l
+w2c config = XC.once id config
