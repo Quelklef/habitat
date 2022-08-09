@@ -90,7 +90,8 @@ main =
 
     in def
       { ppCurrent = unformat >>> wrap "[" "]"
-      , ppHidden = unformat
+      , ppHidden = unformat >>> wrap "(" ")"
+      , ppHiddenNoWindows = const "..."
       , ppSort = do
           sort <- (mkWsSort . pure) (compare `on` flip elemIndex row)
           pure $ filter (W.tag >>> (`elem` row))

@@ -1,8 +1,11 @@
-{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE QuasiQuotes         #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
-import Xmobar
-import System.Process (readProcess)
-import Text.RawString.QQ (r)
+import           Codec.Binary.UTF8.String (decodeString, encodeString)
+import           Control.Exception        (SomeException, catch)
+import           Text.RawString.QQ        (r)
+import           Xmobar
+import           XMonad.Util.Run          (runProcessWithInput)
 
 main :: IO ()
 main = xmobar config
@@ -71,4 +74,16 @@ data Cmd = Cmd Alias String
 
 instance Exec Cmd where
   alias (Cmd al _) = al
-  run (Cmd _ cmd) = readProcess "bash" ["-c", cmd] ""
+  run (Cmd _ cmd) =
+
+    catch
+
+      (decodeString <$> runProcessWithInput "bash" ["-c", cmd] "")
+      -- Can't just use System.Process.readProcess; see https://github.com/xmonad/xmonad/issues/229#issuecomment-660493853
+      -- Not quite sure why decodeString is needed for unicodoe to work, but w/e
+
+      (\(e :: SomeException) -> do
+        putStrLn $ "err: " <> show e
+        pure "<err>"
+      )
+

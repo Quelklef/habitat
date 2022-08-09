@@ -306,21 +306,29 @@ i3-wm = lib.mkIf false {
 # =============================================================================
 xmonad-wm = let
 
-  ghc = pkgs.haskellPackages.ghcWithPackages (p: with p; [
+  xmo-ghc = pkgs.haskellPackages.ghcWithPackages (p: with p; [
     xmonad xmonad-utils xmonad-contrib
     xmobar raw-strings-qq
     lens generic-lens  # hehe
   ]);
 
+  # runtime dependencies for the xmonad/xmobar configs
+  xmo-deps = [
+    xmo-ghc
+    pkgs.bash pkgs.coreutils pkgs.scrot pkgs.xclip pkgs.acpi pkgs.light
+    (pkgs.writeScriptBin "alacritty-random"
+      (builtins.readFile ./files/i3/alacritty-with-random-theme.sh))
+  ];
+
   # WANT: this PATH modification is leaking into the shell -- very bad!
   my-xmonad = pkgs.writeScriptBin "xmonad" ''
-    export PATH=${ghc}/bin''${PATH:+:}''${PATH:+$PATH}
+    export PATH=${pkgs.lib.strings.makeBinPath xmo-deps}''${PATH:+:}''${PATH:+$PATH}
     export XMONAD_XMESSAGE=${pkgs.coreutils}/bin/true
     ${pkgs.haskellPackages.xmonad}/bin/xmonad "$@"
   '';
 
   my-xmobar = pkgs.writeScriptBin "xmobar" ''
-    export PATH=${ghc}/bin''${PATH:+:}''${PATH:+$PATH}
+    export PATH=${pkgs.lib.strings.makeBinPath xmo-deps}''${PATH:+:}''${PATH:+$PATH}
     ${pkgs.haskellPackages.xmobar}/bin/xmobar "$@"
   '';
 
@@ -334,8 +342,6 @@ in lib.mkIf true {
         start = ''
           systemd-cat -t xmonad -- ${my-xmonad}/bin/xmonad &
           waitPID=$!
-          systemd-cat -t xmobar -- ${my-xmobar}/bin/xmobar &
-            # idk if this is how it's supposed to be done but w/e
         '';
       }];
     };
@@ -353,12 +359,10 @@ in lib.mkIf true {
 
   environment.systemPackages = [
 
-    # xmonad.hs and xmobar.hs runtime deps
-    pkgs.scrot pkgs.xclip pkgs.acpi
-    (pkgs.writeScriptBin "alacritty-random"
-      (builtins.readFile ./files/i3/alacritty-with-random-theme.sh))
+    (pkgs.writeScriptBin "my-xmonad" ''${my-xmonad}/bin/xmonad "$@"'')
+    (pkgs.writeScriptBin "my-xmobar" ''${my-xmobar}/bin/xmobar "$@"'')
 
-    # script to rebuild + rerun config on file change
+    # script to rebuild + rerun config on file change. only really half-works
     # WANT: this requires a manual restart when xmobar is changed =(
     (pkgs.writeScriptBin "xmonad-devt" ''
       entr=${pkgs.entr}/bin/entr
