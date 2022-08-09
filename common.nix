@@ -270,11 +270,14 @@ home-manager-generic = {
 };
 
 # =============================================================================
-i3 = {
+i3-wm = lib.mkIf false {
 
-  services.xserver.windowManager.i3 = {
-    enable = true;
-    package = pkgs.i3-gaps;
+  services.xserver = {
+    displayManager.defaultSession = "none+i3";
+    windowManager.i3 = {
+      enable = true;
+      package = pkgs.i3-gaps;
+    };
   };
 
   home-manager.users.${user} = {
@@ -301,9 +304,76 @@ i3 = {
 };
 
 # =============================================================================
+xmonad-wm = let
+
+  ghc = pkgs.haskellPackages.ghcWithPackages (p: with p; [
+    xmonad xmonad-utils xmonad-contrib
+    xmobar raw-strings-qq
+  ]);
+
+  # WANT: this PATH modification is leaking into the shell env -- very bad!
+  my-xmonad = pkgs.writeScriptBin "xmonad" ''
+    export PATH=${ghc}/bin''${PATH:+:}''${PATH:+$PATH}
+    export XMONAD_XMESSAGE=${pkgs.coreutils}/bin/true
+    ${pkgs.haskellPackages.xmonad}/bin/xmonad "$@"
+  '';
+
+  my-xmobar = pkgs.writeScriptBin "xmobar" ''
+    export PATH=${ghc}/bin''${PATH:+:}''${PATH:+$PATH}
+    ${pkgs.haskellPackages.xmobar}/bin/xmobar "$@"
+  '';
+
+in lib.mkIf true {
+
+  services.xserver = {
+    displayManager.defaultSession = "none+xmonad";
+    windowManager = {
+      session = [{
+        name = "xmonad";
+        start = ''
+          systemd-cat -t xmonad -- ${my-xmonad}/bin/xmonad &
+          waitPID=$!
+          systemd-cat -t xmobar -- ${my-xmobar}/bin/xmobar &
+            # idk if this is how it's supposed to be done but w/e
+        '';
+      }];
+    };
+  };
+
+  home-manager.users.${user} = {
+    home.file.".xmonad/xmonad.hs".source = linked ./files/xmonad/xmonad.hs;
+    xdg.configFile."xmobar/xmobar.hs".source = linked ./files/xmonad/xmobar.hs;
+  };
+
+  # Enables 'light' command which is used in xmonad config to manage backlight
+  # nb. Might require a reboot before 'light' can be used without sudo
+  programs.light.enable = true;
+  users.users.${user}.extraGroups = [ "video" ];
+
+  environment.systemPackages = [
+
+    # xmonad.hs and xmobar.hs runtime deps
+    pkgs.scrot pkgs.xclip pkgs.acpi
+    (pkgs.writeScriptBin "alacritty-random"
+      (builtins.readFile ./files/i3/alacritty-with-random-theme.sh))
+
+    # script to rebuild + rerun config on file change
+    # WANT: this requires a manual restart when xmobar is changed =(
+    (pkgs.writeScriptBin "xmonad-devt" ''
+      entr=${pkgs.entr}/bin/entr
+      echo ~/.xmonad/xmonad.hs | $entr -cs '${my-xmonad}/bin/xmonad --recompile && ${my-xmonad}/bin/xmonad --restart' &
+      echo ~/.config/xmobar/xmobar.hs | $entr -cr ${my-xmobar}/bin/xmobar -r &
+      wait
+    '')
+
+  ];
+
+};
+
+# =============================================================================
 lightdm = {
+
   services.xserver.displayManager = {
-    defaultSession = "none+i3";
     lightdm = {
       enable = true;
       background = ./files/background.png;
