@@ -309,9 +309,10 @@ xmonad-wm = let
   ghc = pkgs.haskellPackages.ghcWithPackages (p: with p; [
     xmonad xmonad-utils xmonad-contrib
     xmobar raw-strings-qq
+    lens generic-lens  # hehe
   ]);
 
-  # WANT: this PATH modification is leaking into the shell env -- very bad!
+  # WANT: this PATH modification is leaking into the shell -- very bad!
   my-xmonad = pkgs.writeScriptBin "xmonad" ''
     export PATH=${ghc}/bin''${PATH:+:}''${PATH:+$PATH}
     export XMONAD_XMESSAGE=${pkgs.coreutils}/bin/true
