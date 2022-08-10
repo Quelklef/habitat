@@ -1,18 +1,24 @@
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE DerivingStrategies         #-}
+{-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE NamedFieldPuns             #-}
 {-# LANGUAGE OverloadedLabels           #-}
-{-# OPTIONS_GHC -fwarn-unused-binds           #-}
+{-# LANGUAGE RankNTypes                 #-}
+{-# OPTIONS_GHC -fwarn-unused-binds     #-}
+
+{- | Two-dimensional workspaces for XMonad -}
 
 module W2 where
 
 import           Control.Category             ((>>>))
-import           Control.Lens                 ((%~), (&), (.~), (^.))
+import           Control.Lens                 (view, (%~), (&), (.~), (^.))
+import           Data.Foldable                (fold)
 import           Data.Function                (on)
 import           Data.Generics.Labels         ()
-import           Data.List                    (elemIndex, nub)
+import           Data.List                    (elemIndex, intercalate, nub)
+import           Data.List.Split              (splitOn)
 import           Data.Map                     (Map)
 import qualified Data.Map                     as Map
 import           Data.Maybe                   (catMaybes, fromMaybe)
@@ -25,29 +31,6 @@ import qualified XMonad.Util.ExtensibleState  as XS
 import           XMonad.Util.WorkspaceCompare (mkWsSort)
 
 
--- Allows a workspace to appear at multiple coordinates
---
--- To have two coordinates p1 and p2 share a workspace, assign
--- them the same value in in the Glue map. (Except Nothing)
---
--- nb. I much prefer the more definition
---   data Glue a = forall rep. Eq rep => Glue (a -> rep)
--- which allows general construction of equivalence relations
--- But we can't use that because we need stuff like
--- a Show Glue instance =(
-newtype Glue = Glue (Map Coord String)
-  deriving newtype (Monoid, Semigroup)
-
--- WANT: currently Glue is acting both to glue workspaces
---       together and to give them names. this should be
---       decoupled
-
--- Glue a column together
-column :: W2Config -> Int -> String -> Glue
-column (W2Config { yLabels }) x name =
-  toIndices yLabels & foldMap (\y -> Glue $ Map.singleton (XY x y) name)
-
-
 data Coord = XY { x :: Int, y :: Int }
   deriving (Eq, Ord, Generic)
 
@@ -56,12 +39,32 @@ xs !? n
   | n >= 0 && n < length xs = Just (xs !! n)
   | otherwise = Nothing
 
-toIndices :: [a] -> [Int]
-toIndices xs = take (length xs) [0..]
+indices :: [a] -> [Int]
+indices xs = take (length xs) [0..]
+
+
+-- |
+-- Used to give custom names to workspace cells.
+-- If two cells have the same name, they will share content!
+--
+-- See @column@ and @group@
+newtype Names = Names { unNames :: Map Coord String }
+  deriving (Semigroup, Monoid)
+
+-- | Glue together a column of workspaces
+column :: W2Config -> Int -> String -> Names
+column config x name =
+  Names . fold $ do
+    y <- indices (config ^. #yLabels)
+    pure $ Map.singleton (XY x y) name
+
+-- | Glue together a group of workspaces
+group :: Foldable f => f Coord -> String -> Names
+group coords name = Names $ coords & foldMap (flip Map.singleton name)
 
 
 data W2Config = W2Config
-  { glue    :: Glue
+  { names   :: Names
   , xLabels :: [String]
   , yLabels :: [String]
   } deriving (Generic)
@@ -71,9 +74,9 @@ instance Semigroup W2Config where
 
 instance Default W2Config where
   def = W2Config
-    { glue = mempty
-    , xLabels = show <$> [1 .. 5]
+    { xLabels = show <$> [1 .. 5]
     , yLabels = show <$> [1 .. 5]
+    , names = mempty
     }
 
 data W2State = W2State
@@ -97,74 +100,90 @@ getW2 :: X W2
 getW2 = W2 <$> (fromMaybe def <$> XC.ask) <*> XS.get
 
 
--- | Computes a workspace id from its coordinates
-toWsName :: W2Config -> Coord -> Maybe WorkspaceId
-toWsName (W2Config { xLabels, yLabels, glue = Glue glue }) (XY x y) =
+-- | Computes a ws id from its coordinates
+toWorkspaceId :: W2Config -> Coord -> Maybe WorkspaceId
+toWorkspaceId (W2Config { xLabels, yLabels, names }) (XY x y) =
 
   case (xLabels !? x, yLabels !? y) of
 
     (Just x', Just y') ->
       -- in-bounds
-      case Map.lookup (XY x y) glue of
-        Just name -> Just name
-        Nothing   -> Just $ y' <> ":" <> x'
+      case Map.lookup (XY x y) (unNames names) of
+        Just name -> Just $ ":" <> name
+        Nothing   -> Just $ y' <> "/" <> x' <> ":" <> x'
 
     _ ->
       -- out-of-bounds
       Nothing
 
+wsIdToWsName :: WorkspaceId -> String
+wsIdToWsName = splitOn ":" >>> drop 1 >>> intercalate ":"
+
+-- | Get the label of the currently-selected row
 getYLabel :: W2 -> String
 getYLabel w2 =
-  fromMaybe "<impossible>" $ (w2 ^. #config ^. #yLabels) !? (w2 ^. #state . #loc . #y)
+  fromMaybe "<error>" $ (w2 ^. #config ^. #yLabels) !? (w2 ^. #state . #loc . #y)
 
+-- | Modify the current coordinate
 mapCoord :: (Coord -> Coord) -> X ()
 mapCoord f = do
   w2 <- getW2
   let w2' = w2 & #state . #loc %~ f
-  let wsName = toWsName (config w2) (w2' ^. #state . #loc)
+  let wsName = toWorkspaceId (config w2) (w2' ^. #state . #loc)
   case wsName of
     Nothing -> pure ()  -- moved out-of-bounds
     Just ws -> do
       XS.put (state w2')
       windows (W.greedyView ws)
 
+-- | Modify the current coordinate
 incX, decX, incY, decY :: X ()
 incX = mapCoord $ #x %~ (+1)
 decX = mapCoord $ #x %~ (+(-1))
 incY = mapCoord $ #y %~ (+1)
 decY = mapCoord $ #y %~ (+(-1))
 
+-- | Modify the current coordinate
 setX, setY :: Int -> X ()
 setX x = mapCoord $ #x .~ x
 setY y = mapCoord $ #y .~ y
 
+-- | Move the currently-selected XMonad window to the given x coordinate
 moveWindowToX :: Int -> X ()
 moveWindowToX x = do
   w2 <- getW2
   let y = w2 ^. #state . #loc . #y
-  case toWsName (config w2) (XY x y) of
+  case toWorkspaceId (config w2) (XY x y) of
     Nothing   -> pure ()
     Just name -> windows (W.shift name)
 
+-- |
+--
+-- Modify a PP to work with W2
+--
+-- This overwrites:
+--
+-- * ppCurrent and ppHidden -- if you overwrite these again, you should
+--   wrap them, ala @pp' = pp { ppCurrent = (<> "!") . ppCurrent pp }@
+--
+-- * ppHiddenNoWindows -- which you are free to overwrite
+--
+-- * ppSort -- which you should probably leave alone
 augmentPP :: W2 -> (PP -> PP)
-augmentPP w2 pp = let
+augmentPP w2 = let
 
   XY _ y = w2 ^. #state . #loc
 
   activeRow :: [WorkspaceId]
   activeRow =
-    toIndices (w2 ^. #config . #xLabels)
+    indices (w2 ^. #config . #xLabels)
     & map (\x -> XY x y)
-    & map (toWsName (w2 ^. #config))
+    & map (toWorkspaceId (w2 ^. #config))
     & catMaybes
 
-  -- WANT: this is pretty hacky :~/
-  unformat :: String -> String
-  unformat = reverse >>> takeWhile (/= ':') >>> reverse
-
-  in pp
-        { ppCurrent = unformat
-        , ppHidden = unformat
+  in \pp -> pp
+        { ppCurrent = wsIdToWsName
+        , ppHidden = wsIdToWsName
         , ppHiddenNoWindows = const "..."
         , ppSort = do
             sort <- (mkWsSort . pure) (compare `on` flip elemIndex activeRow)
@@ -172,6 +191,7 @@ augmentPP w2 pp = let
                    >>> sort
         }
 
+-- | Modify an XConfig to use W2
 withW2 :: W2Config -> XConfig l -> XConfig l
 withW2 w2Config = XC.once modifyXConfig w2Config
   where
@@ -182,11 +202,11 @@ withW2 w2Config = XC.once modifyXConfig w2Config
   computeWorkspaceIds :: W2Config -> [WorkspaceId]
   computeWorkspaceIds w2Config@(W2Config { xLabels, yLabels }) =
     (do
-      y <- toIndices yLabels
-      x <- toIndices xLabels
+      y <- indices yLabels
+      x <- indices xLabels
       let coord = XY x y
-      pure $ toWsName w2Config coord
+      pure $ toWorkspaceId w2Config coord
     )
     & catMaybes
-    & nub  -- account for duplicate names due to gluing
+    & nub  -- account for duplicate workspace names
 

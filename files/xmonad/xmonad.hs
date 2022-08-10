@@ -83,7 +83,7 @@ mkConfig = def
 
 w2Config :: W2.W2Config
 w2Config = W2.W2Config
-  { W2.glue = W2.column w2Config 0 "α" <> W2.column w2Config 3 "γ"
+  { W2.names = W2.column w2Config 0 "α" <> W2.column w2Config 3 "γ"
   , W2.xLabels = show <$> [1 .. 6]
   , W2.yLabels = show <$> [1 .. 4]
   }
