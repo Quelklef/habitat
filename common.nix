@@ -324,12 +324,12 @@ xmonad-wm = let
   my-xmonad = pkgs.writeScriptBin "xmonad" ''
     export PATH=${pkgs.lib.strings.makeBinPath xmo-deps}''${PATH:+:}''${PATH:+$PATH}
     export XMONAD_XMESSAGE=${pkgs.coreutils}/bin/true
-    ${pkgs.haskellPackages.xmonad}/bin/xmonad "$@"
+    exec ${pkgs.haskellPackages.xmonad}/bin/xmonad "$@"
   '';
 
   my-xmobar = pkgs.writeScriptBin "xmobar" ''
     export PATH=${pkgs.lib.strings.makeBinPath xmo-deps}''${PATH:+:}''${PATH:+$PATH}
-    ${pkgs.haskellPackages.xmobar}/bin/xmobar "$@"
+    exec ${pkgs.haskellPackages.xmobar}/bin/xmobar "$@"
   '';
 
 in lib.mkIf true {
@@ -368,9 +368,9 @@ in lib.mkIf true {
       path_append=${pkgs.lib.strings.makeBinPath (with pkgs; [ entr stylish-haskell ])}
       export PATH=''${PATH:+$PATH}''${PATH:+:}''${path_append}
       src=${toString ./files}
-      find $src/{xmonad,xmobar} -name '*.hs' | entr -c bash -c "stylish-haskell -i \$(find $src/{xmonad,xmobar} -name '*.hs')" &
-      find $src/xmonad -name '*.hs' | entr -cs '${my-xmonad}/bin/xmonad --recompile && ${my-xmonad}/bin/xmonad --restart' &
-      find $src/xmobar -name '*.hs' | entr -cs 'pkill xmobar && ${my-xmobar}/bin/xmobar' &
+      find $src/{xmonad,xmobar} -name '*.hs' | entr bash -c "stylish-haskell -i \$(find $src/{xmonad,xmobar} -name '*.hs')" &
+      find $src/xmonad -name '*.hs' | entr -s '${my-xmonad}/bin/xmonad --recompile && ${my-xmonad}/bin/xmonad --restart' &
+      find $src/xmobar -name '*.hs' | entr -sr 'pkill xmobar; ${my-xmobar}/bin/xmobar' &
       wait
     '')
 

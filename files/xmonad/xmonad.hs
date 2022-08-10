@@ -1,10 +1,12 @@
 {-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedLabels      #-}
 {-# LANGUAGE PartialTypeSignatures #-}
 
 import           Control.Category                   ((>>>))
 import           Control.Lens                       ((%~), (&), (.~), (^.))
-import           Control.Monad.Writer               (Writer, execWriter, tell)
+import           Control.Monad.Writer               (Writer, execWriter, lift,
+                                                     tell)
 import           Data.Foldable                      (for_)
 import           Data.Function                      (on, (&))
 import           Data.List                          (elemIndex)
@@ -12,17 +14,22 @@ import           Data.Map                           (Map)
 import qualified Data.Map                           as Map
 import           Data.Maybe                         (catMaybes, fromMaybe)
 import           XMonad
+import           XMonad.Config.Prime                (Query (..))
 import           XMonad.Hooks.EwmhDesktops          (ewmh)
 import           XMonad.Hooks.ManageDocks           (avoidStruts, docks)
-import           XMonad.Hooks.StatusBar             (statusBarGeneric,
-                                                     statusBarProp, withSB,
-                                                     xmonadPropLog)
-import           XMonad.Hooks.StatusBar.PP          (PP (..), dynamicLogString)
-import qualified XMonad.Layout.BinarySpacePartition as LBSP
+import           XMonad.Hooks.StatusBar             (statusBarProp, withSB)
+import           XMonad.Hooks.StatusBar.PP          (PP (..), xmobarColor)
+import qualified XMonad.Layout.BinarySpacePartition as LB
+import           XMonad.Layout.Decoration           (Theme (..))
+import           XMonad.Layout.Reflect              (reflectHoriz, reflectVert)
+import           XMonad.Layout.Spacing              (spacingWithEdge)
 import qualified XMonad.Layout.Tabbed               as LT
-import qualified XMonad.Layout.WindowNavigation     as LWN
-import qualified XMonad.StackSet                    as W
+import qualified XMonad.Layout.WindowNavigation     as LW
+import           XMonad.StackSet                    (focusDown, focusUp,
+                                                     swapDown, swapUp)
 import           XMonad.Util.EZConfig               (mkKeymap)
+import qualified XMonad.Util.Themes                 as Themes
+import           XMonad.Util.Themes                 (theme)
 import           XMonad.Util.WorkspaceCompare       (mkWsSort)
 
 import qualified W2                                 as W2
@@ -41,22 +48,23 @@ main =
 
   where
 
-  myStatusBar = statusBarGeneric "xmobar" $ do
-    w2 <- W2.getW2
-    str <- dynamicLogString (mkPP w2)
-    let yLabel = W2.getYLabel w2
-    xmonadPropLog $ yLabel <> ": "<> str
+  myStatusBar = statusBarProp "xmobar" mkPP
 
-  mkPP :: W2 -> PP
-  mkPP w2 =
+  mkPP :: X PP
+  mkPP = do
+    w2 <- W2.getW2
     let w2PP = W2.augmentPP w2 def
-    in w2PP
-        { ppCurrent = ppCurrent w2PP >>> wrap "[" "]"
-        , ppHidden = ppHidden w2PP >>> wrap "(" ")"
-        , ppHiddenNoWindows = const "..."
-        , ppUrgent = wrap "!" "!"
-        , ppSep = "  -  "
-        , ppTitle = take 150
+        pad = wrap " " " "
+        yLabel = W2.getYLabel w2
+    pure $ w2PP
+        { ppCurrent = ppCurrent w2PP >>> pad >>> xmobarColor "white" "#C06"
+        , ppHidden = ppHidden w2PP >>> pad >>> xmobarColor "#BBB" ""
+        , ppHiddenNoWindows = ppHiddenNoWindows w2PP >>> pad >>> xmobarColor "#444" ""
+        , ppUrgent = xmobarColor "black" "yellow"
+        , ppSep = xmobarColor "#555" "" "  •  "
+        , ppOrder = \(workspaces : _layout : windowTitle : _) ->
+            [yLabel <> " / " <> workspaces, windowTitle]
+        , ppTitle = take 112
         }
 
   wrap l r s = l <> s <> r
@@ -68,17 +76,26 @@ mkConfig = def
   , terminal = "alacritty-random"
   , normalBorderColor = "#000000"
   , focusedBorderColor = "#CC0066"
+  , borderWidth = 3
   , clickJustFocuses = False
   , keys = myKeys
   , layoutHook =
-      (LBSP.emptyBSP ||| myTabbed ||| Full)
+      ( (LB.emptyBSP
+          & reflectVert & reflectHoriz -- open new windows to down/right instead of up/left
+          & spacingWithEdge 2  -- WANT: this seems to somehow be affecting the tabbed layout?
+        )
+        ||| LT.tabbed LT.shrinkText myTheme
+      )
       & avoidStruts
-      & LWN.windowNavigation
+      & LW.windowNavigation
   }
 
   where
 
-  myTabbed = LT.tabbed LT.shrinkText def
+  myTheme = (theme Themes.wfarrTheme)
+    { decoHeight = 16
+    , fontName = "xft:monospace:size=8"
+    }
 
 
 w2Config :: W2.W2Config
@@ -90,12 +107,12 @@ w2Config = W2.W2Config
 
 
 myKeys :: XConfig Layout -> Map (KeyMask, KeySym) (X ())
-myKeys conf@(XConfig { XMonad.modMask = mod }) =
+myKeys conf@(XConfig { terminal, modMask = mod }) =
 
   compile conf . execWriter $ do
 
     -- launch terminal
-    bind' "M-<Return>" $ spawn (XMonad.terminal conf)
+    bind' "M-<Return>" $ spawn terminal
 
     -- kill focused window
     bind' "M-q" kill
@@ -103,68 +120,68 @@ myKeys conf@(XConfig { XMonad.modMask = mod }) =
     -- rotate layout
     bind' "M-<Space>" $ sendMessage NextLayout
 
-    -- move up/down window stack (n for next)
-    bind' "M-n"   $ windows W.focusDown
-    bind' "M-C-n" $ windows W.focusUp
-    bind' "M-S-n"   $ windows W.swapDown
-    bind' "M-S-C-n" $ windows W.swapUp
+    -- cycle throgh windows
+    bind' "M-n"   $ windows focusDown
+    bind' "M-m"   $ windows focusUp
+    bind' "M-S-n" $ windows swapDown
+    bind' "M-S-m" $ windows swapUp
 
-    -- move two-dimensionally
-    bind' "M-l"   $ sendMessage (LWN.Go LWN.R)
-    bind' "M-j"   $ sendMessage (LWN.Go LWN.D)
-    bind' "M-h"   $ sendMessage (LWN.Go LWN.L)
-    bind' "M-k"   $ sendMessage (LWN.Go LWN.U)
-    bind' "M-S-l" $ sendMessage (LWN.Swap LWN.R)
-    bind' "M-S-j" $ sendMessage (LWN.Swap LWN.D)
-    bind' "M-S-h" $ sendMessage (LWN.Swap LWN.L)
-    bind' "M-S-k" $ sendMessage (LWN.Swap LWN.U)
+    -- move around windows two-dimensionally
+    bind' "M-l"   $ sendMessage (LW.Go LW.R)
+    bind' "M-j"   $ sendMessage (LW.Go LW.D)
+    bind' "M-h"   $ sendMessage (LW.Go LW.L)
+    bind' "M-k"   $ sendMessage (LW.Go LW.U)
+    bind' "M-S-l" $ sendMessage (LW.Swap LW.R)
+    bind' "M-S-j" $ sendMessage (LW.Swap LW.D)
+    bind' "M-S-h" $ sendMessage (LW.Swap LW.L)
+    bind' "M-S-k" $ sendMessage (LW.Swap LW.U)
 
 --    -- workspaces
 --    for_ (zip (XMonad.workspaces conf) [xK_1 .. xK_9]) $ \(workspace, key) -> do
---      for_ [(W.greedyView, 0), (W.shift, shiftMask)] $ \(fun, mask) -> do
+--      for_ [(greedyView, 0), (shift, shiftMask)] $ \(fun, mask) -> do
 --        bind (mod .|. mask) key (windows $ fun workspace)
 
-    -- workspaces
-    bind' "M-w"   $ W2.incY
-    bind' "M-S-w" $ W2.decY
-    for_ (zip [0 .. 10] [xK_1 .. xK_9]) $ \(x, key) -> do
+    -- move around workspaces two-dimensionally
+    bind' "M-s" $ W2.incY
+    bind' "M-w" $ W2.decY
+    for_ (zip [0..] [xK_1 .. xK_9]) $ \(x, key) -> do
       bind mod                 key (W2.setX x)
       bind (mod .|. shiftMask) key (W2.moveWindowToX x)
 
     -- resize
-    bind' "M-C-l" $ sendMessage (LBSP.ExpandTowards LBSP.R)
-    bind' "M-C-j" $ sendMessage (LBSP.ExpandTowards LBSP.D)
-    bind' "M-C-h" $ sendMessage (LBSP.ExpandTowards LBSP.L)
-    bind' "M-C-k" $ sendMessage (LBSP.ExpandTowards LBSP.U)
-    bind' "M-C-S-l" $ sendMessage (LBSP.ShrinkFrom LBSP.R)
-    bind' "M-C-S-j" $ sendMessage (LBSP.ShrinkFrom LBSP.D)
-    bind' "M-C-S-h" $ sendMessage (LBSP.ShrinkFrom LBSP.L)
-    bind' "M-C-S-k" $ sendMessage (LBSP.ShrinkFrom LBSP.U)
+    bind' "M-C-l"   $ sendMessage (LB.ExpandTowards LB.R)
+    bind' "M-C-j"   $ sendMessage (LB.ExpandTowards LB.D)
+    bind' "M-C-h"   $ sendMessage (LB.ExpandTowards LB.L)
+    bind' "M-C-k"   $ sendMessage (LB.ExpandTowards LB.U)
+    bind' "M-C-S-l" $ sendMessage (LB.ShrinkFrom LB.R)
+    bind' "M-C-S-j" $ sendMessage (LB.ShrinkFrom LB.D)
+    bind' "M-C-S-h" $ sendMessage (LB.ShrinkFrom LB.L)
+    bind' "M-C-S-k" $ sendMessage (LB.ShrinkFrom LB.U)
 
     -- rotate BSP pair
-    bind' "M-]" $ sendMessage LBSP.Rotate
+    bind' "M-]" $ sendMessage LB.Rotate
 
     -- screenshot fullscreen
     let scrot = "scrot -q 100 -e 'xclip -selection clipboard -t image/png -i $f; rm $f'"
-    -- bind' "M-p f" $ spawn scrot
+    bind' "M-p f" $ spawn scrot
 
     -- screenshot selection
     let scrotsel = scrot <> " -s -f -l color=#00ff00"
     bind' "M-p s" $ spawn scrotsel
 
+    let andRefreshXmobar = (<> "&& pkill --signal SIGUSR2 xmobar")
+
     -- volume
-    bind' "<XF86AudioRaiseVolume>" $ spawn "pactl set-sink-volume @DEFAULT_SINK@ +10%"
-    bind' "<XF86AudioLowerVolume>" $ spawn "pactl set-sink-volume @DEFAULT_SINK@ -10%"
-    bind' "<XF86AudioMute>"        $ spawn "pactl set-sink-mute   @DEFAULT_SINK@ toggle"
-    bind' "<XF86AudioMicMute>"     $ spawn "pactl set-source-mute @DEFAULT_SOURCE@ toggle"
+    bind' "<XF86AudioRaiseVolume>" $ spawn . andRefreshXmobar $ "pactl set-sink-volume @DEFAULT_SINK@ +10%"
+    bind' "<XF86AudioLowerVolume>" $ spawn . andRefreshXmobar $ "pactl set-sink-volume @DEFAULT_SINK@ -10%"
+    bind' "<XF86AudioMute>"        $ spawn . andRefreshXmobar $ "pactl set-sink-mute   @DEFAULT_SINK@ toggle"
+    bind' "<XF86AudioMicMute>"     $ spawn . andRefreshXmobar $ "pactl set-source-mute @DEFAULT_SOURCE@ toggle"
 
     -- brightness
-    bind' "<XF86MonBrightnessUp>"   $ spawn "light -A 10"
-    bind' "<XF86MonBrightnessDown>" $ spawn "light -U 10"
+    bind' "<XF86MonBrightnessUp>"   $ spawn . andRefreshXmobar $ "light -A 10"
+    bind' "<XF86MonBrightnessDown>" $ spawn . andRefreshXmobar $ "light -U 10"
 
   where
-
-  shift = shiftMask
 
   -- old-style binding
   bind :: KeyMask -> KeySym -> X () -> Writer Bindings ()

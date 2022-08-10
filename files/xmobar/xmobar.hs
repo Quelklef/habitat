@@ -2,7 +2,14 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 import           Codec.Binary.UTF8.String (decodeString, encodeString)
+import           Control.Concurrent       (threadDelay)
 import           Control.Exception        (SomeException, catch)
+import           Control.Monad            (forever, void)
+import           Data.Char                (toLower)
+import           Data.Foldable            (fold)
+import           Data.List                (intercalate)
+import           System.Posix.Signals     (Handler (..), Signal, SignalInfo,
+                                           installHandler, sigUSR2)
 import           Text.RawString.QQ        (r)
 import           Xmobar
 import           XMonad.Util.Run          (runProcessWithInput)
@@ -12,14 +19,23 @@ main = xmobar config
 
 config :: Config
 config = defaultConfig
-  { template = " %XMonadLog% || %cpu%  -  %bri%  -  %vol%  -  %battery%  -  %uptime%  -  %date% "
+  { template = fold
+      [ " "
+      , "%XMonadLog%"
+      , "||"
+      , let sep = "<fc=#555>  •  </fc>"
+        in intercalate sep
+              $ ["%cpu%", "%bri%", "%vol%", "%battery-hi%<fc=black,pink>%battery-lo%</fc>", "%uptime%", "%date%"]
+      , " "
+      ]
   , alignSep = "||"
-  , font = "DejaVu Sans 6"  -- WANT: this is not working =(
+  , font = "xft:monospace:size=8"
   , commands =
-      [ Run $ Date "%a %Y-%m-%d %H:%M:%S %z" "date" 10
+      [ Run $ Lowercase (Date "%a %Y-%m-%d %H:%M:%S %z" "date" 37)
       , Run XMonadLog
-      , Run $ Uptime [] 10
-      , Run battery
+      , Run $ Lowercase (Uptime [] 300)
+      , Run battery_hi
+      , Run battery_lo
       , Run volume
       , Run brightness
       , Run cpu
@@ -28,22 +44,50 @@ config = defaultConfig
 
   where
 
-  volume = Cmd "vol" [r|
-    vol_l=$(amixer sget Master | grep 'Left:' | awk -F'[][]' '{ print $2 }')
-    vol_r=$(amixer sget Master | grep 'Right:' | awk -F'[][]' '{ print $2 }')
-    vol_amt=$({ [ "$vol_l" = "$vol_r" ] && echo "$vol_l" || echo "$vol_l/$vol_r"; })
-    echo -n "Vol $vol_amt"
+  wrap d s = d <> s <> d
+
+  withPrelude :: String -> String
+  withPrelude = ([r|
+    function fmt_percent {
+      str="$1"
+      for (( i = "${#str}"; i < 3; i++ )); do str="·$str"; done
+      echo "${str}%"
+    }
+  |] <>)
+
+  volume = Cmd "vol" 10 $ withPrelude [r|
+    function get_vol { amixer sget Master | grep "$1" | grep -Po '[0-9]+(?=%)'; }
+    vol_l=$(get_vol Left)
+    vol_r=$(get_vol Right)
+    echo -n 'vol '
+    if [ "$vol_l" = "$vol_r" ]; then
+      echo -n "$(fmt_percent $vol_l)"
+    else
+      echo -n "$(fmt_percent $vol_l)/$(fmt_percent $vol_r)"
+    fi
   |]
 
-  brightness = Cmd "bri" [r|
-    bri=$(light | xargs printf "%0.f")
-    echo -n "Bri $bri"
+  brightness = Cmd "bri" 10 $ withPrelude [r|
+    bri=$(light | xargs printf "%3d")
+    echo -n "bri $(fmt_percent $bri)"
   |]
 
-  battery = Cmd "battery" [r|
+  battery_hi = Cmd "battery-hi" 5 (batteryScript "[ $batt_percent -gt 10 -o $batt_is_charging -eq 1 ]")
+  battery_lo = Cmd "battery-lo" 5 (batteryScript "[ $batt_percent -le 10 -a $batt_is_charging -ne 1 ]")
+
+  batteryScript cond = withPrelude [r|
     batt_all=$(acpi -i | grep '0:')
-    batt_degred=$(echo "$batt_all" | tail -n1 | awk -F' = ' '{ print $2 }')
-    batt_percent=$(echo "$batt_all" | head -n1 | grep -oP '\d+(?=%)' | xargs printf '%03d')
+    batt_degred=$(echo "$batt_all" | tail -n1 | awk -F' = ' '{ print $2 }' | xargs printf '%3d')
+    batt_percent=$(echo "$batt_all" | head -n1 | grep -oP '\d+(?=%)' | xargs printf '%3d')
+
+    batt_is_charging=$({
+      batt_time() { echo "$batt_all" | grep -oP '\d{2}:\d{2}(?=:)'; }
+      case "$batt_all" in
+        *Charging*) echo -n 1 ;;
+        *Discharging*) echo -n 0 ;;
+        *'Not charging'*) echo 0 ;;
+      esac
+    })
 
     batt_charging=$({
       batt_time() { echo "$batt_all" | grep -oP '\d{2}:\d{2}(?=:)'; }
@@ -54,12 +98,16 @@ config = defaultConfig
       esac
     })
 
-    echo -n "Batt ${batt_percent}% (×$batt_degred)${batt_charging}"
+    if ! |] <> cond <> [r|; then
+      exit 0
+    fi
+
+    echo -n "bat $(fmt_percent $batt_percent) (×$(fmt_percent $batt_degred)%)${batt_charging}"
   |]
 
-  cpu = Cmd "cpu" [r|
+  cpu = Cmd "cpu" 10 [r|
     cpu_mode=$(cpufreq-info | grep 'The gov' | head -n1 | awk -F\" '{ print $2 }')
-    echo -n "Cpu $cpu_mode"
+    echo -n "cpu $cpu_mode"
   |]
 
 
@@ -69,21 +117,44 @@ config = defaultConfig
 -- </rant>
 
 
-data Cmd = Cmd Alias String
-  deriving (Show, Read, Eq)
+-- |
+--
+-- Runs a bash command at a given frequrency, producing its stdout
+--
+-- Upon receiving SIGUSR2, runs the command immediately
+data Cmd = Cmd
+  { cmdAlias       :: Alias
+  , cmdFreqSeconds :: Int
+  , cmdCommand     :: String
+  }
+  deriving (Show, Read)  -- Exec demands it
 
 instance Exec Cmd where
-  alias (Cmd al _) = al
-  run (Cmd _ cmd) =
+  alias (Cmd al _ _) = al
+  start (Cmd _ freq cmd) k = do
+    let doit = runBash cmd >>= k
+    appendHandler sigUSR2 doit
+    everySeconds freq doit
 
-    catch
+-- Will break if a non-Catch handler exists for the given signal
+appendHandler :: Signal -> IO () -> IO ()
+appendHandler signal newHandler = do
+  Catch oldHandler <- installHandler signal Default Nothing
+  void $ installHandler signal (Catch $ oldHandler <> newHandler) Nothing
 
-      (decodeString <$> runProcessWithInput "bash" ["-c", cmd] "")
-      -- Can't just use System.Process.readProcess; see https://github.com/xmonad/xmonad/issues/229#issuecomment-660493853
-      -- Not quite sure why decodeString is needed for unicodoe to work, but w/e
+everySeconds :: Int -> IO () -> IO ()
+everySeconds n act = forever (act >> threadDelay (n * 1000000))
 
-      (\(e :: SomeException) -> do
-        putStrLn $ "err: " <> show e
-        pure "<err>"
-      )
+runBash :: String -> IO String
+runBash cmd = decodeString <$> runProcessWithInput "bash" ["-c", cmd] ""
+  -- Can't just use System.Process.readProcess; see https://github.com/xmonad/xmonad/issues/229#issuecomment-660493853
+  -- Not quite sure why decodeString is needed for unicode to work, but w/e
 
+
+-- | Lowercases the output of an Exec instance
+newtype Lowercase a = Lowercase a
+  deriving (Show, Read)
+
+instance Exec a => Exec (Lowercase a) where
+  alias (Lowercase a) = alias a
+  start (Lowercase a) cb = start a (cb . map toLower)

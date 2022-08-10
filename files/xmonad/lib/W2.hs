@@ -163,10 +163,9 @@ moveWindowToX x = do
 --
 -- This overwrites:
 --
--- * ppCurrent and ppHidden -- if you overwrite these again, you should
---   wrap them, ala @pp' = pp { ppCurrent = (<> "!") . ppCurrent pp }@
---
--- * ppHiddenNoWindows -- which you are free to overwrite
+-- * ppCurrent, ppHidden, ppHiddenNoWindows
+--   if you overwrite these again, you should wrap them, ala
+--     @pp' = pp { ppCurrent = (<> "!") . ppCurrent pp }@
 --
 -- * ppSort -- which you should probably leave alone
 augmentPP :: W2 -> (PP -> PP)
@@ -184,7 +183,7 @@ augmentPP w2 = let
   in \pp -> pp
         { ppCurrent = wsIdToWsName
         , ppHidden = wsIdToWsName
-        , ppHiddenNoWindows = const "..."
+        , ppHiddenNoWindows = wsIdToWsName
         , ppSort = do
             sort <- (mkWsSort . pure) (compare `on` flip elemIndex activeRow)
             pure $ filter (W.tag >>> (`elem` activeRow))
