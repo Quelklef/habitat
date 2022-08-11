@@ -144,6 +144,7 @@ generic-system-config = {
     sshfs rclone
     drive
     bc
+    magic-wormhole
     ghc nodejs python3 cabal-install  # for one-off uses
     (linkedBin (with pkgs; [ nodejs curl ]) "" ./files/scripts/loom-put.sh)
     (linkedBin [] ''TRASH_LOC=${stateloc + "/trash"}'' ./files/scripts/del.sh)
@@ -447,7 +448,9 @@ thunderbird = {
   home-manager.users.${user} = {
     home.file.".thunderbird".source = linked (stateloc + "/thunderbird");
   };
-  environment.interactiveShellInit = ''alias thunderbird="thunderbird --profile ~/.thunderbird/q2te5qzd.default-release"'';
+  environment.interactiveShellInit = ''
+    alias thunderbird="thunderbird --profile ~/.thunderbird/q2te5qzd.default-release"
+  '';
   # ^ Not totally sure why this is necessary but whatever
 };
 
