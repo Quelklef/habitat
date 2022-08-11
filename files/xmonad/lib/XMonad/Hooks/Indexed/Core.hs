@@ -1,16 +1,9 @@
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE DerivingStrategies         #-}
-{-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE NamedFieldPuns             #-}
-{-# LANGUAGE NoImplicitPrelude          #-}
-{-# LANGUAGE OverloadedLabels           #-}
-{-# LANGUAGE RankNTypes                 #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE TupleSections              #-}
-{-# LANGUAGE TypeApplications           #-}
-{-# OPTIONS_GHC -fwarn-unused-binds     #-}
+{-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE OverloadedLabels    #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections       #-}
+{-# LANGUAGE TypeApplications    #-}
+{-# OPTIONS_GHC -Wall -Wwarn #-}
 
 module XMonad.Hooks.Indexed.Core where
 
@@ -22,21 +15,20 @@ import           Data.Foldable                (fold, toList)
 import           Data.Function                (on)
 import           Data.Functor                 (($>))
 import           Data.Generics.Labels         ()
-import           Data.List                    (elemIndex, intercalate, nub)
+import           Data.List                    (elemIndex, intercalate, nub,
+                                               sort)
 import           Data.List.Split              (splitOn)
 import           Data.Map                     (Map)
 import qualified Data.Map                     as Map
 import           Data.Maybe                   (catMaybes, fromMaybe, isJust)
-import           Data.Proxy                   (Proxy (..))
 import           GHC.Generics                 (Generic)
-import           XMonad                       hiding (config, state)
+import           XMonad                       hiding (config, state, trace)
 import           XMonad.Hooks.StatusBar.PP    (PP (..))
-import           XMonad.StackSet              (greedyView, shift, tag)
+import           XMonad.StackSet              (tag)
 import qualified XMonad.Util.ExtensibleConf   as XC
 import qualified XMonad.Util.ExtensibleState  as XS
 import           XMonad.Util.WorkspaceCompare (mkWsSort)
 
-import           Debug.Trace
 
 newtype WidMapping coord = WidMapping { unWidMapping :: Map coord WorkspaceId }
   deriving (Show, Eq, Generic)
@@ -46,6 +38,20 @@ instance Ord coord => Semigroup (WidMapping coord) where
 
 instance Ord coord => Monoid (WidMapping coord) where
   mempty = WidMapping mempty
+
+range :: Ord x => (coord -> x) -> WidMapping coord -> Maybe (x, x)
+range proj (WidMapping wids) =
+  let xs = proj <$> Map.keys wids
+  in case xs of
+      [] -> Nothing
+      _  -> Just (minimum xs, maximum xs)
+
+span :: (Ord x, Enum x) => (coord -> x) -> WidMapping coord -> [x]
+span proj (WidMapping wids) =
+  let xs = proj <$> Map.keys wids
+  in case xs of
+      [] -> []
+      _  -> [minimum xs .. maximum xs]
 
 
 data Config coord = Config
@@ -62,7 +68,7 @@ data Config coord = Config
   } deriving (Generic)
 
 instance Semigroup (Config coord) where
-  ca <> cb = cb
+  _ <> c = c
 
 instance Ord coord => Default (Config coord) where
   def = Config
@@ -72,37 +78,22 @@ instance Ord coord => Default (Config coord) where
           , toLabel = Just . const ""
           }
 
-data Ix coord = Ix
-  { config :: Config coord
-  , coord  :: coord
-  } deriving (Generic)
-
-getIx
-  :: forall coord
-   . (ExtensionClass coord, Ord coord)
-  => Proxy coord -> X (Ix coord)
-getIx px = Ix <$> (fromMaybe def <$> XC.ask) <*> XS.get
+getBoth :: (Default conf, Typeable conf, ExtensionClass state) => X (state, conf)
+getBoth = (,) <$> XS.get <*> (fromMaybe def <$> XC.ask)
 
 getWid :: Ord coord => Config coord -> coord -> Maybe WorkspaceId
 getWid config = flip Map.lookup (unWidMapping . wids $ config)
 
-span :: (Ord x, Enum x) => (coord -> x) -> WidMapping coord -> [x]
-span project (WidMapping wids) =
-  let xs = project <$> Map.keys wids
-  in case xs of
-      [] -> []
-      _  -> [minimum xs .. maximum xs]
-
-pp :: Ord coord => Ix coord -> PP
-pp ix = let
+pp :: Ord coord => Config coord -> coord -> PP
+pp config coord = let
 
   activeWids :: [WorkspaceId]
   activeWids =
-    (ix ^. #config . #toNeighborhood) (ix ^. #coord)
-    & map (getWid (ix ^. #config))
+    (config ^. #toNeighborhood) coord
+    & map (getWid config)
     & catMaybes
 
-  toName = ix ^. #config . #toName
+  toName = config ^. #toName
 
   in def
       { ppCurrent = toName
@@ -117,14 +108,15 @@ pp ix = let
 
   where
 
-  label = fromMaybe "<err>" $ (ix ^. #config . #toLabel) (ix ^. #coord)
+  label = fromMaybe "<err>" $ (config ^. #toLabel) coord
 
-hook :: Typeable coord => Config coord -> XConfig l -> XConfig l
-hook config = XC.once modifyXConfig config
+modifyXConfig :: Typeable coord => Config coord -> XConfig l -> XConfig l
+modifyXConfig config xConfig = xConfig { workspaces = calcWorkspaces (config ^. #wids) }
   where
 
-  modifyXConfig xConfig = xConfig { workspaces = calcWorkspaces (config ^. #wids) }
-
   calcWorkspaces :: WidMapping coord -> [WorkspaceId]
-  calcWorkspaces = toList . unWidMapping
+  calcWorkspaces =
+    unWidMapping
+    >>> toList
+    >>> nub  -- account for two coordinates pointing to the same workspace
 
