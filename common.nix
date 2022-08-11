@@ -464,10 +464,23 @@ telegram = {
 
 # =============================================================================
 discord = {
-  environment.systemPackages = with pkgs; [ discord ];
+
+  # See github.com/NixOS/nixpkgs/issues/94806 and reddit.com/r/NixOS/comments/i5bpjy
+  environment.systemPackages =
+    let
+      version = "0.0.19";
+      discord = pkgs.discord.overrideAttrs (_: {
+        src = builtins.fetchTarball
+          { url = "https://dl.discordapp.net/apps/linux/${version}/discord-${version}.tar.gz";
+            sha256 = "1kwqn1xr96kvrlbjd14m304g2finc5f5ljvnklg6fs5k4avrvmn4";
+          };
+      });
+    in [ discord ];
+
   home-manager.users.${user} = {
     xdg.configFile."discord".source = linked (stateloc + "/discord");
   };
+
 };
 
 # =============================================================================
