@@ -2,38 +2,42 @@
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedLabels      #-}
 {-# LANGUAGE PartialTypeSignatures #-}
+{-# LANGUAGE TypeApplications      #-}
 
-import           Control.Category                   ((>>>))
-import           Control.Lens                       ((%~), (&), (.~), (^.))
-import           Control.Monad.Writer               (Writer, execWriter, lift,
-                                                     tell)
-import           Data.Foldable                      (for_)
-import           Data.Function                      (on, (&))
-import           Data.List                          (elemIndex)
-import           Data.Map                           (Map)
-import qualified Data.Map                           as Map
-import           Data.Maybe                         (catMaybes, fromMaybe)
-import           XMonad
-import           XMonad.Config.Prime                (Query (..))
-import           XMonad.Hooks.EwmhDesktops          (ewmh)
-import           XMonad.Hooks.ManageDocks           (avoidStruts, docks)
-import           XMonad.Hooks.StatusBar             (statusBarProp, withSB)
-import           XMonad.Hooks.StatusBar.PP          (PP (..), xmobarColor)
-import qualified XMonad.Layout.BinarySpacePartition as LB
-import           XMonad.Layout.Decoration           (Theme (..))
-import           XMonad.Layout.Reflect              (reflectHoriz, reflectVert)
-import           XMonad.Layout.Spacing              (spacingWithEdge)
-import qualified XMonad.Layout.Tabbed               as LT
-import qualified XMonad.Layout.WindowNavigation     as LW
-import           XMonad.StackSet                    (focusDown, focusUp,
-                                                     swapDown, swapUp)
-import           XMonad.Util.EZConfig               (mkKeymap)
-import qualified XMonad.Util.Themes                 as Themes
-import           XMonad.Util.Themes                 (theme)
-import           XMonad.Util.WorkspaceCompare       (mkWsSort)
+import           Control.Category                    ((>>>))
+import           Control.Lens                        ((%~), (&), (.~), (^.))
+import           Control.Monad.Writer                (Writer, execWriter, lift,
+                                                      tell)
+import           Data.Foldable                       (fold, for_)
+import           Data.Function                       (on, (&))
+import           Data.List                           (elemIndex)
+import           Data.Map                            (Map)
+import qualified Data.Map                            as Map
+import           Data.Maybe                          (catMaybes, fromMaybe)
+import           Data.Proxy                          (Proxy (Proxy))
+import           XMonad                              hiding (trace)
+import           XMonad.Config.Prime                 (Query (..))
+import           XMonad.Hooks.EwmhDesktops           (ewmh)
+import           XMonad.Hooks.ManageDocks            (avoidStruts, docks)
+import           XMonad.Hooks.StatusBar              (statusBarProp, withSB)
+import           XMonad.Hooks.StatusBar.PP           (PP (..), xmobarColor)
+import qualified XMonad.Layout.BinarySpacePartition  as LB
+import           XMonad.Layout.Decoration            (Theme (..))
+import           XMonad.Layout.Reflect               (reflectHoriz, reflectVert)
+import           XMonad.Layout.Spacing               (spacingWithEdge)
+import qualified XMonad.Layout.Tabbed                as LT
+import qualified XMonad.Layout.WindowNavigation      as LW
+import           XMonad.StackSet                     (focusDown, focusUp,
+                                                      swapDown, swapUp)
+import           XMonad.Util.EZConfig                (mkKeymap)
+import qualified XMonad.Util.Themes                  as Themes
+import           XMonad.Util.Themes                  (theme)
+import           XMonad.Util.WorkspaceCompare        (mkWsSort)
 
-import qualified W2                                 as W2
-import           W2                                 (Coord (XY), W2 (W2), (!?))
+import qualified XMonad.Hooks.Indexed.Core           as Ix
+import qualified XMonad.Hooks.Indexed.TwoDimensional as Ix
+
+import           Debug.Trace
 
 
 main :: IO ()
@@ -43,7 +47,7 @@ main =
     & docks
     & ewmh
     & withSB myStatusBar
-    & W2.withW2 w2Config
+    & Ix.hook ixConfig
     & xmonad
 
   where
@@ -52,22 +56,19 @@ main =
 
   mkPP :: X PP
   mkPP = do
-    w2 <- W2.getW2
-    let w2PP = W2.augmentPP w2 def
-        pad = wrap " " " "
-        yLabel = W2.getYLabel w2
-    pure $ w2PP
-        { ppCurrent = ppCurrent w2PP >>> pad >>> xmobarColor "white" "#C06"
-        , ppHidden = ppHidden w2PP >>> pad >>> xmobarColor "#BBB" ""
-        , ppHiddenNoWindows = ppHiddenNoWindows w2PP >>> pad >>> xmobarColor "#444" ""
+    ixPP <- Ix.pp <$> Ix.getIx (Proxy @Ix.Coord)
+    pure $ ixPP
+        { ppCurrent = ppCurrent ixPP >>> pad >>> xmobarColor "white" "#C06"
+        , ppHidden = ppHidden ixPP >>> pad >>> xmobarColor "#BBB" ""
+        , ppHiddenNoWindows = ppHiddenNoWindows ixPP >>> pad >>> xmobarColor "#444" ""
         , ppUrgent = xmobarColor "black" "yellow"
         , ppSep = xmobarColor "#555" "" "  •  "
-        , ppOrder = \(workspaces : _layout : windowTitle : _) ->
-            [yLabel <> " / " <> workspaces, windowTitle]
+        , ppOrder = ppOrder ixPP >>> \(workspaces : _layout : windowTitle : _) -> [workspaces, windowTitle]
         , ppTitle = take 112
         }
 
   wrap l r s = l <> s <> r
+  pad = wrap " " " "
 
 
 mkConfig :: XConfig _
@@ -98,12 +99,15 @@ mkConfig = def
     }
 
 
-w2Config :: W2.W2Config
-w2Config = W2.W2Config
-  { W2.names = W2.column w2Config 0 "α" <> W2.column w2Config 3 "γ"
-  , W2.xLabels = show <$> [1 .. 6]
-  , W2.yLabels = show <$> [1 .. 4]
-  }
+ixConfig :: Ix.Config Ix.Coord
+ixConfig =
+  let dims = Ix.Dims { Ix.width = 6, Ix.height = 5 }
+      mapping = fold
+        [ Ix.grid dims
+        , Ix.column dims 0 "α"
+        , Ix.column dims 3 "γ"
+        ]
+  in Ix.mkConfig mapping
 
 
 myKeys :: XConfig Layout -> Map (KeyMask, KeySym) (X ())
@@ -142,11 +146,11 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
 --        bind (mod .|. mask) key (windows $ fun workspace)
 
     -- move around workspaces two-dimensionally
-    bind' "M-s" $ W2.incY
-    bind' "M-w" $ W2.decY
+    bind' "M-s" $ Ix.incY
+    bind' "M-w" $ Ix.decY
     for_ (zip [0..] [xK_1 .. xK_9]) $ \(x, key) -> do
-      bind mod                 key (W2.setX x)
-      bind (mod .|. shiftMask) key (W2.moveWindowToX x)
+      bind mod                 key (Ix.setX x)
+      bind (mod .|. shiftMask) key (Ix.moveWindowToX x)
 
     -- resize
     bind' "M-C-l"   $ sendMessage (LB.ExpandTowards LB.R)
