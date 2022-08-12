@@ -149,11 +149,13 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
 --        bind (mod .|. mask) key (windows $ fun workspace)
 
     -- move around workspaces two-dimensionally
-    bind' "M-s" $ Grid.incY
-    bind' "M-w" $ Grid.decY
+    bind' "M-s"   $ Grid.move (#y %~ succ)
+    bind' "M-w"   $ Grid.move (#y %~ pred)
+    bind' "M-S-s" $ Grid.swap (#y %~ succ)
+    bind' "M-S-w" $ Grid.swap (#y %~ pred)
     for_ (zip [0..] [xK_1 .. xK_9]) $ \(x, key) -> do
-      bind mod                 key (Grid.setX x)
-      bind (mod .|. shiftMask) key (Grid.moveWindowToX x)
+      bind mod                 key $ Grid.move (#x .~ x)
+      bind (mod .|. shiftMask) key $ Grid.swap (#x .~ x)
 
     -- resize
     bind' "M-C-l"   $ sendMessage (LB.ExpandTowards LB.R)

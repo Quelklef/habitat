@@ -68,6 +68,8 @@ toCore config =
     , Core.toLabel = \(XY _ y) -> Just $ show (y + 1) <> " / "
     }
 
+
+-- Wrap a coordinate around the x/y axes according to the configured wrapping mode
 wrap :: Config -> (Coord -> Coord)
 wrap config =
 
@@ -118,32 +120,36 @@ column (Dims { height }) x wid =
     pure $ Map.singleton (XY x y) (":" <> wid)
 
 
+-- |
+--
+--
+-- The call @move f@ replaces the current coordinate to @f currentCoord@
+--
+-- If @f currentCoord@ is out-of-bounds, do nothing
+--
+-- Use this to move around workspaces
+move :: (Coord -> Coord) -> X ()
+move = update $ \coord wid -> do
+  XS.put coord
+  windows (greedyView wid)
 
-mapCoord :: (Coord -> Coord) -> X ()
-mapCoord f = do
+-- |
+--
+-- The call @swap f@ moves the selected window to @f currentCoord@
+--
+-- If @f currentCoord@ is out-of-bounds, do nothing
+swap :: (Coord -> Coord) -> X ()
+swap = update $ \_ wid -> windows (shift wid)
+
+update :: (Coord -> WorkspaceId -> X ()) -> (Coord -> Coord) -> X ()
+update act f = do
   (coord, config) <- Core.getBoth
   let coord' = coord & f & wrap config
   case Core.getWid (toCore config) coord' of
     Nothing -> pure ()
     Just wid -> do
-      XS.put coord'
-      windows (greedyView wid)
+     act coord' wid
 
-incX, incY, decX, decY :: X ()
-incX = mapCoord $ #x %~ (+1)
-incY = mapCoord $ #y %~ (+1)
-decX = mapCoord $ #x %~ (+(-1))
-decY = mapCoord $ #y %~ (+(-1))
-
-setX :: Int -> X ()
-setX = mapCoord . (#x .~)
-
-moveWindowToX :: Int -> X ()
-moveWindowToX x = do
-  (XY { y }, config) <- Core.getBoth
-  case traceShowId $ Core.getWid (toCore config) (XY x y) of
-    Nothing  -> pure ()
-    Just wid -> windows (shift wid)
 
 hook :: Config -> XConfig l -> XConfig l
 hook config = XC.add config >>> Core.modifyXConfig (toCore config)
