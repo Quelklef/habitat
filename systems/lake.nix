@@ -86,8 +86,6 @@ cpu-control = let
 
 in {
 
-  environment.systemPackages = with pkgs; [ cpufrequtils ];
-
   security.wrappers.${scriptname} = {
     source = pkgs.writeScript scriptname ''
       #!${pkgs.bash}/bin/bash
@@ -101,14 +99,39 @@ in {
     group = "root";
   };
 
-  environment.interactiveShellInit = ''
-    alias perf.fast="${scriptname} performance"
-    alias perf.slow="${scriptname} powersave"
+  environment.systemPackages = [
 
-    function perf.which {
-      cpufreq-info | grep 'The governor' | awk -F\" '{print $2}'
-    }
-  '';
+    pkgs.cpufrequtils
+
+    (pkgs.writeScriptBin "perf.fast" ''
+      ${scriptname} performance "$@"
+    '')
+
+    (pkgs.writeScriptBin "perf.slow" ''
+      ${scriptname} powersave "$@"
+    '')
+
+    (pkgs.writeScriptBin "perf.which" ''
+      # assumes all CPUs are set to the same governor
+      mode=$(cpufreq-info | grep 'The governor' | awk -F\" '{print $2}' | head -n1)
+
+      case "$mode" in
+        performance) echo -n fast ;;
+        powersave) echo -n slow ;;
+        *) echo -n '???' ;;
+      esac
+    '')
+
+    (pkgs.writeScriptBin "perf.switch" ''
+      case "$(perf.which)" in
+        fast) perf.slow ;;
+        slow) perf.fast ;;
+        *) perf.fast ;;
+      esac
+    '')
+
+  ];
+
 };
 
 # =============================================================================

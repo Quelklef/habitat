@@ -364,7 +364,7 @@ in lib.mkIf true {
     (pkgs.writeScriptBin "my-xmonad" ''${my-xmonad}/bin/xmonad "$@"'')
     (pkgs.writeScriptBin "my-xmobar" ''${my-xmobar}/bin/xmobar "$@"'')
 
-    # script to rebuild + rerun config on file change. only really half-works
+    # script to rebuild + rerun config on file change
     (pkgs.writeScriptBin "xmonad-devt" ''
       path_append=${pkgs.lib.strings.makeBinPath (with pkgs; [ entr stylish-haskell ])}
       export PATH=''${PATH:+$PATH}''${PATH:+:}''${path_append}

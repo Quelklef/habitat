@@ -23,7 +23,7 @@ body=$3
 case "$prio" in
   dlc)  prio='deadline + consequences' ;;
   dl)   prio='deadline' ;;
-  kim)  prio='keep in mind?' ;;
+  kim)  prio='keep in mind' ;;
   here) prio='here for when you need' ;;
   *) help ;;
 esac 

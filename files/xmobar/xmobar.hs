@@ -24,8 +24,13 @@ config = defaultConfig
       , "%XMonadLog%"
       , "||"
       , let sep = "<fc=#555>  •  </fc>"
-        in intercalate sep
-              $ ["%cpu%", "%bri%", "%vol%", "%battery-hi%<fc=black,pink>%battery-lo%</fc>", "%uptime%", "%date%"]
+        in intercalate sep $
+            [ "<action=`perf.switch && pkill --signal SIGUSR2 xmobar`>%cpu%</action>"
+            , "%bri%", "%vol%"
+            , "%battery-hi%<fc=black,pink>%battery-lo%</fc>"
+            , "%uptime%"
+            , "%date%"
+            ]
       , " "
       ]
   , alignSep = "||"
@@ -106,8 +111,7 @@ config = defaultConfig
   |]
 
   cpu = Cmd "cpu" 10 [r|
-    cpu_mode=$(cpufreq-info | grep 'The gov' | head -n1 | awk -F\" '{ print $2 }')
-    echo -n "cpu $cpu_mode"
+    echo -n "cpu $(perf.which)"
   |]
 
 

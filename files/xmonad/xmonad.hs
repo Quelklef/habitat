@@ -27,7 +27,7 @@ import           XMonad.Layout.Reflect              (reflectHoriz, reflectVert)
 import           XMonad.Layout.Spacing              (spacingWithEdge)
 import qualified XMonad.Layout.Tabbed               as LT
 import qualified XMonad.Layout.WindowNavigation     as LW
-import           XMonad.StackSet                    (focusDown, focusUp,
+import           XMonad.StackSet                    (focusDown, focusUp, sink,
                                                      swapDown, swapUp)
 import           XMonad.Util.EZConfig               (mkKeymap)
 import qualified XMonad.Util.Themes                 as Themes
@@ -123,6 +123,9 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
 
     -- rotate layout
     bind' "M-<Space>" $ sendMessage NextLayout
+
+    -- unfloat focused window
+    bind' "M-u" $ withFocused (windows . sink)
 
     -- cycle throgh windows
     bind' "M-n"   $ windows focusDown
