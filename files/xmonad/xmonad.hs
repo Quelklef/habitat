@@ -35,6 +35,7 @@ import           XMonad.Util.Themes                 (theme)
 import           XMonad.Util.WorkspaceCompare       (mkWsSort)
 
 import qualified XMonad.Hooks.Indexed.Core          as Ix.Core
+import qualified XMonad.Hooks.Indexed.Cycle         as Cycle
 import qualified XMonad.Hooks.Indexed.Grid          as Grid
 
 
@@ -46,11 +47,18 @@ main =
     & ewmh
     & withSB myStatusBar
     & Grid.hook gridConfig
+    -- & Cycle.hook cycleConfig
     & xmonad
 
   where
 
   myStatusBar = statusBarProp "xmobar" mkPP
+
+  cycleConfig :: Cycle.Config
+  cycleConfig = Cycle.Config
+    { Cycle.width = 7
+    , Cycle.workspaces = (:[]) <$> ['a' .. 'z']
+    }
 
   gridConfig :: Grid.Config
   gridConfig =
@@ -61,7 +69,7 @@ main =
           , Grid.column dims 3 "γ"
           ]
     in Grid.Config
-        { Grid.wids = mapping
+        { Grid.mapping = Grid.SomeMapping mapping
         , Grid.wrapping = Grid.Wrapping True True
         }
 
@@ -156,6 +164,11 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
     for_ (zip [0..] [xK_1 .. xK_9]) $ \(x, key) -> do
       bind mod                 key $ Grid.move (#x .~ x)
       bind (mod .|. shiftMask) key $ Grid.swap (#x .~ x)
+
+    bind' "M-<Right>"   $ Cycle.move Cycle.Wrap (#position %~ succ)
+    bind' "M-<Left>"    $ Cycle.move Cycle.Wrap (#position %~ pred)
+    bind' "M-C-<Right>" $ Cycle.move Cycle.Clamp (#offset %~ succ)
+    bind' "M-C-<Left>"  $ Cycle.move Cycle.Clamp (#offset %~ pred)
 
     -- resize
     bind' "M-C-l"   $ sendMessage (LB.ExpandTowards LB.R)
