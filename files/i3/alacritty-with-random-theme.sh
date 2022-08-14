@@ -12,6 +12,7 @@ disabled_themes=(
   /home/lark/.config/alacritty/themes/papercolor_light.yaml
   /home/lark/.config/alacritty/themes/night_owlish_light.yaml
   /home/lark/.config/alacritty/themes/atom_one_light.yaml
+  /home/lark/.config/alacritty/themes/konsole_linux.yaml
 )
 
 root=$XDG_CONFIG_HOME/alacritty
