@@ -184,3 +184,20 @@ function kak {
   command kak "$@"
 }
 
+# fork
+function spoon {
+  which "$1" || return 1
+  nohup "$@" >/dev/null 2>&1 &
+}
+
+# fork and exit
+function spork {
+  which "$1" || return 1
+  nohup "$@" >/dev/null 2>&1 &
+  exit
+  exit
+}
+
+# desktops
+function d1 { spoon google-chrome-stable && spork true; }
+function d4 { spoon telegram-desktop && spoon thunderbird && spoon discord && spork true; }

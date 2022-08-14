@@ -507,8 +507,10 @@ alacritty = {
 };
 
 # =============================================================================
-ulauncher = {
-  environment.systemPackages = with pkgs; [ ulauncher ];
+ulauncher =
+  lib.mkIf false  # fucking ulauncher is broken for some reason
+{
+  environment.systemPackages = [ ulauncher ];
   home-manager.users.${user} = {
     xdg.dataFile."ulauncher".source = linked (stateloc + "/ulauncher/home.local.share");
     xdg.configFile."ulauncher".source = linked (stateloc + "/ulauncher/home.config");
