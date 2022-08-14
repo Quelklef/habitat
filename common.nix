@@ -448,10 +448,6 @@ thunderbird = {
   home-manager.users.${user} = {
     home.file.".thunderbird".source = linked (stateloc + "/thunderbird");
   };
-  environment.interactiveShellInit = ''
-    alias thunderbird="thunderbird --profile ~/.thunderbird/q2te5qzd.default-release"
-  '';
-  # ^ Not totally sure why this is necessary but whatever
 };
 
 # =============================================================================
