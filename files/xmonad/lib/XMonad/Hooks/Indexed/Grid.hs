@@ -49,7 +49,6 @@ data Formatted
       -- ^ Unformatted
   | Formatted
       -- ^
-      --
       -- Using built-in formatting
       --
       -- This means *specifically* that workspace IDs are of the format
@@ -98,7 +97,7 @@ instance Monoid (Mapping ftd) where
   mempty = Mapping mempty
 
 
-data SomeMapping = forall ftd. DemoteFormatted ftd => SomeMapping { unSomeMapping :: Mapping ftd }
+data SomeMapping = forall ftd. DemoteFormatted ftd => SomeMapping (Mapping ftd)
 
 getTheMap :: SomeMapping -> Map Coord WorkspaceId
 getTheMap (SomeMapping (Mapping map)) = map
@@ -133,14 +132,26 @@ fromFunction (Dims { width, height }) =
   funToMap :: Ord k => [k] -> (k -> v) -> Map k v
   funToMap xs f = Map.fromList $ (\k -> (k, f k)) <$> xs
 
--- | Construct a 2d grid
+-- |
+--
+-- Construct a 2d grid
+--
+-- Each coordinate (x, y) will be given the name @show (x + 1)@
 grid :: Dims -> Mapping 'Formatted
-grid (Dims { width, height }) =
+grid = grid' (\(XY x y) -> show $ x + 1)
+
+-- |
+--
+-- Construct a 2d grid
+--
+-- Each coordinate will be assigned a name according to the supplied function
+grid' :: (Coord -> String) -> Dims -> Mapping 'Formatted
+grid' toName (Dims { width, height }) =
   Mapping . fold $ do
     y <- [0 .. height - 1]
     x <- [0 .. width - 1]
     let coord = XY x y
-    pure $ Map.singleton coord (doFormat @'Formatted coord (show $ x + 1))
+    pure $ Map.singleton coord (doFormat @'Formatted coord $ toName coord)
 
 -- | Glue together a group of workspaces
 group :: forall f ftd. (DemoteFormatted ftd, Foldable f) => f Coord -> String -> Mapping ftd
@@ -201,7 +212,6 @@ wrap config =
 
 
 -- |
---
 --
 -- The call @move f@ replaces the current coordinate to @f currentCoord@
 --

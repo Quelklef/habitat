@@ -64,9 +64,9 @@ main =
   gridConfig =
     let dims = Grid.Dims { Grid.width = 6, Grid.height = 4 }
         mapping = fold
-          [ Grid.grid dims
+          [ dims & Grid.grid' (\coord -> show (Grid.x coord))
           , Grid.column dims 0 "α"
-          , Grid.column dims 3 "γ"
+          , Grid.column dims 4 "γ"
           ]
     in Grid.Config
         { Grid.mapping = Grid.SomeMapping mapping
@@ -161,7 +161,10 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
     bind' "M-w"   $ Grid.move (#y %~ pred)
     bind' "M-S-s" $ Grid.swap (#y %~ succ)
     bind' "M-S-w" $ Grid.swap (#y %~ pred)
-    for_ (zip [0..] [xK_1 .. xK_9]) $ \(x, key) -> do
+    let pairs =
+          (<>) [ (0, xK_quoteleft) ]
+               (zip [1..] [xK_1 .. xK_9])
+    for_ pairs $ \(x, key) -> do
       bind mod                 key $ Grid.move (#x .~ x)
       bind (mod .|. shiftMask) key $ Grid.swap (#x .~ x)
 
@@ -194,8 +197,8 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
     let andRefreshXmobar = (<> "&& pkill --signal SIGUSR2 xmobar")
 
     -- volume
-    bind' "<XF86AudioRaiseVolume>" $ spawn . andRefreshXmobar $ "pactl set-sink-volume @DEFAULT_SINK@ +10%"
-    bind' "<XF86AudioLowerVolume>" $ spawn . andRefreshXmobar $ "pactl set-sink-volume @DEFAULT_SINK@ -10%"
+    bind' "<XF86AudioRaiseVolume>" $ spawn . andRefreshXmobar $ "pactl set-sink-volume @DEFAULT_SINK@ +5%"
+    bind' "<XF86AudioLowerVolume>" $ spawn . andRefreshXmobar $ "pactl set-sink-volume @DEFAULT_SINK@ -5%"
     bind' "<XF86AudioMute>"        $ spawn . andRefreshXmobar $ "pactl set-sink-mute   @DEFAULT_SINK@ toggle"
     bind' "<XF86AudioMicMute>"     $ spawn . andRefreshXmobar $ "pactl set-source-mute @DEFAULT_SOURCE@ toggle"
 
