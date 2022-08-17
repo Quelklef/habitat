@@ -46,7 +46,7 @@ main =
     & docks
     & ewmh
     & withSB myStatusBar
-    & Grid.hook gridConfig
+    & Grid.hook gridInit
     -- & Cycle.hook cycleConfig
     & xmonad
 
@@ -60,17 +60,17 @@ main =
     , Cycle.workspaces = (:[]) <$> ['a' .. 'z']
     }
 
-  gridConfig :: Grid.Config
-  gridConfig =
+  gridInit :: Grid.Init
+  gridInit =
     let dims = Grid.Dims { Grid.width = 6, Grid.height = 4 }
         mapping = fold
           [ dims & Grid.grid' (\coord -> show (Grid.x coord))
           , Grid.column dims 0 "α"
           , Grid.column dims 4 "γ"
           ]
-    in Grid.Config
-        { Grid.mapping = Grid.SomeMapping mapping
-        , Grid.wrapping = Grid.Wrapping True True
+    in Grid.Init
+        { Grid.initMapping = Grid.SomeMapping mapping
+        , Grid.initWrapping = Grid.Wrapping True True
         }
 
   mkPP :: X PP

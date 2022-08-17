@@ -11,6 +11,7 @@
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE StandaloneDeriving        #-}
 {-# LANGUAGE TypeApplications          #-}
+{-# LANGUAGE TypeFamilies              #-}
 {-# LANGUAGE ViewPatterns              #-}
 {-# OPTIONS_GHC -Wall -Wwarn #-}
 
@@ -18,29 +19,28 @@
 
 module XMonad.Hooks.Indexed.Grid where
 
-import           Prelude                     hiding (span)
+import           Prelude                       hiding (span)
 
-import           Control.Category            ((>>>))
-import           Control.Lens                ((%~), (&), (.~), (^.))
-import           Control.Monad.State         (State, evalState, execState,
-                                              modify)
-import           Data.Foldable               (fold, toList)
-import           Data.Generics.Labels        ()
-import           Data.List                   (intercalate, nub)
-import           Data.List.Split             (splitOn)
-import           Data.Map                    (Map)
-import qualified Data.Map                    as Map
-import           Data.Maybe                  (catMaybes, fromMaybe)
-import           Data.Monoid                 (Endo (..), appEndo)
-import           GHC.Generics                (Generic)
-import           XMonad                      hiding (config, state, trace)
-import           XMonad.Hooks.StatusBar.PP   (PP (..))
-import           XMonad.StackSet             (greedyView, shift)
-import qualified XMonad.Util.ExtensibleConf  as XC
-import qualified XMonad.Util.ExtensibleState as XS
+import           Control.Category              ((>>>))
+import           Control.Lens                  ((%~), (&), (.~), (^.))
+import           Control.Monad.State           (evalState, execState, modify)
+import           Data.Foldable                 (fold, toList)
+import           Data.Generics.Labels          ()
+import           Data.List                     (intercalate, nub)
+import           Data.List.Split               (splitOn)
+import           Data.Map                      (Map)
+import qualified Data.Map                      as Map
+import           Data.Maybe                    (catMaybes, fromMaybe)
+import           Data.Monoid                   (Endo (..), appEndo)
+import           GHC.Generics                  (Generic)
+import           XMonad                        hiding (config, state, trace)
+import           XMonad.Hooks.StatusBar.PP     (PP (..))
+import           XMonad.StackSet               (greedyView, shift)
 
-import qualified XMonad.Hooks.Indexed.Core   as Core
-import           XMonad.Hooks.Indexed.Core   (affineMod)
+import qualified XMonad.Hooks.Indexed.Core     as Core
+import           XMonad.Hooks.Indexed.Core     (affineMod)
+
+import qualified XMonad.Hooks.Indexed.OneState as OS
 
 
 
@@ -85,7 +85,7 @@ instance DemoteFormatted 'Formatted where
 
 
 newtype Mapping (ftd :: Formatted) = Mapping { unMapping :: Map Coord WorkspaceId }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Generic)
 
 unsafeChangeFormatting :: forall old (ftd :: Formatted). Mapping old -> Mapping ftd
 unsafeChangeFormatting (Mapping map) = Mapping map
@@ -132,6 +132,7 @@ fromFunction (Dims { width, height }) =
   funToMap :: Ord k => [k] -> (k -> v) -> Map k v
   funToMap xs f = Map.fromList $ (\k -> (k, f k)) <$> xs
 
+
 -- |
 --
 -- Construct a 2d grid
@@ -139,6 +140,7 @@ fromFunction (Dims { width, height }) =
 -- Each coordinate (x, y) will be given the name @show (x + 1)@
 grid :: Dims -> Mapping 'Formatted
 grid = grid' (\(XY x y) -> show $ x + 1)
+
 
 -- |
 --
@@ -153,11 +155,13 @@ grid' toName (Dims { width, height }) =
     let coord = XY x y
     pure $ Map.singleton coord (doFormat @'Formatted coord $ toName coord)
 
+
 -- | Glue together a group of workspaces
 group :: forall f ftd. (DemoteFormatted ftd, Foldable f) => f Coord -> String -> Mapping ftd
 group (toList -> xs) name = case xs of
   []     -> Mapping mempty
   (x0:_) -> Mapping $ xs & foldMap (\x -> Map.singleton x (doFormat @ftd x0 name))
+
 
 -- | Glue together a column of workspaces
 column :: forall ftd. DemoteFormatted ftd => Dims -> Int -> String -> Mapping ftd
@@ -171,15 +175,7 @@ column (Dims { height }) x name =
 
 
 data Coord = XY { x :: Int, y :: Int }
-  deriving (Show, Eq, Ord, Generic)
-
-instance ExtensionClass Coord where
-  initialValue = XY 0 0
-
-data Config = Config
-  { mapping  :: SomeMapping
-  , wrapping :: Wrapping
-  } deriving (Generic)
+  deriving (Show, Ord, Eq, Generic)
 
 data Wrapping = Wrapping
   { wrapX :: Bool
@@ -187,22 +183,31 @@ data Wrapping = Wrapping
   }
   deriving (Show, Generic)
 
-instance Semigroup Config where
-  _ <> c = c
+data State = State
+  { mapping  :: SomeMapping
+  , wrapping :: Wrapping
+  , coord    :: Coord
+  } deriving (Generic)
 
-instance Default Config where
-  def = Config (SomeMapping (mempty :: Mapping 'Formatted)) (Wrapping False False)
+instance OS.OneState State where
+  type Mod State = State -> State
+  merge ma s = pure (ma s)
+  defaultState = State
+    { mapping = SomeMapping (grid $ Dims 5 5)
+    , wrapping = Wrapping False False
+    , coord = XY 0 0
+    }
 
 -- Wrap a coordinate around the x/y axes according to the configured wrapping mode
-wrap :: Config -> (Coord -> Coord)
-wrap config =
+wrap :: State -> (Coord -> Coord)
+wrap state =
 
   appEndo . fromMaybe (Endo id) $ do
-    xRange <- range (^. #x) (config ^. #mapping)
-    yRange <- range (^. #y) (config ^. #mapping)
+    xRange <- range (^. #x) (state ^. #mapping)
+    yRange <- range (^. #y) (state ^. #mapping)
 
-    pure $ guard (config ^. #wrapping . #wrapX) (Endo $ #x %~ affineMod xRange)
-        <> guard (config ^. #wrapping . #wrapY) (Endo $ #y %~ affineMod yRange)
+    pure $ guard (state ^. #wrapping . #wrapX) (Endo $ #x %~ affineMod xRange)
+        <> guard (state ^. #wrapping . #wrapY) (Endo $ #y %~ affineMod yRange)
 
   where
 
@@ -220,8 +225,9 @@ wrap config =
 -- Use this to move around workspaces
 move :: (Coord -> Coord) -> X ()
 move = update $ \coord wid -> do
-  XS.put coord
+  OS.modify (#coord .~ coord :: State -> State)
   windows (greedyView wid)
+
 
 -- |
 --
@@ -233,23 +239,33 @@ swap = update $ \_ wid -> windows (shift wid)
 
 update :: (Coord -> WorkspaceId -> X ()) -> (Coord -> Coord) -> X ()
 update act f = do
-  (coord, config) <- Core.getBoth
-  let coord' = coord & f & wrap config
-  case Map.lookup coord' (getTheMap $ config ^. #mapping) of
+  state@State { coord, mapping } <- OS.get
+  let coord' = coord & f & wrap state
+  case Map.lookup coord' (getTheMap mapping) of
     Nothing -> pure ()
     Just wid -> do
      act coord' wid
 
 
-hook :: Config -> XConfig l -> XConfig l
-hook config@Config { mapping } = XC.add config >>> (\xc -> xc { XMonad.workspaces = workspaces })
+data Init = Init
+  { initMapping  :: SomeMapping
+  , initWrapping :: Wrapping
+  }
+
+-- | Hook the grid layout into XMonad
+hook :: Init -> XConfig l -> XConfig l
+hook Init { initMapping, initWrapping } =
+  OS.once @State
+    (\xc -> xc { XMonad.workspaces = workspaces })
+    (\state -> state { mapping = initMapping, wrapping = initWrapping })
+
   where
-  workspaces = toList (getTheMap mapping)
+  workspaces = toList (getTheMap initMapping)
              & nub  -- account for two coordinates pointing to the same workspace
 
 pp :: X PP
 pp = do
-  (XY x y :: Coord, Config { mapping }) <- Core.getBoth
+  State { coord = XY x y, mapping } <- OS.get
   pure $ def
        & Core.withLabel (show (y + 1) <> " / ")
        & Core.withNeighborhood

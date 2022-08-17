@@ -1,8 +1,12 @@
-{-# LANGUAGE DeriveGeneric       #-}
-{-# LANGUAGE OverloadedLabels    #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TupleSections       #-}
-{-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE DerivingStrategies         #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE OverloadedLabels           #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE TupleSections              #-}
+{-# LANGUAGE TypeApplications           #-}
+{-# LANGUAGE TypeFamilies               #-}
 {-# OPTIONS_GHC -Wall -Wwarn #-}
 
 module XMonad.Hooks.Indexed.Core where
@@ -21,10 +25,11 @@ import           Data.List.Split              (splitOn)
 import           Data.Map                     (Map)
 import qualified Data.Map                     as Map
 import           Data.Maybe                   (catMaybes, fromMaybe, isJust)
+import           Data.Monoid                  (Endo (..), appEndo)
 import           GHC.Generics                 (Generic)
 import qualified XMonad
-import           XMonad                       hiding (config, state, trace,
-                                               workspaces)
+import           XMonad                       hiding (config, modify, state,
+                                               trace, workspaces)
 import           XMonad.Hooks.StatusBar.PP    (PP (..))
 import           XMonad.StackSet              (tag)
 import qualified XMonad.Util.ExtensibleConf   as XC
