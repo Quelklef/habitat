@@ -2,19 +2,25 @@
 {-# LANGUAGE NamedFieldPuns        #-}
 {-# LANGUAGE OverloadedLabels      #-}
 {-# LANGUAGE PartialTypeSignatures #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TupleSections         #-}
 {-# LANGUAGE TypeApplications      #-}
 
 import           Control.Category                   ((>>>))
 import           Control.Lens                       ((%~), (&), (.~), (^.))
+import           Control.Monad                      (void)
 import           Control.Monad.Writer               (Writer, execWriter, lift,
                                                      tell)
 import           Data.Foldable                      (fold, for_)
 import           Data.Function                      (on, (&))
+import           Data.IORef                         (modifyIORef, newIORef,
+                                                     readIORef)
 import           Data.List                          (elemIndex)
 import           Data.Map                           (Map)
 import qualified Data.Map                           as Map
 import           Data.Maybe                         (catMaybes, fromMaybe)
 import           Data.Proxy                         (Proxy (Proxy))
+import           System.IO.Unsafe                   (unsafePerformIO)
 import           XMonad                             hiding (trace)
 import           XMonad.Config.Prime                (Query (..))
 import           XMonad.Hooks.EwmhDesktops          (ewmh)
@@ -23,6 +29,7 @@ import           XMonad.Hooks.StatusBar             (statusBarProp, withSB)
 import           XMonad.Hooks.StatusBar.PP          (PP (..), xmobarColor)
 import qualified XMonad.Layout.BinarySpacePartition as LB
 import           XMonad.Layout.Decoration           (Theme (..))
+import qualified XMonad.Layout.Gaps                 as Gaps
 import           XMonad.Layout.Reflect              (reflectHoriz, reflectVert)
 import           XMonad.Layout.Spacing              (spacingWithEdge)
 import qualified XMonad.Layout.Tabbed               as LT
@@ -37,6 +44,8 @@ import           XMonad.Util.WorkspaceCompare       (mkWsSort)
 import qualified XMonad.Hooks.Indexed.Core          as Ix.Core
 import qualified XMonad.Hooks.Indexed.Cycle         as Cycle
 import qualified XMonad.Hooks.Indexed.Grid          as Grid
+
+import           Debug.Trace
 
 
 main :: IO ()
@@ -109,6 +118,9 @@ mkConfig = def
       )
       & avoidStruts
       & LW.windowNavigation
+      & Gaps.gaps ((, 0) <$> [Gaps.U, Gaps.R, Gaps.D, Gaps.L])
+          -- ^ Start with all gaps enabled but empty
+          --   This is different from having all gaps disabled!
   }
 
   where
@@ -133,6 +145,8 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
     -- rotate layout
     bind' "M-<Space>" $ sendMessage NextLayout
 
+    initializeSlouchmodes
+
     -- unfloat focused window
     bind' "M-u" $ withFocused (windows . sink)
 
@@ -152,10 +166,18 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
     bind' "M-S-h" $ sendMessage (LW.Swap LW.L)
     bind' "M-S-k" $ sendMessage (LW.Swap LW.U)
 
---    -- workspaces
---    for_ (zip (XMonad.workspaces conf) [xK_1 .. xK_9]) $ \(workspace, key) -> do
---      for_ [(greedyView, 0), (shift, shiftMask)] $ \(fun, mask) -> do
---        bind (mod .|. mask) key (windows $ fun workspace)
+    -- resize windows
+    bind' "M-C-l"   $ sendMessage (LB.ExpandTowards LB.R)
+    bind' "M-C-j"   $ sendMessage (LB.ExpandTowards LB.D)
+    bind' "M-C-h"   $ sendMessage (LB.ExpandTowards LB.L)
+    bind' "M-C-k"   $ sendMessage (LB.ExpandTowards LB.U)
+    bind' "M-C-S-l" $ sendMessage (LB.ShrinkFrom LB.R)
+    bind' "M-C-S-j" $ sendMessage (LB.ShrinkFrom LB.D)
+    bind' "M-C-S-h" $ sendMessage (LB.ShrinkFrom LB.L)
+    bind' "M-C-S-k" $ sendMessage (LB.ShrinkFrom LB.U)
+
+    -- rotate BSP pair
+    bind' "M-]" $ sendMessage LB.Rotate
 
     -- move around workspaces two-dimensionally
     bind' "M-s"   $ Grid.move (#y %~ succ)
@@ -169,23 +191,10 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
       bind mod                 key $ Grid.move (#x .~ x)
       bind (mod .|. shiftMask) key $ Grid.swap (#x .~ x)
 
-    bind' "M-<Right>"   $ Cycle.move Cycle.Wrap (#position %~ succ)
-    bind' "M-<Left>"    $ Cycle.move Cycle.Wrap (#position %~ pred)
-    bind' "M-C-<Right>" $ Cycle.move Cycle.Clamp (#offset %~ succ)
-    bind' "M-C-<Left>"  $ Cycle.move Cycle.Clamp (#offset %~ pred)
-
-    -- resize
-    bind' "M-C-l"   $ sendMessage (LB.ExpandTowards LB.R)
-    bind' "M-C-j"   $ sendMessage (LB.ExpandTowards LB.D)
-    bind' "M-C-h"   $ sendMessage (LB.ExpandTowards LB.L)
-    bind' "M-C-k"   $ sendMessage (LB.ExpandTowards LB.U)
-    bind' "M-C-S-l" $ sendMessage (LB.ShrinkFrom LB.R)
-    bind' "M-C-S-j" $ sendMessage (LB.ShrinkFrom LB.D)
-    bind' "M-C-S-h" $ sendMessage (LB.ShrinkFrom LB.L)
-    bind' "M-C-S-k" $ sendMessage (LB.ShrinkFrom LB.U)
-
-    -- rotate BSP pair
-    bind' "M-]" $ sendMessage LB.Rotate
+    -- bind' "M-<Right>"   $ Cycle.move Cycle.Wrap (#position %~ succ)
+    -- bind' "M-<Left>"    $ Cycle.move Cycle.Wrap (#position %~ pred)
+    -- bind' "M-C-<Right>" $ Cycle.move Cycle.Clamp (#offset %~ succ)
+    -- bind' "M-C-<Left>"  $ Cycle.move Cycle.Clamp (#offset %~ pred)
 
     -- screenshot fullscreen
     let scrot = "scrot -q 100 -e 'xclip -selection clipboard -t image/png -i $f; rm $f'"
@@ -208,6 +217,32 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
     bind' "<XF86MonBrightnessDown>" $ spawn . andRefreshXmobar $ "light -U 10"
 
   where
+
+  -- When I slouch, my fingers obscure the bottom of my screen
+  -- Solution: raise all windows above my fingers
+  -- Keybinding is p for 'posture', as in 'bad posture'
+  initializeSlouchmodes :: Writer Bindings ()
+  initializeSlouchmodes = let
+
+      slouchmodes :: [Gaps.GapSpec]
+      slouchmodes = [ [(Gaps.D, 0)], [(Gaps.D, 110)], [(Gaps.D, 220)] ]
+
+      next :: Eq a => [a] -> (a -> a)
+      next as a = case a `elemIndex` as of
+        Nothing  -> as !! 0
+        Just idx -> as !! (succ idx `Prelude.mod` length as)
+
+      -- Used to synchronize slouchmode between all layouts
+      ref = unsafePerformIO (newIORef $ slouchmodes !! 0)
+
+      in bind' "M-S-p" $ do
+        -- Rotate slouch modes
+        io $ modifyIORef ref (next slouchmodes)
+        -- Set current mode in all windows
+        broadcastMessage =<< (Gaps.setGaps <$> io (readIORef ref))
+        -- Redraw with new mode
+        refresh
+
 
   -- old-style binding
   bind :: KeyMask -> KeySym -> X () -> Writer Bindings ()
@@ -237,4 +272,5 @@ compile config bindings = let
   --     we have to do all the computation here in one place
 
   in oldsMap <> newsMap
+
 

@@ -309,7 +309,7 @@ xmonad-wm = let
 
   xmo-ghc = pkgs.haskellPackages.ghcWithPackages (p: with p; [
     xmonad xmonad-utils xmonad-contrib
-    xmobar raw-strings-qq
+    xmobar raw-strings-qq temporary
     lens generic-lens  # hehe
   ]);
 
