@@ -78,7 +78,7 @@ swap mode f = do
 
 calc :: BoundsMode -> (Coord -> Coord) -> X (Coord, WorkspaceId)
 calc mode f = do
-  (coord, config@Config { width, workspaces }) <- Core.getBoth
+  (coord, config@Config { width, workspaces }) <- getBoth
   let coord' = flip execState coord $ do
         modify f
         offset' <- (^. #offset) <$> get
@@ -104,7 +104,7 @@ hook config = XC.once endo config
 
 pp :: X PP
 pp = do
-  (coord@Coord { position, offset }, Config { width, workspaces }) <- traceShowId <$> Core.getBoth
+  (coord@Coord { position, offset }, Config { width, workspaces }) <- traceShowId <$> getBoth
   pure $ def
        & Core.withNameTransform id
        & Core.withNeighborhood
@@ -114,3 +114,6 @@ pp = do
 
 (!%) :: [a] -> Int -> a
 xs !% n = xs !! (n `mod` length xs)
+
+getBoth :: (Default conf, Typeable conf, ExtensionClass state) => X (state, conf)
+getBoth = (,) <$> XS.get <*> (fromMaybe def <$> XC.ask)

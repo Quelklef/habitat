@@ -21,7 +21,8 @@ module XMonad.Hooks.Indexed.Grid where
 
 import           Prelude                       hiding (span)
 
-import           Control.Category              ((>>>))
+import           Control.Applicative           ((<|>))
+import           Control.Category              ((<<<), (>>>))
 import           Control.Lens                  ((%~), (&), (.~), (^.))
 import           Control.Monad.State           (evalState, execState, modify)
 import           Data.Foldable                 (fold, toList)
@@ -40,47 +41,55 @@ import           XMonad.StackSet               (greedyView, shift)
 import qualified XMonad.Hooks.Indexed.Core     as Core
 import           XMonad.Hooks.Indexed.Core     (affineMod)
 
-import qualified XMonad.Hooks.Indexed.OneState as OS
+import qualified XMonad.Hooks.Indexed.OneState as St
 
 
 
 data Formatted
+
   = Unformatted
-      -- ^ Unformatted
+      -- ^
+      --
+      -- Workspace IDs are left untouched
+
   | Formatted
       -- ^
-      -- Using built-in formatting
+      -- Workspace IDs are formatted
       --
       -- This means *specifically* that workspace IDs are of the format
-      --  <uniq>:<name>
+      --   <uniq>:<name>
       -- Where
       -- * <uniq> contains a uniquely-identifying string
       -- * <name> contains the workspace name
       -- * <uniq> may not contain colons
       --
-      -- Ideally at compiletime we could pass around a rich object representing such a
-      -- format, but I don't think that's possible in Haskell.
+      -- (Editor's note: ideally, I'd like to allow custom formats beyond
+      -- just this specific one. Such a desire is, however, in tension with
+      -- retaining the static guarantee that formats are not mixed. Achieving
+      -- this might be possible, but I'm judging it not worth the effort.)
 
-doFormat :: forall ftd. DemoteFormatted ftd => Coord -> String -> WorkspaceId
+
+doFormat :: forall ftd. IsFormatted ftd => Coord -> String -> WorkspaceId
 doFormat (XY x y) name =
   case demoteFormatted @ftd of
     Formatted   -> show y <> "/" <> show x <> ":" <> name
     Unformatted -> name
 
-doToName :: forall ftd. DemoteFormatted ftd => WorkspaceId -> String
+
+doToName :: forall ftd. IsFormatted ftd => WorkspaceId -> String
 doToName =
   case demoteFormatted @ftd of
     Unformatted -> id
     Formatted   -> splitOn ":" >>> drop 1 >>> intercalate ":"
 
 
-class DemoteFormatted (ftd :: Formatted) where
+class IsFormatted (ftd :: Formatted) where
   demoteFormatted :: Formatted
 
-instance DemoteFormatted 'Unformatted where
+instance IsFormatted 'Unformatted where
   demoteFormatted = Unformatted
 
-instance DemoteFormatted 'Formatted where
+instance IsFormatted 'Formatted where
   demoteFormatted = Formatted
 
 
@@ -97,7 +106,10 @@ instance Monoid (Mapping ftd) where
   mempty = Mapping mempty
 
 
-data SomeMapping = forall ftd. DemoteFormatted ftd => SomeMapping (Mapping ftd)
+data SomeMapping = forall ftd. IsFormatted ftd => SomeMapping (Mapping ftd)
+
+onTheMap :: (Map Coord WorkspaceId -> Map Coord WorkspaceId) -> (SomeMapping -> SomeMapping)
+onTheMap f (SomeMapping (Mapping map :: Mapping ftd)) = (SomeMapping (Mapping @ftd (f map)))
 
 getTheMap :: SomeMapping -> Map Coord WorkspaceId
 getTheMap (SomeMapping (Mapping map)) = map
@@ -120,9 +132,13 @@ span proj (getTheMap -> mapping) =
 
 data Dims = Dims { width :: Int, height :: Int }
 
+
+-- | Construct a Mapping from a Map
 fromMap :: Map Coord WorkspaceId -> Mapping 'Unformatted
 fromMap = Mapping
 
+
+-- | Construct a Mapping from a function
 fromFunction :: Dims -> (Coord -> WorkspaceId) -> Mapping 'Unformatted
 fromFunction (Dims { width, height }) =
   let domain = XY <$> [0 .. width - 1] <*> [0 .. height - 1]
@@ -157,14 +173,14 @@ grid' toName (Dims { width, height }) =
 
 
 -- | Glue together a group of workspaces
-group :: forall f ftd. (DemoteFormatted ftd, Foldable f) => f Coord -> String -> Mapping ftd
+group :: forall f ftd. (IsFormatted ftd, Foldable f) => f Coord -> String -> Mapping ftd
 group (toList -> xs) name = case xs of
   []     -> Mapping mempty
   (x0:_) -> Mapping $ xs & foldMap (\x -> Map.singleton x (doFormat @ftd x0 name))
 
 
 -- | Glue together a column of workspaces
-column :: forall ftd. DemoteFormatted ftd => Dims -> Int -> String -> Mapping ftd
+column :: forall ftd. IsFormatted ftd => Dims -> Int -> String -> Mapping ftd
 column (Dims { height }) x name =
   Mapping . fold $ do
     y <- [0 .. height - 1]
@@ -185,11 +201,16 @@ data Wrapping = Wrapping
 
 data State = State
   { mapping  :: SomeMapping
+      -- ^ Coordinate -> WorkspaceId mapping
+  , labelf   :: Coord -> Maybe String
+      -- ^ Labels
   , wrapping :: Wrapping
+      -- ^ Wrapping mode
   , coord    :: Coord
+      -- ^ Current coordinate
   } deriving (Generic)
 
-instance OS.OneState State where
+instance St.OneState State where
   type Mod State = State -> State
   merge ma s = pure (ma s)
   defaultState = State
@@ -225,7 +246,7 @@ wrap state =
 -- Use this to move around workspaces
 move :: (Coord -> Coord) -> X ()
 move = update $ \coord wid -> do
-  OS.modify (#coord .~ coord :: State -> State)
+  St.modify (#coord .~ coord :: State -> State)
   windows (greedyView wid)
 
 
@@ -239,7 +260,7 @@ swap = update $ \_ wid -> windows (shift wid)
 
 update :: (Coord -> WorkspaceId -> X ()) -> (Coord -> Coord) -> X ()
 update act f = do
-  state@State { coord, mapping } <- OS.get
+  state@State { coord, mapping } <- St.get
   let coord' = coord & f & wrap state
   case Map.lookup coord' (getTheMap mapping) of
     Nothing -> pure ()
@@ -247,17 +268,56 @@ update act f = do
      act coord' wid
 
 
+-- |
+--
+-- Let @N@ be the number of rows in the current state. Given a
+-- bijection @f@ between @[0 .. N-1]@ and itself, moves each row from
+-- the y-index @y@ to y-index @f y@.
+--
+-- If a function is supplied which is not a bijection, behaviour is undefined.
+organizeRows :: (Int -> Int) -> (State -> State)
+organizeRows perm =
+      (#labelf %~ (<<< (#y %~ perm)))
+  >>> (#mapping %~ onTheMap (Map.mapKeys (#y %~ perm)))
+
+
+-- | Sets the label of all cells with the given y-value
+setYLabel :: Int -> String -> (State -> State)
+setYLabel y label = relabel (\_ coord -> if coord ^. #y == y then Just label else Nothing)
+
+-- |
+--
+-- Accepts a function which, given the old label-assigning function,
+-- produces a new label-assigning function. Uses that argument to
+-- relabel the workspace layout.
+relabel :: Endo' (Coord -> Maybe String) -> (State -> State)
+relabel g = #labelf %~ (\f c -> g f c <|> f c)
+
+type Endo' a = a -> a
+
+
+
 data Init = Init
   { initMapping  :: SomeMapping
+      -- ^ Physical layout
   , initWrapping :: Wrapping
+      -- ^ Wrapping mode
+  , initLabelf   :: Coord -> Maybe String
+      -- ^
+      -- Displayed to the left of the axis workspaces
+      -- When Nothing is returned, uses a fallback
   }
 
 -- | Hook the grid layout into XMonad
 hook :: Init -> XConfig l -> XConfig l
-hook Init { initMapping, initWrapping } =
-  OS.once @State
+hook Init { initMapping, initWrapping, initLabelf } =
+  St.once @State
     (\xc -> xc { XMonad.workspaces = workspaces })
-    (\state -> state { mapping = initMapping, wrapping = initWrapping })
+    (\state -> state
+        { mapping = initMapping
+        , wrapping = initWrapping
+        , labelf = initLabelf
+        })
 
   where
   workspaces = toList (getTheMap initMapping)
@@ -265,9 +325,10 @@ hook Init { initMapping, initWrapping } =
 
 pp :: X PP
 pp = do
-  State { coord = XY x y, mapping } <- OS.get
+  State { coord, mapping, labelf } <- St.get
+  let XY x y = coord
   pure $ def
-       & Core.withLabel (show (y + 1) <> " / ")
+       & Core.withLabel (labelf coord & fromMaybe (show (y + 1) <> " / "))
        & Core.withNeighborhood
           (let coords = (flip XY y) <$> span (^. #x) mapping
            in coords & fmap (flip Map.lookup (getTheMap mapping)) & catMaybes & nub)

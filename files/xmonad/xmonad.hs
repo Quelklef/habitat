@@ -71,6 +71,7 @@ main =
     in Grid.Init
         { Grid.initMapping = Grid.SomeMapping mapping
         , Grid.initWrapping = Grid.Wrapping True True
+        , Grid.initLabelf = const Nothing
         }
 
   mkPP :: X PP

@@ -38,12 +38,6 @@ import           XMonad.Util.WorkspaceCompare (mkWsSort)
 
 
 
-
-getBoth :: (Default conf, Typeable conf, ExtensionClass state) => X (state, conf)
-getBoth = (,) <$> XS.get <*> (fromMaybe def <$> XC.ask)
-
-
-
 withNameTransform :: (WorkspaceId -> String) -> PP -> PP
 withNameTransform toName pp = pp
   { ppCurrent = toName
