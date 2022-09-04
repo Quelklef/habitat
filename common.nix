@@ -94,9 +94,12 @@ generic-system-config = {
   hardware.pulseaudio.enable = true;
 
   # mouse n touchpad
-  services.xserver.libinput.enable = true;
-  services.xserver.libinput.touchpad.tappingDragLock = false;
-  services.xserver.libinput.mouse.tappingDragLock = false;
+  services.xserver.libinput = {
+    enable = true;
+    touchpad.tappingDragLock = false;
+    mouse.tappingDragLock = false;
+    mouse.accelSpeed = "0";
+  };
 
   # bluetooth
   hardware.bluetooth.enable = true;
