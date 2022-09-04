@@ -63,7 +63,7 @@ boot = {
 base = {
   networking.hostName = "lake";
   system.stateVersion = "22.05";
-  time.timeZone = "America/New_York";
+  time.timeZone = "America/Los_Angeles";
 
   environment.etc."nixos/configuration.nix".text = "import /per/config/systems/lake.nix";
   # ^ nb
@@ -76,7 +76,7 @@ base = {
   '';
 
   # Disable ipv6; it's messing with npm n stuff
-  # boot.kernel.sysctl."net.ipv6.conf.eth0.disable_ipv6" = true;
+  boot.kernel.sysctl."net.ipv6.conf.eth0.disable_ipv6" = true;
 };
 
 # =============================================================================
