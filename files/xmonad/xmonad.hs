@@ -71,11 +71,11 @@ main =
 
   gridInit :: Grid.Init
   gridInit =
-    let dims = Grid.Dims { Grid.width = 6, Grid.height = 4 }
+    let dims = Grid.Dims { Grid.width = 9, Grid.height = 4 }
         mapping = fold
           [ dims & Grid.grid' (\coord -> show (Grid.x coord))
           , Grid.column dims 0 "α"
-          , Grid.column dims 4 "γ"
+          , Grid.column dims 5 "γ"
           ]
     in Grid.Init
         { Grid.initMapping = Grid.SomeMapping mapping
@@ -110,13 +110,18 @@ mkConfig = def
   , clickJustFocuses = False
   , keys = myKeys
   , layoutHook =
-      ( (LB.emptyBSP
-          & reflectVert & reflectHoriz -- open new windows to down/right instead of up/left
-          & spacingWithEdge 2  -- WANT: this seems to somehow be affecting the tabbed layout?
+      (
+        (
+          (
+            LB.emptyBSP
+            & reflectVert & reflectHoriz -- open new windows to down/right instead of up/left
+            & spacingWithEdge 2  -- WANT: this seems to somehow be affecting the tabbed layout?
+          )
+          ||| LT.tabbed LT.shrinkText myTheme
         )
-        ||| LT.tabbed LT.shrinkText myTheme
+        & avoidStruts
       )
-      & avoidStruts
+      ||| Full
       & LW.windowNavigation
       & Gaps.gaps ((, 0) <$> [Gaps.U, Gaps.R, Gaps.D, Gaps.L])
           -- ^ Start with all gaps enabled but empty
@@ -167,10 +172,11 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
     bind' "M-S-k" $ sendMessage (LW.Swap LW.U)
 
     -- resize windows
-    bind' "M-C-l"   $ sendMessage (LB.ExpandTowards LB.R)
-    bind' "M-C-j"   $ sendMessage (LB.ExpandTowards LB.D)
-    bind' "M-C-h"   $ sendMessage (LB.ExpandTowards LB.L)
-    bind' "M-C-k"   $ sendMessage (LB.ExpandTowards LB.U)
+    -- controls are flipped due to use of reflect(Horiz|Vert) on layout
+    bind' "M-C-l"   $ sendMessage (LB.ExpandTowards LB.L)
+    bind' "M-C-j"   $ sendMessage (LB.ExpandTowards LB.U)
+    bind' "M-C-h"   $ sendMessage (LB.ExpandTowards LB.R)
+    bind' "M-C-k"   $ sendMessage (LB.ExpandTowards LB.D)
     bind' "M-C-S-l" $ sendMessage (LB.ShrinkFrom LB.R)
     bind' "M-C-S-j" $ sendMessage (LB.ShrinkFrom LB.D)
     bind' "M-C-S-h" $ sendMessage (LB.ShrinkFrom LB.L)

@@ -107,7 +107,7 @@ config = defaultConfig
       exit 0
     fi
 
-    echo -n "bat $(fmt_percent $batt_percent) (×$(fmt_percent $batt_degred)%)${batt_charging}"
+    echo -n "bat $(fmt_percent $batt_percent) (×$(fmt_percent $batt_degred))${batt_charging}"
   |]
 
   cpu = Cmd "cpu" 10 [r|
