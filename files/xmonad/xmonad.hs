@@ -37,6 +37,7 @@ import qualified XMonad.Layout.WindowNavigation     as LW
 import           XMonad.StackSet                    (focusDown, focusUp, sink,
                                                      swapDown, swapUp)
 import           XMonad.Util.EZConfig               (mkKeymap)
+import qualified XMonad.Util.Hacks                  as Hacks
 import qualified XMonad.Util.Themes                 as Themes
 import           XMonad.Util.Themes                 (theme)
 import           XMonad.Util.WorkspaceCompare       (mkWsSort)
@@ -109,6 +110,8 @@ mkConfig = def
   , borderWidth = 3
   , clickJustFocuses = False
   , keys = myKeys
+  , handleEventHook = handleEventHook def <> Hacks.windowedFullscreenFixEventHook
+      -- ^ Fixes an issue with fullscreen on some apps, like chromium
   , layoutHook =
       (
         (
