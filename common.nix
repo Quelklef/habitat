@@ -107,7 +107,6 @@ generic-system-config = {
   # > bluetoothctl
   # > scan on
   # turn on device discovery mode
-  # > pair <hex>
   # > connect <hex>
 
   # enable x
