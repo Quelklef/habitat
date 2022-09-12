@@ -262,40 +262,6 @@ home-manager-generic = {
 };
 
 # =============================================================================
-i3-wm = lib.mkIf false {
-
-  services.xserver = {
-    displayManager.defaultSession = "none+i3";
-    windowManager.i3 = {
-      enable = true;
-      package = pkgs.i3-gaps;
-    };
-  };
-
-  home-manager.users.${user} = {
-    home.file.".i3/config".source = linked ./files/i3/i3config;
-    home.file.".i3/i3status-config".source = linked ./files/i3/i3status-config;
-  };
-
-  # packages used by i3 config
-  environment.systemPackages = with pkgs; [
-    (import ./files/i3/i3wsgroups.nix { inherit pkgs; })  # .. for workspace groups
-    scrot xclip  # .. for screenshots
-    acpi  # .. for battery info in status bar
-  ];
-
-  # Enables 'light' command which is used in i3 config to manage backlight
-  # nb. Might require a reboot before 'light' can be used without sudo
-  programs.light.enable = true;
-  users.users.${user}.extraGroups = [ "video" ];
-
-  # WANT: a fair amount of the i3 config (i3-status.sh in particular)
-  # is system-specific (eg assumes existence of a battery) and therefore
-  # really belongs in ./systems/lake
-
-};
-
-# =============================================================================
 xmonad-wm = let
 
   xmo-ghc = pkgs.haskellPackages.ghcWithPackages (p: with p; [
@@ -309,7 +275,7 @@ xmonad-wm = let
     xmo-ghc
     pkgs.bash pkgs.coreutils pkgs.scrot pkgs.xclip pkgs.acpi pkgs.light
     (pkgs.writeScriptBin "alacritty-random"
-      (builtins.readFile ./files/i3/alacritty-with-random-theme.sh))
+      (builtins.readFile ./files/alacritty-with-random-theme.sh))
   ];
 
   # WANT: this PATH modification is leaking into the shell -- very bad!
