@@ -512,17 +512,4 @@ z = {
   };
 };
 
-# =============================================================================
-steam = {
-  environment.systemPackages = with pkgs; [ steam ];
-  hardware.opengl.driSupport32Bit = true;  # https://github.com/NixOS/nixpkgs/issues/47932#issuecomment-447508411
-
-  home-manager.users.${user} = {
-    home.file.".steam".source = linked (stateloc + "/steam/home.steam");
-    home.file.".steampath".source = linked (stateloc + "/steam/home.steampath");
-    home.file.".steampid".source = linked (stateloc + "/steampid/home.steampid");
-    xdg.dataFile."Steam".source = linked (stateloc + "/steam/home.local.share.steam");
-  };
-};
-
 }; in result
