@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 
-disabled_themes=(
-  /home/lark/.config/alacritty/themes/xterm.yaml
-  /home/lark/.config/alacritty/themes/low_contrast.yaml
-  /home/lark/.config/alacritty/themes/terminal_app.yaml
-  /home/lark/.config/alacritty/themes/high_contrast.yaml
-  /home/lark/.config/alacritty/themes/tango_dark.yaml
-  /home/lark/.config/alacritty/themes/pencil_light.yaml
-  /home/lark/.config/alacritty/themes/gruvbox_light.yaml
-  /home/lark/.config/alacritty/themes/solarized_light.yaml
-  /home/lark/.config/alacritty/themes/papercolor_light.yaml
-  /home/lark/.config/alacritty/themes/night_owlish_light.yaml
-  /home/lark/.config/alacritty/themes/atom_one_light.yaml
-  /home/lark/.config/alacritty/themes/konsole_linux.yaml
-)
-
 root=$XDG_CONFIG_HOME/alacritty
+
+disabled_themes=(
+  $root/themes/xterm.yaml
+  $root/themes/low_contrast.yaml
+  $root/themes/terminal_app.yaml
+  $root/themes/high_contrast.yaml
+  $root/themes/tango_dark.yaml
+  $root/themes/pencil_light.yaml
+  $root/themes/gruvbox_light.yaml
+  $root/themes/solarized_light.yaml
+  $root/themes/papercolor_light.yaml
+  $root/themes/night_owlish_light.yaml
+  $root/themes/atom_one_light.yaml
+  $root/themes/konsole_linux.yaml
+)
 
 read -a all_themes <<< "$(echo $root/themes/*.y{a,}ml)"
 

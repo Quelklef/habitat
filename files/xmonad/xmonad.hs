@@ -104,7 +104,9 @@ main =
 mkConfig :: XConfig _
 mkConfig = def
   { modMask = mod4Mask  -- super
-  , terminal = "alacritty-random"
+  -- , terminal = "alacritty-random"
+        -- WANT^ alacritty random themes are not working for some reason
+  , terminal = "alacritty"
   , normalBorderColor = "#000000"
   , focusedBorderColor = "#CC0066"
   , borderWidth = 3

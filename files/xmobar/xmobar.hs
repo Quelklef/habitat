@@ -86,11 +86,11 @@ config = defaultConfig
     batt_percent=$(echo "$batt_all" | head -n1 | grep -oP '\d+(?=%)' | xargs printf '%3d')
 
     batt_is_charging=$({
-      batt_time() { echo "$batt_all" | grep -oP '\d{2}:\d{2}(?=:)'; }
       case "$batt_all" in
         *Charging*) echo -n 1 ;;
         *Discharging*) echo -n 0 ;;
         *'Not charging'*) echo 0 ;;
+        *Full*) echo 0 ;;
       esac
     })
 
