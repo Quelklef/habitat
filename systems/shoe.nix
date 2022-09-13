@@ -36,7 +36,7 @@ base = {
   fileSystems."/per" = { device = "rpool/eyd/per"; fsType = "zfs"; };
   fileSystems."/boot" = { device = "/dev/disk/by-uuid/DBF4-C77A"; fsType = "vfat"; };
 
-  swapDevices = [ ];
+  swapDevices = [ { device = "/dev/disk/by-label/swap"; } ];
 
   networking.useDHCP = lib.mkDefault true;
 
