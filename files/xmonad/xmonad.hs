@@ -86,7 +86,7 @@ main =
 
   mkPP :: X PP
   mkPP = do
-    pp <- Grid.pp
+    pp <- WSL.Core.render <$> Grid.getView
     pure $ pp
         { ppCurrent = ppCurrent pp >>> pad >>> xmobarColor "white" "#C06"
         , ppHidden = ppHidden pp >>> pad >>> xmobarColor "#BBB" ""

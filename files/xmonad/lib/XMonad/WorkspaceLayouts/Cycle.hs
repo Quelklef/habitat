@@ -34,7 +34,8 @@ import qualified XMonad.Util.ExtensibleConf   as XC
 import qualified XMonad.Util.ExtensibleState  as XS
 
 import qualified XMonad.WorkspaceLayouts.Core as Core
-import           XMonad.WorkspaceLayouts.Core (affineMod)
+import           XMonad.WorkspaceLayouts.Core (WorkspaceLayoutView (..),
+                                               affineMod)
 
 import           Debug.Trace
 
@@ -102,15 +103,17 @@ hook config = XC.once endo config
   where
   endo xc = xc { XMonad.workspaces = config ^. #workspaces }
 
-pp :: X PP
-pp = do
+getView :: X WorkspaceLayoutView
+getView = do
   (coord@Coord { position, offset }, Config { width, workspaces }) <- traceShowId <$> getBoth
-  pure $ def
-       & Core.withNameTransform id
-       & Core.withNeighborhood
+  pure $ WSLView
+    { toName = id
+    , label = ""
+    , neighborhood =
             (do pos <- [offset - width `div` 2 .. offset + width `div` 2]
                 pure $ workspaces !% (pos `mod` length workspaces)
             )
+    }
 
 (!%) :: [a] -> Int -> a
 xs !% n = xs !! (n `mod` length xs)

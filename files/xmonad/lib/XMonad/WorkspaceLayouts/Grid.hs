@@ -39,7 +39,8 @@ import           XMonad.Hooks.StatusBar.PP        (PP (..))
 import           XMonad.StackSet                  (greedyView, shift)
 
 import qualified XMonad.WorkspaceLayouts.Core     as Core
-import           XMonad.WorkspaceLayouts.Core     (affineMod)
+import           XMonad.WorkspaceLayouts.Core     (WorkspaceLayoutView (..),
+                                                   affineMod)
 
 import qualified XMonad.WorkspaceLayouts.OneState as St
 
@@ -323,14 +324,15 @@ hook Init { initMapping, initWrapping, initLabelf } =
   workspaces = toList (getTheMap initMapping)
              & nub  -- account for two coordinates pointing to the same workspace
 
-pp :: X PP
-pp = do
+getView :: X WorkspaceLayoutView
+getView = do
   State { coord, mapping, labelf } <- St.get
   let XY x y = coord
-  pure $ def
-       & Core.withLabel (labelf coord & fromMaybe (show (y + 1) <> " / "))
-       & Core.withNeighborhood
-          (let coords = (flip XY y) <$> span (^. #x) mapping
-           in coords & fmap (flip Map.lookup (getTheMap mapping)) & catMaybes & nub)
-       & Core.withNameTransform (case mapping of SomeMapping (_ :: Mapping ftd) -> doToName @ftd)
+  pure $ WSLView
+    { neighborhood =
+           let coords = (flip XY y) <$> span (^. #x) mapping
+           in coords & fmap (flip Map.lookup (getTheMap mapping)) & catMaybes & nub
+    , toName = case mapping of SomeMapping (_ :: Mapping ftd) -> doToName @ftd
+    , label = labelf coord & fromMaybe (show (y + 1) <> " / ")
+    }
 

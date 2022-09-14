@@ -2,6 +2,7 @@
 {-# LANGUAGE DerivingStrategies         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE NamedFieldPuns             #-}
 {-# LANGUAGE OverloadedLabels           #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TupleSections              #-}
@@ -37,25 +38,38 @@ import qualified XMonad.Util.ExtensibleState  as XS
 import           XMonad.Util.WorkspaceCompare (mkWsSort)
 
 
-
-withNameTransform :: (WorkspaceId -> String) -> PP -> PP
-withNameTransform toName pp = pp
-  { ppCurrent = toName
-  , ppHidden = toName
-  , ppHiddenNoWindows = toName
+-- |
+--
+-- Encompasses information needed to render a workspace layout
+data WorkspaceLayoutView = WSLView
+  { label        :: String
+  , neighborhood :: [WorkspaceId]
+  , toName       :: WorkspaceId -> String
   }
 
-withNeighborhood :: [WorkspaceId] -> PP -> PP
-withNeighborhood nbhd pp = pp
-  { ppSort = do
-      sort <- (mkWsSort . pure) (compare `on` flip elemIndex nbhd)
-      pure $ filter (tag >>> (`elem` nbhd)) >>> sort
-  }
 
-withLabel :: String -> PP -> PP
-withLabel label pp = pp
-  { ppOrder = \(workspaces : rest) -> (label <> workspaces) : rest
-  }
+render :: WorkspaceLayoutView -> PP
+render (WSLView { neighborhood, toName, label }) =
+
+  withLabel . withNameTransform . withNeighborhood $ def
+
+  where
+
+  withNameTransform pp = pp
+    { ppCurrent = toName
+    , ppHidden = toName
+    , ppHiddenNoWindows = toName
+    }
+
+  withNeighborhood pp = pp
+    { ppSort = do
+        sort <- (mkWsSort . pure) (compare `on` flip elemIndex neighborhood)
+        pure $ filter (tag >>> (`elem` neighborhood)) >>> sort
+    }
+
+  withLabel pp = pp
+    { ppOrder = \(workspaces : rest) -> (label <> workspaces) : rest
+    }
 
 
 -- Doubly-inclusive
