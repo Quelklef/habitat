@@ -8,7 +8,7 @@
 
 import           Control.Category                   ((>>>))
 import           Control.Lens                       ((%~), (&), (.~), (^.))
-import           Control.Monad                      (void)
+import           Control.Monad                      (void, when)
 import           Control.Monad.Writer               (Writer, execWriter, lift,
                                                      tell)
 import           Data.Foldable                      (fold, for_)
@@ -48,6 +48,7 @@ import qualified XMonad.WorkspaceLayout.Grid        as Grid
 
 
 data WSLChoice = WSLGrid | WSLCycle
+  deriving (Show, Eq)
 
 wslChoice :: WSLChoice
 wslChoice = WSLGrid
@@ -199,21 +200,23 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
     bind' "M-]" $ sendMessage LB.Rotate
 
     -- move around workspaces two-dimensionally
-    bind' "M-s"   $ Grid.move (#y %~ succ)
-    bind' "M-w"   $ Grid.move (#y %~ pred)
-    bind' "M-S-s" $ Grid.swap (#y %~ succ)
-    bind' "M-S-w" $ Grid.swap (#y %~ pred)
-    let pairs =
-          (<>) [ (0, xK_quoteleft) ]
-               (zip [1..] [xK_1 .. xK_9])
-    for_ pairs $ \(x, key) -> do
-      bind mod                 key $ Grid.move (#x .~ x)
-      bind (mod .|. shiftMask) key $ Grid.swap (#x .~ x)
+    when (wslChoice == WSLGrid) $ do
+      bind' "M-s"   $ Grid.move (#y %~ succ)
+      bind' "M-w"   $ Grid.move (#y %~ pred)
+      bind' "M-S-s" $ Grid.swap (#y %~ succ)
+      bind' "M-S-w" $ Grid.swap (#y %~ pred)
+      let pairs =
+            (<>) [ (0, xK_quoteleft) ]
+                 (zip [1..] [xK_1 .. xK_9])
+      for_ pairs $ \(x, key) -> do
+        bind mod                 key $ Grid.move (#x .~ x)
+        bind (mod .|. shiftMask) key $ Grid.swap (#x .~ x)
 
-    bind' "M-<Right>"   $ Cycle.move Cycle.Wrap (#position %~ succ)
-    bind' "M-<Left>"    $ Cycle.move Cycle.Wrap (#position %~ pred)
-    bind' "M-C-<Right>" $ Cycle.move Cycle.Clamp (#offset %~ succ)
-    bind' "M-C-<Left>"  $ Cycle.move Cycle.Clamp (#offset %~ pred)
+    when (wslChoice == WSLCycle) $ do
+      bind' "M-<Right>"   $ Cycle.move Cycle.Wrap (#position %~ succ)
+      bind' "M-<Left>"    $ Cycle.move Cycle.Wrap (#position %~ pred)
+      bind' "M-C-<Right>" $ Cycle.move Cycle.Clamp (#offset %~ succ)
+      bind' "M-C-<Left>"  $ Cycle.move Cycle.Clamp (#offset %~ pred)
 
     -- screenshot fullscreen
     let scrot = "scrot -q 100 -e 'xclip -selection clipboard -t image/png -i $f; rm $f'"
