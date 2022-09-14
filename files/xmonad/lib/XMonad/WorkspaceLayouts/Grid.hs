@@ -17,31 +17,31 @@
 
 {- | Two-dimensional workspaces for XMonad -}
 
-module XMonad.Hooks.Indexed.Grid where
+module XMonad.WorkspaceLayouts.Grid where
 
-import           Prelude                       hiding (span)
+import           Prelude                          hiding (span)
 
-import           Control.Applicative           ((<|>))
-import           Control.Category              ((<<<), (>>>))
-import           Control.Lens                  ((%~), (&), (.~), (^.))
-import           Control.Monad.State           (evalState, execState, modify)
-import           Data.Foldable                 (fold, toList)
-import           Data.Generics.Labels          ()
-import           Data.List                     (intercalate, nub)
-import           Data.List.Split               (splitOn)
-import           Data.Map                      (Map)
-import qualified Data.Map                      as Map
-import           Data.Maybe                    (catMaybes, fromMaybe)
-import           Data.Monoid                   (Endo (..), appEndo)
-import           GHC.Generics                  (Generic)
-import           XMonad                        hiding (config, state, trace)
-import           XMonad.Hooks.StatusBar.PP     (PP (..))
-import           XMonad.StackSet               (greedyView, shift)
+import           Control.Applicative              ((<|>))
+import           Control.Category                 ((<<<), (>>>))
+import           Control.Lens                     ((%~), (&), (.~), (^.))
+import           Control.Monad.State              (evalState, execState, modify)
+import           Data.Foldable                    (fold, toList)
+import           Data.Generics.Labels             ()
+import           Data.List                        (intercalate, nub)
+import           Data.List.Split                  (splitOn)
+import           Data.Map                         (Map)
+import qualified Data.Map                         as Map
+import           Data.Maybe                       (catMaybes, fromMaybe)
+import           Data.Monoid                      (Endo (..), appEndo)
+import           GHC.Generics                     (Generic)
+import           XMonad                           hiding (config, state, trace)
+import           XMonad.Hooks.StatusBar.PP        (PP (..))
+import           XMonad.StackSet                  (greedyView, shift)
 
-import qualified XMonad.Hooks.Indexed.Core     as Core
-import           XMonad.Hooks.Indexed.Core     (affineMod)
+import qualified XMonad.WorkspaceLayouts.Core     as Core
+import           XMonad.WorkspaceLayouts.Core     (affineMod)
 
-import qualified XMonad.Hooks.Indexed.OneState as St
+import qualified XMonad.WorkspaceLayouts.OneState as St
 
 
 

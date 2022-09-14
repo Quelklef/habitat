@@ -7,34 +7,34 @@
 {-# LANGUAGE TupleSections       #-}
 {-# OPTIONS_GHC -Wall -Wwarn #-}
 
-module XMonad.Hooks.Indexed.Cycle where
+module XMonad.WorkspaceLayouts.Cycle where
 
 import           Prelude
 
-import           Control.Category            ((>>>))
-import           Control.Lens                ((%~), (&), (.~), (^.))
-import           Control.Monad.State         (execState, get, modify)
-import           Data.Foldable               (fold)
-import           Data.Generics.Labels        ()
-import           Data.List                   (intercalate)
-import           Data.List.Split             (splitOn)
-import qualified Data.Map                    as Map
-import           Data.Maybe                  (fromMaybe)
-import           Data.Monoid                 (Endo (..))
-import           Data.Semigroup              (stimes)
-import           GHC.Generics                (Generic)
+import           Control.Category             ((>>>))
+import           Control.Lens                 ((%~), (&), (.~), (^.))
+import           Control.Monad.State          (execState, get, modify)
+import           Data.Foldable                (fold)
+import           Data.Generics.Labels         ()
+import           Data.List                    (intercalate)
+import           Data.List.Split              (splitOn)
+import qualified Data.Map                     as Map
+import           Data.Maybe                   (fromMaybe)
+import           Data.Monoid                  (Endo (..))
+import           Data.Semigroup               (stimes)
+import           GHC.Generics                 (Generic)
 import qualified XMonad
-import           XMonad                      hiding (config, state, trace,
-                                              workspaces)
-import           XMonad.Hooks.StatusBar.PP   (PP (..))
-import           XMonad.Prelude              ((!?))
-import           XMonad.StackSet             (current, greedyView, shift, tag,
-                                              workspace)
-import qualified XMonad.Util.ExtensibleConf  as XC
-import qualified XMonad.Util.ExtensibleState as XS
+import           XMonad                       hiding (config, state, trace,
+                                               workspaces)
+import           XMonad.Hooks.StatusBar.PP    (PP (..))
+import           XMonad.Prelude               ((!?))
+import           XMonad.StackSet              (current, greedyView, shift, tag,
+                                               workspace)
+import qualified XMonad.Util.ExtensibleConf   as XC
+import qualified XMonad.Util.ExtensibleState  as XS
 
-import qualified XMonad.Hooks.Indexed.Core   as Core
-import           XMonad.Hooks.Indexed.Core   (affineMod)
+import qualified XMonad.WorkspaceLayouts.Core as Core
+import           XMonad.WorkspaceLayouts.Core (affineMod)
 
 import           Debug.Trace
 

@@ -9,7 +9,7 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# OPTIONS_GHC -Wall -Wwarn #-}
 
-module XMonad.Hooks.Indexed.Core where
+module XMonad.WorkspaceLayouts.Core where
 
 import           Prelude                      hiding (span)
 

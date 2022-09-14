@@ -42,9 +42,9 @@ import qualified XMonad.Util.Themes                 as Themes
 import           XMonad.Util.Themes                 (theme)
 import           XMonad.Util.WorkspaceCompare       (mkWsSort)
 
-import qualified XMonad.Hooks.Indexed.Core          as Ix.Core
-import qualified XMonad.Hooks.Indexed.Cycle         as Cycle
-import qualified XMonad.Hooks.Indexed.Grid          as Grid
+import qualified XMonad.WorkspaceLayouts.Core       as WSL.Core
+import qualified XMonad.WorkspaceLayouts.Cycle      as Cycle
+import qualified XMonad.WorkspaceLayouts.Grid       as Grid
 
 import           Debug.Trace
 

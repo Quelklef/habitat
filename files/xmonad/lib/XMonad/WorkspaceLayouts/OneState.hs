@@ -6,7 +6,7 @@
 {-# LANGUAGE TypeApplications           #-}
 {-# LANGUAGE TypeFamilies               #-}
 
-module XMonad.Hooks.Indexed.OneState
+module XMonad.WorkspaceLayouts.OneState
   ( OneState (..)
   , get
   , put
@@ -62,14 +62,14 @@ class Typeable state => OneState state where
   defaultState :: state
 
 
--- hooks into ExtensibleState
+-- hook into ExtensibleState
 newtype State state = State (Maybe state)
   deriving (Typeable)
 
 instance OneState state => ExtensionClass (State state) where
   initialValue = State Nothing
 
--- hooks into ExtensibleConf
+-- hook into ExtensibleConf
 newtype Config state = Config [Mod state]
   deriving newtype (Typeable, Semigroup)
 
@@ -87,8 +87,8 @@ trivialConfig = Config []
 --   set value will be returned
 --
 -- * Otherwise, if the state was configured during config-time, then all the
---   config-time @Mod state@ values will be applied to @default@, and that
---   will be returned
+--   config-time @Mod state@ values will be applied to @defaultState@, and
+--   that will be returned
 --
 -- * Otherwise, @default@ is returned
 get :: forall state. OneState state => X state
