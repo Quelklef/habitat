@@ -21,17 +21,17 @@ module XMonad.WorkspaceLayout.Cycle
 
 import           Prelude
 
-import           Control.Monad.State             (execState)
-import           GHC.Generics                    (Generic)
+import           Control.Monad.State         (execState)
+import           GHC.Generics                (Generic)
 import qualified XMonad
-import           XMonad                          hiding (config, state, trace,
-                                                  workspaces)
-import           XMonad.StackSet                 (greedyView, shift)
+import           XMonad                      hiding (config, state, trace,
+                                              workspaces)
+import           XMonad.StackSet             (greedyView, shift)
 
-import           XMonad.WorkspaceLayout.Core     (WorkspaceLayoutView (..))
-import qualified XMonad.WorkspaceLayout.OneState as St
-import           XMonad.WorkspaceLayout.OneState (OneState (..))
-import           XMonad.WorkspaceLayout.Util     (affineMod, (!%))
+import qualified XMonad.Util.OneState        as St
+import           XMonad.Util.OneState        (OneState (..))
+import           XMonad.WorkspaceLayout.Core (WorkspaceLayoutView (..))
+import           XMonad.WorkspaceLayout.Util (affineMod, (!%))
 
 
 

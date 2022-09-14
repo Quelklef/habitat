@@ -41,24 +41,24 @@ module XMonad.WorkspaceLayout.Grid
   , getView
   ) where
 
-import           Prelude                         hiding (span)
+import           Prelude                     hiding (span)
 
-import           Control.Category                ((>>>))
-import           Data.Foldable                   (fold, toList)
-import           Data.Function                   ((&))
-import           Data.List                       (intercalate, nub)
-import           Data.List.Split                 (splitOn)
-import           Data.Map                        (Map)
-import qualified Data.Map                        as Map
-import           Data.Maybe                      (catMaybes, fromMaybe)
-import           Data.Monoid                     (Endo (..), appEndo)
-import           GHC.Generics                    (Generic)
-import           XMonad                          hiding (config, state, trace)
-import           XMonad.StackSet                 (greedyView, shift)
+import           Control.Category            ((>>>))
+import           Data.Foldable               (fold, toList)
+import           Data.Function               ((&))
+import           Data.List                   (intercalate, nub)
+import           Data.List.Split             (splitOn)
+import           Data.Map                    (Map)
+import qualified Data.Map                    as Map
+import           Data.Maybe                  (catMaybes, fromMaybe)
+import           Data.Monoid                 (Endo (..), appEndo)
+import           GHC.Generics                (Generic)
+import           XMonad                      hiding (config, state, trace)
+import           XMonad.StackSet             (greedyView, shift)
 
-import           XMonad.WorkspaceLayout.Core     (WorkspaceLayoutView (..))
-import qualified XMonad.WorkspaceLayout.OneState as St
-import           XMonad.WorkspaceLayout.Util     (affineMod)
+import qualified XMonad.Util.OneState        as St
+import           XMonad.WorkspaceLayout.Core (WorkspaceLayoutView (..))
+import           XMonad.WorkspaceLayout.Util (affineMod)
 
 
 
