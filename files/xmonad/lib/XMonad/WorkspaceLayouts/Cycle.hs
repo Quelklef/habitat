@@ -5,35 +5,24 @@
 {-# LANGUAGE OverloadedLabels    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections       #-}
-{-# OPTIONS_GHC -Wall -Wwarn #-}
+{-# OPTIONS_GHC -Wall -Werror #-}
 
 module XMonad.WorkspaceLayouts.Cycle where
 
 import           Prelude
 
-import           Control.Category             ((>>>))
-import           Control.Lens                 ((%~), (&), (.~), (^.))
-import           Control.Monad.State          (execState, get, modify)
-import           Data.Foldable                (fold)
+import           Control.Lens                 ((%~), (^.))
+import           Control.Monad.State          (execState)
 import           Data.Generics.Labels         ()
-import           Data.List                    (intercalate)
-import           Data.List.Split              (splitOn)
-import qualified Data.Map                     as Map
 import           Data.Maybe                   (fromMaybe)
-import           Data.Monoid                  (Endo (..))
-import           Data.Semigroup               (stimes)
 import           GHC.Generics                 (Generic)
 import qualified XMonad
 import           XMonad                       hiding (config, state, trace,
                                                workspaces)
-import           XMonad.Hooks.StatusBar.PP    (PP (..))
-import           XMonad.Prelude               ((!?))
-import           XMonad.StackSet              (current, greedyView, shift, tag,
-                                               workspace)
+import           XMonad.StackSet              (greedyView, shift)
 import qualified XMonad.Util.ExtensibleConf   as XC
 import qualified XMonad.Util.ExtensibleState  as XS
 
-import qualified XMonad.WorkspaceLayouts.Core as Core
 import           XMonad.WorkspaceLayouts.Core (WorkspaceLayoutView (..),
                                                affineMod)
 
@@ -79,7 +68,7 @@ swap mode f = do
 
 calc :: BoundsMode -> (Coord -> Coord) -> X (Coord, WorkspaceId)
 calc mode f = do
-  (coord, config@Config { width, workspaces }) <- getBoth
+  (coord, Config { width, workspaces }) <- getBoth
   let coord' = flip execState coord $ do
         modify f
         offset' <- (^. #offset) <$> get
@@ -92,11 +81,6 @@ calc mode f = do
   let wid = workspaces !% (coord' ^. #position)
   pure (coord', wid)
 
-  where
-
-  getCurrentWid :: X WorkspaceId
-  getCurrentWid = tag . workspace . current . windowset <$> get
-
 
 hook :: Config -> XConfig l -> XConfig l
 hook config = XC.once endo config
@@ -105,7 +89,7 @@ hook config = XC.once endo config
 
 getView :: X WorkspaceLayoutView
 getView = do
-  (coord@Coord { position, offset }, Config { width, workspaces }) <- traceShowId <$> getBoth
+  (Coord { offset }, Config { width, workspaces }) <- traceShowId <$> getBoth
   pure $ WSLView
     { toName = id
     , label = ""

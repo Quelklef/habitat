@@ -13,7 +13,7 @@
 {-# LANGUAGE TypeApplications          #-}
 {-# LANGUAGE TypeFamilies              #-}
 {-# LANGUAGE ViewPatterns              #-}
-{-# OPTIONS_GHC -Wall -Wwarn #-}
+{-# OPTIONS_GHC -Wall -Werror #-}
 
 {- | Two-dimensional workspaces for XMonad -}
 
@@ -24,7 +24,6 @@ import           Prelude                          hiding (span)
 import           Control.Applicative              ((<|>))
 import           Control.Category                 ((<<<), (>>>))
 import           Control.Lens                     ((%~), (&), (.~), (^.))
-import           Control.Monad.State              (evalState, execState, modify)
 import           Data.Foldable                    (fold, toList)
 import           Data.Generics.Labels             ()
 import           Data.List                        (intercalate, nub)
@@ -35,10 +34,8 @@ import           Data.Maybe                       (catMaybes, fromMaybe)
 import           Data.Monoid                      (Endo (..), appEndo)
 import           GHC.Generics                     (Generic)
 import           XMonad                           hiding (config, state, trace)
-import           XMonad.Hooks.StatusBar.PP        (PP (..))
 import           XMonad.StackSet                  (greedyView, shift)
 
-import qualified XMonad.WorkspaceLayouts.Core     as Core
 import           XMonad.WorkspaceLayouts.Core     (WorkspaceLayoutView (..),
                                                    affineMod)
 
@@ -98,7 +95,7 @@ newtype Mapping (ftd :: Formatted) = Mapping { unMapping :: Map Coord WorkspaceI
   deriving (Show, Generic)
 
 unsafeChangeFormatting :: forall old (ftd :: Formatted). Mapping old -> Mapping ftd
-unsafeChangeFormatting (Mapping map) = Mapping map
+unsafeChangeFormatting (Mapping mp) = Mapping mp
 
 instance Semigroup (Mapping ftd) where
   Mapping ma <> Mapping mb = Mapping (mb <> ma)  -- right-biased
@@ -110,10 +107,10 @@ instance Monoid (Mapping ftd) where
 data SomeMapping = forall ftd. IsFormatted ftd => SomeMapping (Mapping ftd)
 
 onTheMap :: (Map Coord WorkspaceId -> Map Coord WorkspaceId) -> (SomeMapping -> SomeMapping)
-onTheMap f (SomeMapping (Mapping map :: Mapping ftd)) = (SomeMapping (Mapping @ftd (f map)))
+onTheMap f (SomeMapping (Mapping mp :: Mapping ftd)) = (SomeMapping (Mapping @ftd (f mp)))
 
 getTheMap :: SomeMapping -> Map Coord WorkspaceId
-getTheMap (SomeMapping (Mapping map)) = map
+getTheMap (SomeMapping (Mapping mp)) = mp
 
 range :: Ord x => (Coord -> x) -> SomeMapping -> Maybe (x, x)
 range proj (getTheMap -> mapping) =
@@ -156,7 +153,7 @@ fromFunction (Dims { width, height }) =
 --
 -- Each coordinate (x, y) will be given the name @show (x + 1)@
 grid :: Dims -> Mapping 'Formatted
-grid = grid' (\(XY x y) -> show $ x + 1)
+grid = grid' (\(XY x _) -> show $ x + 1)
 
 
 -- |
@@ -218,6 +215,7 @@ instance St.OneState State where
     { mapping = SomeMapping (grid $ Dims 5 5)
     , wrapping = Wrapping False False
     , coord = XY 0 0
+    , labelf = const Nothing
     }
 
 -- Wrap a coordinate around the x/y axes according to the configured wrapping mode
@@ -327,7 +325,7 @@ hook Init { initMapping, initWrapping, initLabelf } =
 getView :: X WorkspaceLayoutView
 getView = do
   State { coord, mapping, labelf } <- St.get
-  let XY x y = coord
+  let XY _ y = coord
   pure $ WSLView
     { neighborhood =
            let coords = (flip XY y) <$> span (^. #x) mapping

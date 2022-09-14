@@ -5,6 +5,7 @@
 {-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE TypeApplications           #-}
 {-# LANGUAGE TypeFamilies               #-}
+{-# OPTIONS_GHC -Wall -Werror #-}
 
 module XMonad.WorkspaceLayouts.OneState
   ( OneState (..)

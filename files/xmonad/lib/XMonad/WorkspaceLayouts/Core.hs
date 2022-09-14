@@ -8,33 +8,21 @@
 {-# LANGUAGE TupleSections              #-}
 {-# LANGUAGE TypeApplications           #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# OPTIONS_GHC -Wall -Wwarn #-}
+{-# OPTIONS_GHC -Wall -Werror #-}
 
 module XMonad.WorkspaceLayouts.Core where
 
 import           Prelude                      hiding (span)
 
 import           Control.Category             ((>>>))
-import           Control.Lens                 (view, (%~), (&), (.~), (^.))
-import           Data.Foldable                (fold, toList)
 import           Data.Function                (on)
-import           Data.Functor                 (($>))
 import           Data.Generics.Labels         ()
-import           Data.List                    (elemIndex, intercalate, nub,
-                                               sort)
-import           Data.List.Split              (splitOn)
-import           Data.Map                     (Map)
-import qualified Data.Map                     as Map
-import           Data.Maybe                   (catMaybes, fromMaybe, isJust)
-import           Data.Monoid                  (Endo (..), appEndo)
+import           Data.List                    (elemIndex)
 import           GHC.Generics                 (Generic)
-import qualified XMonad
 import           XMonad                       hiding (config, modify, state,
                                                trace, workspaces)
 import           XMonad.Hooks.StatusBar.PP    (PP (..))
 import           XMonad.StackSet              (tag)
-import qualified XMonad.Util.ExtensibleConf   as XC
-import qualified XMonad.Util.ExtensibleState  as XS
 import           XMonad.Util.WorkspaceCompare (mkWsSort)
 
 
@@ -45,7 +33,7 @@ data WorkspaceLayoutView = WSLView
   { label        :: String
   , neighborhood :: [WorkspaceId]
   , toName       :: WorkspaceId -> String
-  }
+  } deriving (Generic)
 
 
 render :: WorkspaceLayoutView -> PP
