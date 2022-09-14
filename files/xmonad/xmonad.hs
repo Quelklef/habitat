@@ -56,8 +56,8 @@ main =
     & docks
     & ewmh
     & withSB myStatusBar
-    & Grid.hook gridInit
-    -- & Cycle.hook cycleConfig
+    -- & Grid.hook gridInit
+    & Cycle.hook cycleConfig
     & xmonad
 
   where
@@ -86,7 +86,7 @@ main =
 
   mkPP :: X PP
   mkPP = do
-    pp <- WSL.Core.render <$> Grid.getView
+    pp <- WSL.Core.render <$> Cycle.getView
     pure $ pp
         { ppCurrent = ppCurrent pp >>> pad >>> xmobarColor "white" "#C06"
         , ppHidden = ppHidden pp >>> pad >>> xmobarColor "#BBB" ""
@@ -202,10 +202,10 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
       bind mod                 key $ Grid.move (#x .~ x)
       bind (mod .|. shiftMask) key $ Grid.swap (#x .~ x)
 
-    -- bind' "M-<Right>"   $ Cycle.move Cycle.Wrap (#position %~ succ)
-    -- bind' "M-<Left>"    $ Cycle.move Cycle.Wrap (#position %~ pred)
-    -- bind' "M-C-<Right>" $ Cycle.move Cycle.Clamp (#offset %~ succ)
-    -- bind' "M-C-<Left>"  $ Cycle.move Cycle.Clamp (#offset %~ pred)
+    bind' "M-<Right>"   $ Cycle.move Cycle.Wrap (#position %~ succ)
+    bind' "M-<Left>"    $ Cycle.move Cycle.Wrap (#position %~ pred)
+    bind' "M-C-<Right>" $ Cycle.move Cycle.Clamp (#offset %~ succ)
+    bind' "M-C-<Left>"  $ Cycle.move Cycle.Clamp (#offset %~ pred)
 
     -- screenshot fullscreen
     let scrot = "scrot -q 100 -e 'xclip -selection clipboard -t image/png -i $f; rm $f'"

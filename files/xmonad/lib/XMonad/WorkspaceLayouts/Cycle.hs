@@ -5,28 +5,27 @@
 {-# LANGUAGE OverloadedLabels    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections       #-}
+{-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE TypeFamilies        #-}
 {-# OPTIONS_GHC -Wall -Werror #-}
 
 module XMonad.WorkspaceLayouts.Cycle where
 
 import           Prelude
 
-import           Control.Lens                 ((%~), (^.))
-import           Control.Monad.State          (execState)
-import           Data.Generics.Labels         ()
-import           Data.Maybe                   (fromMaybe)
-import           GHC.Generics                 (Generic)
+import           Control.Lens                     ((%~), (.~), (^.))
+import           Control.Monad.State              (execState)
+import           Data.Generics.Labels             ()
+import           GHC.Generics                     (Generic)
 import qualified XMonad
-import           XMonad                       hiding (config, state, trace,
-                                               workspaces)
-import           XMonad.StackSet              (greedyView, shift)
-import qualified XMonad.Util.ExtensibleConf   as XC
-import qualified XMonad.Util.ExtensibleState  as XS
+import           XMonad                           hiding (config, state, trace,
+                                                   workspaces)
+import           XMonad.StackSet                  (greedyView, shift)
 
-import           XMonad.WorkspaceLayouts.Core (WorkspaceLayoutView (..),
-                                               affineMod)
-
-import           Debug.Trace
+import           XMonad.WorkspaceLayouts.Core     (WorkspaceLayoutView (..),
+                                                   affineMod)
+import qualified XMonad.WorkspaceLayouts.OneState as St
+import           XMonad.WorkspaceLayouts.OneState (OneState (..))
 
 
 
@@ -36,20 +35,25 @@ data Coord = Coord
   }
   deriving (Show, Eq, Ord, Generic)
 
-instance ExtensionClass Coord where
-  initialValue = Coord 0 0
-
 data Config = Config
   { width      :: Int
   , workspaces :: [WorkspaceId]
   }
   deriving (Show, Generic)
 
-instance Semigroup Config where
-  _ <> c = c
+data State = State
+  { coord  :: Coord
+  , config :: Config
+  }
+  deriving (Show, Generic)
 
-instance Default Config where
-  def = Config 5 (single <$> ['a' .. 'j'])
+instance OneState State where
+  type Mod State = State -> State
+  merge ma s = pure (ma s)
+  defaultState = State
+    { coord = Coord 0 0
+    , config = Config 5 (single <$> ['a' .. 'j'])
+    }
     where single = (:[])
 
 
@@ -58,7 +62,7 @@ data BoundsMode = Clamp | Wrap
 move :: BoundsMode -> (Coord -> Coord) -> X ()
 move mode f = do
   (coord', wid') <- calc mode f
-  XS.put coord'
+  St.modify (#coord .~ coord' :: State -> State)
   windows (greedyView wid')
 
 swap :: BoundsMode -> (Coord -> Coord) -> X ()
@@ -68,7 +72,7 @@ swap mode f = do
 
 calc :: BoundsMode -> (Coord -> Coord) -> X (Coord, WorkspaceId)
 calc mode f = do
-  (coord, Config { width, workspaces }) <- getBoth
+  State coord (Config { width, workspaces }) <- St.get
   let coord' = flip execState coord $ do
         modify f
         offset' <- (^. #offset) <$> get
@@ -83,13 +87,13 @@ calc mode f = do
 
 
 hook :: Config -> XConfig l -> XConfig l
-hook config = XC.once endo config
-  where
-  endo xc = xc { XMonad.workspaces = config ^. #workspaces }
+hook config = St.once @State
+  (\xc -> xc { XMonad.workspaces = config ^. #workspaces })
+  (\state -> state { config = config })
 
 getView :: X WorkspaceLayoutView
 getView = do
-  (Coord { offset }, Config { width, workspaces }) <- traceShowId <$> getBoth
+  State (Coord { offset }) (Config { width, workspaces }) <- St.get
   pure $ WSLView
     { toName = id
     , label = ""
@@ -101,6 +105,3 @@ getView = do
 
 (!%) :: [a] -> Int -> a
 xs !% n = xs !! (n `mod` length xs)
-
-getBoth :: (Default conf, Typeable conf, ExtensionClass state) => X (state, conf)
-getBoth = (,) <$> XS.get <*> (fromMaybe def <$> XC.ask)
