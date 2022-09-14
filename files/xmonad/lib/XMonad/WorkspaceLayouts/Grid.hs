@@ -36,10 +36,9 @@ import           GHC.Generics                     (Generic)
 import           XMonad                           hiding (config, state, trace)
 import           XMonad.StackSet                  (greedyView, shift)
 
-import           XMonad.WorkspaceLayouts.Core     (WorkspaceLayoutView (..),
-                                                   affineMod)
-
+import           XMonad.WorkspaceLayouts.Core     (WorkspaceLayoutView (..))
 import qualified XMonad.WorkspaceLayouts.OneState as St
+import           XMonad.WorkspaceLayouts.Util     (affineMod)
 
 
 

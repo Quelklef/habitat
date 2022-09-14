@@ -22,10 +22,10 @@ import           XMonad                           hiding (config, state, trace,
                                                    workspaces)
 import           XMonad.StackSet                  (greedyView, shift)
 
-import           XMonad.WorkspaceLayouts.Core     (WorkspaceLayoutView (..),
-                                                   affineMod)
+import           XMonad.WorkspaceLayouts.Core     (WorkspaceLayoutView (..))
 import qualified XMonad.WorkspaceLayouts.OneState as St
 import           XMonad.WorkspaceLayouts.OneState (OneState (..))
+import           XMonad.WorkspaceLayouts.Util     (affineMod, (!%))
 
 
 
@@ -103,5 +103,3 @@ getView = do
             )
     }
 
-(!%) :: [a] -> Int -> a
-xs !% n = xs !! (n `mod` length xs)
