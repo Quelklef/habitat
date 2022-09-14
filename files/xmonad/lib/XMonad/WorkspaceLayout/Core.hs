@@ -16,7 +16,6 @@ import           Prelude                      hiding (span)
 
 import           Control.Category             ((>>>))
 import           Data.Function                (on)
-import           Data.Generics.Labels         ()
 import           Data.List                    (elemIndex)
 import           GHC.Generics                 (Generic)
 import           XMonad                       hiding (config, modify, state,

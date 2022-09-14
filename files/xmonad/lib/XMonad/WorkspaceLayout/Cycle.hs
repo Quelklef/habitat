@@ -9,13 +9,19 @@
 {-# LANGUAGE TypeFamilies        #-}
 {-# OPTIONS_GHC -Wall -Werror #-}
 
-module XMonad.WorkspaceLayout.Cycle where
+module XMonad.WorkspaceLayout.Cycle
+  ( Coord (..)
+  , Config (..)
+  , BoundsMode (..)
+  , move
+  , swap
+  , hook
+  , getView
+  ) where
 
 import           Prelude
 
-import           Control.Lens                    ((%~), (.~), (^.))
 import           Control.Monad.State             (execState)
-import           Data.Generics.Labels            ()
 import           GHC.Generics                    (Generic)
 import qualified XMonad
 import           XMonad                          hiding (config, state, trace,
@@ -62,7 +68,7 @@ data BoundsMode = Clamp | Wrap
 move :: BoundsMode -> (Coord -> Coord) -> X ()
 move mode f = do
   (coord', wid') <- calc mode f
-  St.modify (#coord .~ coord' :: State -> State)
+  St.modify $ \st -> st { coord = coord' }
   windows (greedyView wid')
 
 swap :: BoundsMode -> (Coord -> Coord) -> X ()
@@ -75,20 +81,22 @@ calc mode f = do
   State coord (Config { width, workspaces }) <- St.get
   let coord' = flip execState coord $ do
         modify f
-        offset' <- (^. #offset) <$> get
-        modify $ #position %~
-          (let lo = offset' - width `div` 2
-               hi = offset' + width `div` 2
-          in case mode of
-            Clamp -> max lo . min hi
-            Wrap  -> affineMod (lo, hi))
-  let wid = workspaces !% (coord' ^. #position)
+        offset' <- offset <$> get
+        modify $
+          let updatePosition =
+                (let lo = offset' - width `div` 2
+                     hi = offset' + width `div` 2
+                in case mode of
+                  Clamp -> max lo . min hi
+                  Wrap  -> affineMod (lo, hi))
+          in \st -> st { position = updatePosition (position st) }
+  let wid = workspaces !% (position coord')
   pure (coord', wid)
 
 
 hook :: Config -> XConfig l -> XConfig l
 hook config = St.once @State
-  (\xc -> xc { XMonad.workspaces = config ^. #workspaces })
+  (\xc -> xc { XMonad.workspaces = workspaces config })
   (\state -> state { config = config })
 
 getView :: X WorkspaceLayoutView

@@ -17,15 +17,35 @@
 
 {- | Two-dimensional workspaces for XMonad -}
 
-module XMonad.WorkspaceLayout.Grid where
+module XMonad.WorkspaceLayout.Grid
+  ( Formatted (..)
+  , IsFormatted (..)
+  , unsafeChangeFormatting
+  , Mapping (..)
+  , SomeMapping (..)
+  , Dims(..)
+  , fromMap
+  , fromFunction
+  , grid
+  , grid'
+  , group
+  , column
+  , Coord (..)
+  , Wrapping (..)
+  , State (..)
+  , move
+  , swap
+  , update
+  , Init (..)
+  , hook
+  , getView
+  ) where
 
 import           Prelude                         hiding (span)
 
-import           Control.Applicative             ((<|>))
-import           Control.Category                ((<<<), (>>>))
-import           Control.Lens                    ((%~), (&), (.~), (^.))
+import           Control.Category                ((>>>))
 import           Data.Foldable                   (fold, toList)
-import           Data.Generics.Labels            ()
+import           Data.Function                   ((&))
 import           Data.List                       (intercalate, nub)
 import           Data.List.Split                 (splitOn)
 import           Data.Map                        (Map)
@@ -105,8 +125,8 @@ instance Monoid (Mapping ftd) where
 
 data SomeMapping = forall ftd. IsFormatted ftd => SomeMapping (Mapping ftd)
 
-onTheMap :: (Map Coord WorkspaceId -> Map Coord WorkspaceId) -> (SomeMapping -> SomeMapping)
-onTheMap f (SomeMapping (Mapping mp :: Mapping ftd)) = (SomeMapping (Mapping @ftd (f mp)))
+-- onTheMap :: (Map Coord WorkspaceId -> Map Coord WorkspaceId) -> (SomeMapping -> SomeMapping)
+-- onTheMap f (SomeMapping (Mapping mp :: Mapping ftd)) = (SomeMapping (Mapping @ftd (f mp)))
 
 getTheMap :: SomeMapping -> Map Coord WorkspaceId
 getTheMap (SomeMapping (Mapping mp)) = mp
@@ -222,11 +242,11 @@ wrap :: State -> (Coord -> Coord)
 wrap state =
 
   appEndo . fromMaybe (Endo id) $ do
-    xRange <- range (^. #x) (state ^. #mapping)
-    yRange <- range (^. #y) (state ^. #mapping)
+    xRange <- range x (mapping state)
+    yRange <- range y (mapping state)
 
-    pure $ guard (state ^. #wrapping . #wrapX) (Endo $ #x %~ affineMod xRange)
-        <> guard (state ^. #wrapping . #wrapY) (Endo $ #y %~ affineMod yRange)
+    pure $ guard (state & wrapping & wrapX) (Endo $ \c -> c { x = affineMod xRange (x c) })
+        <> guard (state & wrapping & wrapY) (Endo $ \c -> c { y = affineMod yRange (y c) })
 
   where
 
@@ -244,7 +264,7 @@ wrap state =
 -- Use this to move around workspaces
 move :: (Coord -> Coord) -> X ()
 move = update $ \coord wid -> do
-  St.modify (#coord .~ coord :: State -> State)
+  St.modify $ \st -> st { coord = coord }
   windows (greedyView wid)
 
 
@@ -264,35 +284,6 @@ update act f = do
     Nothing -> pure ()
     Just wid -> do
      act coord' wid
-
-
--- |
---
--- Let @N@ be the number of rows in the current state. Given a
--- bijection @f@ between @[0 .. N-1]@ and itself, moves each row from
--- the y-index @y@ to y-index @f y@.
---
--- If a function is supplied which is not a bijection, behaviour is undefined.
-organizeRows :: (Int -> Int) -> (State -> State)
-organizeRows perm =
-      (#labelf %~ (<<< (#y %~ perm)))
-  >>> (#mapping %~ onTheMap (Map.mapKeys (#y %~ perm)))
-
-
--- | Sets the label of all cells with the given y-value
-setYLabel :: Int -> String -> (State -> State)
-setYLabel y label = relabel (\_ coord -> if coord ^. #y == y then Just label else Nothing)
-
--- |
---
--- Accepts a function which, given the old label-assigning function,
--- produces a new label-assigning function. Uses that argument to
--- relabel the workspace layout.
-relabel :: Endo' (Coord -> Maybe String) -> (State -> State)
-relabel g = #labelf %~ (\f c -> g f c <|> f c)
-
-type Endo' a = a -> a
-
 
 
 data Init = Init
@@ -327,7 +318,7 @@ getView = do
   let XY _ y = coord
   pure $ WSLView
     { neighborhood =
-           let coords = (flip XY y) <$> span (^. #x) mapping
+           let coords = (flip XY y) <$> span x mapping
            in coords & fmap (flip Map.lookup (getTheMap mapping)) & catMaybes & nub
     , toName = case mapping of SomeMapping (_ :: Mapping ftd) -> doToName @ftd
     , label = labelf coord & fromMaybe (show (y + 1) <> " / ")
