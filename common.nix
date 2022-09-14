@@ -98,6 +98,7 @@ generic-system-config = {
     enable = true;
     touchpad.tappingDragLock = false;
     touchpad.transformationMatrix = "2 0 0 0 2 0 0 0 1";
+    touchpad.accelSpeed = "0";
     mouse.tappingDragLock = false;
     mouse.accelSpeed = "0";
   };
