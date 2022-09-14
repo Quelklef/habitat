@@ -7,7 +7,7 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# OPTIONS_GHC -Wall -Werror #-}
 
-module XMonad.WorkspaceLayouts.OneState
+module XMonad.WorkspaceLayout.OneState
   ( OneState (..)
   , get
   , put

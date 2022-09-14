@@ -9,23 +9,23 @@
 {-# LANGUAGE TypeFamilies        #-}
 {-# OPTIONS_GHC -Wall -Werror #-}
 
-module XMonad.WorkspaceLayouts.Cycle where
+module XMonad.WorkspaceLayout.Cycle where
 
 import           Prelude
 
-import           Control.Lens                     ((%~), (.~), (^.))
-import           Control.Monad.State              (execState)
-import           Data.Generics.Labels             ()
-import           GHC.Generics                     (Generic)
+import           Control.Lens                    ((%~), (.~), (^.))
+import           Control.Monad.State             (execState)
+import           Data.Generics.Labels            ()
+import           GHC.Generics                    (Generic)
 import qualified XMonad
-import           XMonad                           hiding (config, state, trace,
-                                                   workspaces)
-import           XMonad.StackSet                  (greedyView, shift)
+import           XMonad                          hiding (config, state, trace,
+                                                  workspaces)
+import           XMonad.StackSet                 (greedyView, shift)
 
-import           XMonad.WorkspaceLayouts.Core     (WorkspaceLayoutView (..))
-import qualified XMonad.WorkspaceLayouts.OneState as St
-import           XMonad.WorkspaceLayouts.OneState (OneState (..))
-import           XMonad.WorkspaceLayouts.Util     (affineMod, (!%))
+import           XMonad.WorkspaceLayout.Core     (WorkspaceLayoutView (..))
+import qualified XMonad.WorkspaceLayout.OneState as St
+import           XMonad.WorkspaceLayout.OneState (OneState (..))
+import           XMonad.WorkspaceLayout.Util     (affineMod, (!%))
 
 
 

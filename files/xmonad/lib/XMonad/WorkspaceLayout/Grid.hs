@@ -17,28 +17,28 @@
 
 {- | Two-dimensional workspaces for XMonad -}
 
-module XMonad.WorkspaceLayouts.Grid where
+module XMonad.WorkspaceLayout.Grid where
 
-import           Prelude                          hiding (span)
+import           Prelude                         hiding (span)
 
-import           Control.Applicative              ((<|>))
-import           Control.Category                 ((<<<), (>>>))
-import           Control.Lens                     ((%~), (&), (.~), (^.))
-import           Data.Foldable                    (fold, toList)
-import           Data.Generics.Labels             ()
-import           Data.List                        (intercalate, nub)
-import           Data.List.Split                  (splitOn)
-import           Data.Map                         (Map)
-import qualified Data.Map                         as Map
-import           Data.Maybe                       (catMaybes, fromMaybe)
-import           Data.Monoid                      (Endo (..), appEndo)
-import           GHC.Generics                     (Generic)
-import           XMonad                           hiding (config, state, trace)
-import           XMonad.StackSet                  (greedyView, shift)
+import           Control.Applicative             ((<|>))
+import           Control.Category                ((<<<), (>>>))
+import           Control.Lens                    ((%~), (&), (.~), (^.))
+import           Data.Foldable                   (fold, toList)
+import           Data.Generics.Labels            ()
+import           Data.List                       (intercalate, nub)
+import           Data.List.Split                 (splitOn)
+import           Data.Map                        (Map)
+import qualified Data.Map                        as Map
+import           Data.Maybe                      (catMaybes, fromMaybe)
+import           Data.Monoid                     (Endo (..), appEndo)
+import           GHC.Generics                    (Generic)
+import           XMonad                          hiding (config, state, trace)
+import           XMonad.StackSet                 (greedyView, shift)
 
-import           XMonad.WorkspaceLayouts.Core     (WorkspaceLayoutView (..))
-import qualified XMonad.WorkspaceLayouts.OneState as St
-import           XMonad.WorkspaceLayouts.Util     (affineMod)
+import           XMonad.WorkspaceLayout.Core     (WorkspaceLayoutView (..))
+import qualified XMonad.WorkspaceLayout.OneState as St
+import           XMonad.WorkspaceLayout.Util     (affineMod)
 
 
 

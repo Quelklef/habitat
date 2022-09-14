@@ -1,4 +1,4 @@
-module XMonad.WorkspaceLayouts.Util where
+module XMonad.WorkspaceLayout.Util where
 
 (!%) :: [a] -> Int -> a
 xs !% n = xs !! (n `mod` length xs)

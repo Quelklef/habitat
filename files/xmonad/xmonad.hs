@@ -42,11 +42,15 @@ import qualified XMonad.Util.Themes                 as Themes
 import           XMonad.Util.Themes                 (theme)
 import           XMonad.Util.WorkspaceCompare       (mkWsSort)
 
-import qualified XMonad.WorkspaceLayouts.Core       as WSL.Core
-import qualified XMonad.WorkspaceLayouts.Cycle      as Cycle
-import qualified XMonad.WorkspaceLayouts.Grid       as Grid
+import qualified XMonad.WorkspaceLayout.Core        as WSL.Core
+import qualified XMonad.WorkspaceLayout.Cycle       as Cycle
+import qualified XMonad.WorkspaceLayout.Grid        as Grid
 
-import           Debug.Trace
+
+data WSLChoice = WSLGrid | WSLCycle
+
+wslChoice :: WSLChoice
+wslChoice = WSLGrid
 
 
 main :: IO ()
@@ -56,8 +60,9 @@ main =
     & docks
     & ewmh
     & withSB myStatusBar
-    -- & Grid.hook gridInit
-    & Cycle.hook cycleConfig
+    & (case wslChoice of
+        WSLGrid  -> Grid.hook gridInit
+        WSLCycle -> Cycle.hook cycleConfig)
     & xmonad
 
   where
@@ -86,7 +91,10 @@ main =
 
   mkPP :: X PP
   mkPP = do
-    pp <- WSL.Core.render <$> Cycle.getView
+    pp <- WSL.Core.render <$>
+            (case wslChoice of
+              WSLGrid  -> Grid.getView
+              WSLCycle -> Cycle.getView)
     pure $ pp
         { ppCurrent = ppCurrent pp >>> pad >>> xmobarColor "white" "#C06"
         , ppHidden = ppHidden pp >>> pad >>> xmobarColor "#BBB" ""
