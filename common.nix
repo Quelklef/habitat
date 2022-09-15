@@ -420,13 +420,14 @@ telegram = {
 discord = {
 
   # See github.com/NixOS/nixpkgs/issues/94806 and reddit.com/r/NixOS/comments/i5bpjy
+  # To update: download .tar.gz from discord.gg, read filename, then bump version below
   environment.systemPackages =
     let
-      version = "0.0.19";
+      version = "0.0.20";
       discord = pkgs.discord.overrideAttrs (_: {
         src = builtins.fetchTarball
           { url = "https://dl.discordapp.net/apps/linux/${version}/discord-${version}.tar.gz";
-            sha256 = "1kwqn1xr96kvrlbjd14m304g2finc5f5ljvnklg6fs5k4avrvmn4";
+            sha256 = "0qaczvp79b4gzzafgc5ynp6h4nd2ppvndmj6pcs1zys3c0hrabpv";
           };
       });
     in [ discord ];
