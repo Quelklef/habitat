@@ -199,8 +199,12 @@ function spoon {
 function spork {
   which "$1" || return 1
   nohup "$@" >/dev/null 2>&1 &
-  exit
-  exit
+  exit > /dev/null; exit
+}
+
+# lol
+function RECURSE {
+  spork $TERM
 }
 
 # enable aliases on spoon/spork
@@ -212,3 +216,15 @@ function dl { spoon google-chrome-stable && spork true; }
 function dr { spoon telegram-desktop && spoon thunderbird && spoon discord && spork true; }
 
 alias chrome-unsafe='google-chrome-stable --disable-web-security --user-data-dir=chrome-temp-profile'
+
+# misspellings
+alias kka='kak '
+alias sl='ls '
+
+# https://askubuntu.com/a/1349604/437551
+function fix-bluetooth {
+  sudo hciconfig hci0 down
+  sudo rmmod btusb
+  sudo modprobe btusb
+  sudo hciconfig hci0 up
+}
