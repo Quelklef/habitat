@@ -167,18 +167,15 @@ automatic-system-cleanup = {
 };
 
 # =============================================================================
-cachix = {
-  imports = [ ./cachix/cachix.nix ];
-  environment = {
-    systemPackages = with pkgs; [ cachix ];
-    interactiveShellInit = let
-      cachix-dir = builtins.toString ./cachix;
-    in ''
-      function cachix {
-        echo >&2 "Use 'command cachix', and remember to point it to '${cachix-dir}'"
-        return 1
-      }
-    '';
+nix-caches = {
+  nix = {
+    binaryCaches = [
+      "https://cache.nixos.org/"
+      "https://shpadoinkle.cachix.org"
+    ];
+    binaryCachePublicKeys = [
+      "shpadoinkle.cachix.org-1:aRltE7Yto3ArhZyVjsyqWh1hmcCf27pYSmO1dPaadZ8="
+    ];
   };
 };
 
