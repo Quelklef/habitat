@@ -205,13 +205,17 @@ kopia = {
     xdg.configFile."kopia".source = linked (stateloc + "/kopia");
   };
 
-  systemd.services.backup = {
-    enable = false;  # temp disabled
+  systemd.services.auto-backup = {
     description = "Regular system backup";
     startAt = "hourly";
+    serviceConfig = { User = "root"; };
+    environment = {
+      PATH = lib.mkForce (pkgs.lib.strings.makeBinPath (with pkgs; [ openssh_hpn ]));
+    };
     script = ''
-      ${pkgs.kopia}/bin/kopia snapshot ${stateloc}
+      ${pkgs.kopia}/bin/kopia snapshot /per
     '';
+    # WANT^ target '/per' ought to be configurable by-system
   };
 };
 
