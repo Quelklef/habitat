@@ -445,26 +445,6 @@ alacritty = {
 };
 
 # =============================================================================
-ulauncher =
-  lib.mkIf false  # fucking ulauncher is broken for some reason
-{
-  environment.systemPackages = [ ulauncher ];
-  home-manager.users.${user} = {
-    xdg.dataFile."ulauncher".source = linked (stateloc + "/ulauncher/home.local.share");
-    xdg.configFile."ulauncher".source = linked (stateloc + "/ulauncher/home.config");
-    xsession.enable = true;
-    xsession.initExtra = ''
-      # This is a bit of a hack. Ideally, invocation would be handled by systemd, not xsession
-      systemctl --user --no-block start ulauncher
-    '';
-  };
-  systemd.user.services.ulauncher = {
-    description = "ulauncher";
-    script = "${pkgs.ulauncher}/bin/ulauncher --dev --hide-window";
-  };
-};
-
-# =============================================================================
 nixops = {
   environment.systemPackages = with pkgs; [ nixops ];
   nixpkgs.config.permittedInsecurePackages = [ "python2.7-pyjwt-1.7.1" ];
