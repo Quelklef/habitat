@@ -88,19 +88,16 @@ config = defaultConfig
     batt_is_charging=$({
       case "$batt_all" in
         *Charging*) echo -n 1 ;;
-        *Discharging*) echo -n 0 ;;
-        *'Not charging'*) echo 0 ;;
-        *Full*) echo 0 ;;
+        *) echo -n 0 ;;
       esac
     })
 
     batt_charging=$({
       batt_time() { echo "$batt_all" | grep -oP '\d{2}:\d{2}(?=:)'; }
       case "$batt_all" in
-        *'Not charging'*) echo ' ---:--' ;;
-        *'Charging, 100%,  until charged'*) echo ' ---:--' ;;
-        *Charging*) echo -n ' ↑'; batt_time ;;
+        *Charging*:*'until charged'*) echo -n ' ↑'; batt_time ;;
         *Discharging*) echo -n ' ↓'; batt_time ;;
+        *) echo ' ---:--' ;;
       esac
     })
 
