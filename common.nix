@@ -204,7 +204,7 @@ kopia = {
 
   systemd.services.auto-backup = {
     description = "Regular system backup";
-    startAt = "hourly";
+    startAt = "*-*-* 04:00:00";
     serviceConfig = { User = "root"; };
     environment = {
       PATH = lib.mkForce (pkgs.lib.strings.makeBinPath (with pkgs; [ openssh_hpn ]));
