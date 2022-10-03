@@ -153,20 +153,6 @@ generic-system-config = {
 };
 
 # =============================================================================
-automatic-system-cleanup = {
-  systemd.services.custodian = {
-    description = "Regular system cleanup";
-    script = ''
-      bin=${config.nix.package.out}/bin
-      $bin/nix-env --profile /nix/var/nix/profiles/system --delete-generations +25
-      $bin/nix-collect-garbage
-    '';
-    startAt = "06:00";
-    enable = false;  # seems to wipe out stuff I need for work, so disable. WANT: fix!
-  };
-};
-
-# =============================================================================
 nix-caches = {
   nix = {
     binaryCaches = [
