@@ -267,31 +267,38 @@ xmonad-wm = let
       '';
     in wrapped;
 
-  xmo-ghc = pkgs.haskellPackages.ghcWithPackages (p: with p; [
+
+  hpkgs = pkgs.haskellPackages.override {
+    overrides = hself: hsuper: {
+      xmonad-contrib =
+        hself.callCabal2nix "xmonad-contrib" /per/dev/xmonad-contrib {};
+    };
+  };
+
+  xmo-ghc = hpkgs.ghcWithPackages (p: with p; [
     xmonad xmonad-utils xmonad-contrib
     xmobar raw-strings-qq temporary
   ]);
 
-  # runtime dependencies for the xmonad/xmobar configs
+  # Runtime dependencies for the xmonad/xmobar configs
+  # These unfortunately will get leaked into the system PATH (WANT: fix)
   xmo-deps = [
     xmo-ghc
     pkgs.bash pkgs.coreutils pkgs.scrot pkgs.xclip pkgs.acpi pkgs.light
 
-    kdfpass
     (pkgs.writeScriptBin "alacritty-random"
       (builtins.readFile ./files/alacritty-with-random-theme.sh))
   ];
 
-  # WANT: this PATH modification is leaking into the shell -- very bad!
   my-xmonad = pkgs.writeScriptBin "xmonad" ''
     export PATH=${pkgs.lib.strings.makeBinPath xmo-deps}''${PATH:+:}''${PATH:+$PATH}
-    export XMONAD_XMESSAGE=${pkgs.coreutils}/bin/true
-    exec ${pkgs.haskellPackages.xmonad}/bin/xmonad "$@"
+    export XMONAD_XMESSAGE=${pkgs.coreutils}/bin/true  # disable xmonad error popup
+    exec ${hpkgs.xmonad}/bin/xmonad "$@"
   '';
 
   my-xmobar = pkgs.writeScriptBin "xmobar" ''
     export PATH=${pkgs.lib.strings.makeBinPath xmo-deps}''${PATH:+:}''${PATH:+$PATH}
-    exec ${pkgs.haskellPackages.xmobar}/bin/xmobar "$@"
+    exec ${hpkgs.xmobar}/bin/xmobar "$@"
   '';
 
 in lib.mkIf true {
@@ -311,24 +318,26 @@ in lib.mkIf true {
 
   home-manager.users.${user} = {
     home.file.".xmonad/xmonad.hs".source = linked ./files/xmonad/xmonad.hs;
+    # Modules in lib/ will be available to xmonad.hs
     home.file.".xmonad/lib".source = linked ./files/xmonad/lib;
     xdg.configFile."xmobar/xmobar.hs".source = linked ./files/xmobar/xmobar.hs;
   };
 
-  # Enables 'light' command which is used in xmonad config to manage backlight
+  # These two lines enable a 'light' command which is used in xmonad config to manage backlight
   # nb. Might require a reboot before 'light' can be used without sudo
   programs.light.enable = true;
   users.users.${user}.extraGroups = [ "video" ];
 
   environment.systemPackages = [
 
-    kdfpass  # WANT: this should really be elsewhere
+    kdfpass  # WANT: move this
 
     (pkgs.writeScriptBin "my-xmonad" ''${my-xmonad}/bin/xmonad "$@"'')
     (pkgs.writeScriptBin "my-xmobar" ''${my-xmobar}/bin/xmobar "$@"'')
 
-    # script to rebuild + rerun config on file change
-    (pkgs.writeScriptBin "xmonad-devt" ''
+    # Script to rebuild + rerun config on change to lib/
+    # This will not work for changes to xmonad-contrib!
+    (pkgs.writeScriptBin "xmonad-lib-devt" ''
       path_append=${pkgs.lib.strings.makeBinPath (with pkgs; [ entr stylish-haskell ])}
       export PATH=''${PATH:+$PATH}''${PATH:+:}''${path_append}
       src=${toString ./files}

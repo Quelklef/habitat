@@ -5,6 +5,8 @@
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TupleSections         #-}
 {-# LANGUAGE TypeApplications      #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
+{-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 
 import           Control.Category                   ((>>>))
 import           Control.Lens                       ((%~), (&), (.~), (^.))
@@ -52,7 +54,6 @@ data WSLChoice = WSLGrid | WSLCycle
 
 wslChoice :: WSLChoice
 wslChoice = WSLGrid
-
 
 main :: IO ()
 main =
