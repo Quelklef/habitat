@@ -226,6 +226,9 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
     let scrotsel = scrot <> " -s -f -l color=#00ff00"
     bind' "M-p s" $ spawn scrotsel
 
+    -- kdfpass
+    bind' "M-o" $ spawn "kdfpass"
+
     let andRefreshXmobar = (<> "&& pkill --signal SIGUSR2 xmobar")
 
     -- volume

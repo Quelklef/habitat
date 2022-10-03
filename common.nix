@@ -267,6 +267,20 @@ home-manager-generic = {
 # =============================================================================
 xmonad-wm = let
 
+  kdfpass = let
+    unwrapped = import
+      (pkgs.fetchFromGitHub
+        { owner = "quelklef";
+          repo = "kdfpass";
+          rev = "a02f6baacf5fc6f70ba82e60586f13fcb276f66e";
+          sha256 = "sha256-GFUfGUYiDabOgy5sLBBczzaHo5olgbFbaNQzWVzfSHc=";
+        });
+    wrapped =
+      pkgs.writeScriptBin "kdfpass" ''
+        ${unwrapped}/bin/kdfpass ${stateloc + "/kdfpass.json"}
+      '';
+    in wrapped;
+
   xmo-ghc = pkgs.haskellPackages.ghcWithPackages (p: with p; [
     xmonad xmonad-utils xmonad-contrib
     xmobar raw-strings-qq temporary
@@ -276,6 +290,8 @@ xmonad-wm = let
   xmo-deps = [
     xmo-ghc
     pkgs.bash pkgs.coreutils pkgs.scrot pkgs.xclip pkgs.acpi pkgs.light
+
+    kdfpass
     (pkgs.writeScriptBin "alacritty-random"
       (builtins.readFile ./files/alacritty-with-random-theme.sh))
   ];
@@ -319,6 +335,8 @@ in lib.mkIf true {
   users.users.${user}.extraGroups = [ "video" ];
 
   environment.systemPackages = [
+
+    kdfpass  # WANT: this should really be elsewhere
 
     (pkgs.writeScriptBin "my-xmonad" ''${my-xmonad}/bin/xmonad "$@"'')
     (pkgs.writeScriptBin "my-xmobar" ''${my-xmobar}/bin/xmobar "$@"'')
