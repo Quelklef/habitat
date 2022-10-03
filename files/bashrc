@@ -202,18 +202,11 @@ function spork {
   exit > /dev/null; exit
 }
 
-# lol
-function RECURSE {
-  spork $TERM
-}
-
 # enable aliases on spoon/spork
 alias spoon='spoon '
 alias spork='spork '
 
-# desktops
-function dl { spoon google-chrome-stable && spork true; }
-function dr { spoon telegram-desktop && spoon thunderbird && spoon discord && spork true; }
+function RECUR { spork $TERM; }  # lol
 
 alias chrome-unsafe='google-chrome-stable --disable-web-security --user-data-dir=chrome-temp-profile'
 
