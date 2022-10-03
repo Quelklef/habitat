@@ -398,6 +398,14 @@ chrome = {
 };
 
 # =============================================================================
+firefox = {
+  environment.systemPackages = with pkgs; [ firefox ];
+  home-manager.users.${user} = {
+    home.file.".mozilla/firefox".source = linked (stateloc + "/firefox");
+  };
+};
+
+# =============================================================================
 thunderbird = {
   environment.systemPackages = with pkgs; [ thunderbird ];
   home-manager.users.${user} = {
