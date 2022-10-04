@@ -253,21 +253,6 @@ home-manager-generic = {
 # =============================================================================
 xmonad-wm = let
 
-  kdfpass = let
-    unwrapped = import
-      (pkgs.fetchFromGitHub
-        { owner = "quelklef";
-          repo = "kdfpass";
-          rev = "a02f6baacf5fc6f70ba82e60586f13fcb276f66e";
-          sha256 = "sha256-GFUfGUYiDabOgy5sLBBczzaHo5olgbFbaNQzWVzfSHc=";
-        });
-    wrapped =
-      pkgs.writeScriptBin "kdfpass" ''
-        ${unwrapped}/bin/kdfpass ${stateloc + "/kdfpass.json"}
-      '';
-    in wrapped;
-
-
   hpkgs = pkgs.haskellPackages.override {
     overrides = hself: hsuper: {
       xmonad-contrib =
@@ -329,8 +314,6 @@ in lib.mkIf true {
   users.users.${user}.extraGroups = [ "video" ];
 
   environment.systemPackages = [
-
-    kdfpass  # WANT: move this
 
     (pkgs.writeScriptBin "my-xmonad" ''${my-xmonad}/bin/xmonad "$@"'')
     (pkgs.writeScriptBin "my-xmobar" ''${my-xmobar}/bin/xmobar "$@"'')
@@ -413,6 +396,14 @@ telegram = {
   environment.systemPackages = with pkgs; [ tdesktop ];
   home-manager.users.${user} = {
     xdg.dataFile."TelegramDesktop".source = linked (stateloc + "/telegram");
+  };
+};
+
+# =============================================================================
+keepassxc = {
+  environment.systemPackages = with pkgs; [ keepassxc ];
+  home-manager.users.${user} = {
+    xdg.configFile."keepassxc".source = linked (stateloc + "/keepassxc/config");
   };
 };
 
