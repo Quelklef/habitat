@@ -49,7 +49,10 @@ import qualified XMonad.WorkspaceLayout.Cycle       as Cycle
 import qualified XMonad.WorkspaceLayout.Grid        as Grid
 
 
-data WSLChoice = WSLGrid | WSLCycle
+data WSLChoice
+    = WSLGrid
+    | WSLGridExample
+    | WSLCycle
   deriving (Show, Eq)
 
 wslChoice :: WSLChoice
@@ -63,8 +66,9 @@ main =
     & ewmh
     & withSB myStatusBar
     & (case wslChoice of
-        WSLGrid  -> Grid.hook gridInit
-        WSLCycle -> Cycle.hook cycleConfig)
+        WSLGrid        -> Grid.hook gridInit
+        WSLGridExample -> Grid.hook gridExampleInit
+        WSLCycle       -> Cycle.hook cycleConfig)
     & xmonad
 
   where
@@ -91,21 +95,37 @@ main =
         , Grid.initLabelf = const Nothing
         }
 
-  mkPP :: X PP
-  mkPP = do
-    pp <- WSL.Core.render <$>
-            (case wslChoice of
-              WSLGrid  -> Grid.getView
-              WSLCycle -> Cycle.getView)
-    pure $ pp
-        { ppCurrent = ppCurrent pp >>> pad >>> xmobarColor "white" "#C06"
-        , ppHidden = ppHidden pp >>> pad >>> xmobarColor "#BBB" ""
-        , ppHiddenNoWindows = ppHiddenNoWindows pp >>> pad >>> xmobarColor "#444" ""
-        , ppUrgent = xmobarColor "black" "yellow"
-        , ppSep = xmobarColor "#555" "" "  •  "
-        , ppOrder = ppOrder pp >>> \(workspaces : _layout : windowTitle : _) -> [workspaces, windowTitle]
-        , ppTitle = take 112
+  gridExampleInit :: Grid.Init
+  gridExampleInit =
+    let dims = Grid.Dims { Grid.width = 5, Grid.height = 3 }
+        getName (Grid.XY x y) = show y <> "/" <> show (x + 1)
+        mapping = Grid.grid' getName dims <> Grid.column dims 4 "gutter"
+    in Grid.Init
+        { Grid.initMapping = Grid.SomeMapping mapping
+        , Grid.initWrapping = Grid.Wrapping True True
+        , Grid.initLabelf = \(Grid.XY _ y) -> Just ("y=" <> show y <> ": ")
         }
+
+  mkPP :: X PP
+  mkPP =
+    case wslChoice of
+      WSLGrid -> do
+        (fixupPP . WSL.Core.render) <$> Grid.getView
+      WSLGridExample ->
+        WSL.Core.render' <$> Grid.getView
+      WSLCycle ->
+        WSL.Core.render' <$> Cycle.getView
+
+    where
+    fixupPP pp = pp
+      { ppCurrent = ppCurrent pp >>> pad >>> xmobarColor "white" "#C06"
+      , ppHidden = ppHidden pp >>> pad >>> xmobarColor "#BBB" ""
+      , ppHiddenNoWindows = ppHiddenNoWindows pp >>> pad >>> xmobarColor "#444" ""
+      , ppUrgent = xmobarColor "black" "yellow"
+      , ppSep = xmobarColor "#555" "" "  •  "
+      , ppOrder = ppOrder pp >>> \(workspaces : _layout : windowTitle : _) -> [workspaces, windowTitle]
+      , ppTitle = take 112
+      }
 
   wrap l r s = l <> s <> r
   pad = wrap " " " "
@@ -201,14 +221,18 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
     bind' "M-]" $ sendMessage LB.Rotate
 
     -- move around workspaces two-dimensionally
-    when (wslChoice == WSLGrid) $ do
+    when (wslChoice `elem` [WSLGrid, WSLGridExample]) $ do
       bind' "M-s"   $ Grid.move (\c -> c { Grid.y = succ (Grid.y c) })
       bind' "M-w"   $ Grid.move (\c -> c { Grid.y = pred (Grid.y c) })
       bind' "M-S-s" $ Grid.swap (\c -> c { Grid.y = succ (Grid.y c) })
       bind' "M-S-w" $ Grid.swap (\c -> c { Grid.y = pred (Grid.y c) })
       let pairs =
-            (<>) [ (0, xK_quoteleft) ]
-                 (zip [1..] [xK_1 .. xK_9])
+            case wslChoice of
+              WSLGridExample ->
+                     (zip [0..] [xK_1 .. xK_9])
+              WSLGrid ->
+                (<>) [ (0, xK_quoteleft) ]
+                     (zip [1..] [xK_1 .. xK_9])
       for_ pairs $ \(x, key) -> do
         bind mod                 key $ Grid.move (\c -> c { Grid.x = x })
         bind (mod .|. shiftMask) key $ Grid.swap (\c -> c { Grid.x = x })
