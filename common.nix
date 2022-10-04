@@ -374,7 +374,7 @@ git = {
     enable = true;
     config = {
       user.name = "Maynard";
-      user.email = "elimaynard923@gmail.com";
+      user.email = "me@maynards.site";
       init.defaultBranch = "main";
       core.sshCommand = ''
         ssh -F '${stateloc + "/ssh/config"}'
