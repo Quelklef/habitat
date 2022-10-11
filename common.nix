@@ -404,6 +404,7 @@ keepassxc = {
   environment.systemPackages = with pkgs; [ keepassxc ];
   home-manager.users.${user} = {
     xdg.configFile."keepassxc".source = linked (stateloc + "/keepassxc/config");
+    home.file.".cache/keepassxc".source = linked (stateloc + "/keepassxc/cache");
   };
 };
 
