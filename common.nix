@@ -253,6 +253,21 @@ home-manager-generic = {
 # =============================================================================
 xmonad-wm = let
 
+  nifty = let
+    src = pkgs.fetchFromGitHub {
+        owner = "quelklef";
+        repo = "nifty-launcher";
+        rev = "469c51e3cb02feaeca5d247f7792978b7d22fa09";
+        sha256 = "sha256-+L78mEk5uLpOObLpN+DP4DYICu8AJunu9B/XapajEGI=";
+      };
+    nifty-state = stateloc + "/nifty-launcher/";
+    in pkgs.writeScriptBin "nifty" ''
+      ${import src {}}/bin/nifty \
+        ${nifty-state + "nifty.js"} \
+        1>>${nifty-state + "log.log"} \
+        2>>${nifty-state + "log.log"}
+    '';
+
   hpkgs = pkgs.haskellPackages.override {
     overrides = hself: hsuper: {
       xmonad-contrib =
@@ -270,6 +285,8 @@ xmonad-wm = let
   xmo-deps = [
     xmo-ghc
     pkgs.bash pkgs.coreutils pkgs.scrot pkgs.xclip pkgs.acpi pkgs.light
+
+    nifty  # WANT: move this
 
     (pkgs.writeScriptBin "alacritty-random"
       (builtins.readFile ./files/alacritty-with-random-theme.sh))
