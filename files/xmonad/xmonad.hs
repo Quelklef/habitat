@@ -44,7 +44,7 @@ import qualified XMonad.Util.Themes                 as Themes
 import           XMonad.Util.Themes                 (theme)
 import           XMonad.Util.WorkspaceCompare       (mkWsSort)
 
-import qualified XMonad.WorkspaceLayout.Core        as WSL.Core
+import           XMonad.WorkspaceLayout.Core        (modPPWithWorkspaceLayout)
 import qualified XMonad.WorkspaceLayout.Cycle       as Cycle
 import qualified XMonad.WorkspaceLayout.Grid        as Grid
 
@@ -110,20 +110,20 @@ main =
   mkPP =
     case wslChoice of
       WSLGrid -> do
-        (fixupPP . WSL.Core.render) <$> Grid.getView
+        modPPWithWorkspaceLayout <$> Grid.getView <*> pure myPP
       WSLGridExample ->
-        WSL.Core.render' <$> Grid.getView
+        modPPWithWorkspaceLayout <$> Grid.getView <*> pure def
       WSLCycle ->
-        WSL.Core.render' <$> Cycle.getView
+        modPPWithWorkspaceLayout <$> Cycle.getView <*> pure def
 
     where
-    fixupPP pp = pp
-      { ppCurrent = ppCurrent pp >>> pad >>> xmobarColor "white" "#C06"
-      , ppHidden = ppHidden pp >>> pad >>> xmobarColor "#BBB" ""
-      , ppHiddenNoWindows = ppHiddenNoWindows pp >>> pad >>> xmobarColor "#444" ""
+    myPP = def
+      { ppCurrent = pad >>> xmobarColor "white" "#C06"
+      , ppHidden = pad >>> xmobarColor "#BBB" ""
+      , ppHiddenNoWindows = pad >>> xmobarColor "#444" ""
       , ppUrgent = xmobarColor "black" "yellow"
       , ppSep = xmobarColor "#555" "" "  •  "
-      , ppOrder = ppOrder pp >>> \(workspaces : _layout : windowTitle : _) -> [workspaces, windowTitle]
+      , ppOrder = \(workspaces : _layout : windowTitle : _) -> [workspaces, windowTitle]
       , ppTitle = take 112
       }
 
@@ -243,13 +243,11 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
       bind' "M-C-<Right>" $ Cycle.move Cycle.Clamp (\c -> c { Cycle.offset = succ (Cycle.offset c) })
       bind' "M-C-<Left>"  $ Cycle.move Cycle.Clamp (\c -> c { Cycle.offset = pred (Cycle.offset c) })
 
-    -- screenshot fullscreen
-    let scrot = "scrot -q 100 -e 'xclip -selection clipboard -t image/png -i $f; rm $f'"
-    bind' "M-p f" $ spawn scrot
+    -- nifty-launcher
+    bind' "M-o" $ spawn "nifty"
 
-    -- screenshot selection
-    let scrotsel = scrot <> " -s -f -l color=#00ff00"
-    bind' "M-p s" $ spawn scrotsel
+    -- screenshot (specifically for capturing nifty, lol, which has a screenshot capability)
+    bind' "M-C-p" $ spawn "scrot -q 100 --file \"$HOME/_scrot-tmp.png\" -e 'xclip -selection clipboard -t image/png -i $f; rm $f' -s -f -l color=#00ff00"
 
     let andRefreshXmobar = (<> "&& pkill --signal SIGUSR2 xmobar")
 
