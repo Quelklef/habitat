@@ -178,27 +178,31 @@ dragon = {
 
 # =============================================================================
 # System backups
-kopia = {
-  environment.systemPackages = with pkgs; [ kopia ];
+borg = let
+  borg = pkgs.borgbackup;
+in {
+  environment.systemPackages = [ borg ];
 
-  # nb Some to-be-backed-up files are root-owned, so use kopia with root
-  #    (Also kopia config is in root's $XDG_CONFIG_HOME)
+  # nb Some to-be-backed-up files are root-owned, so use borg with root
 
-  home-manager.users.root = {
-    xdg.configFile."kopia".source = linked (stateloc + "/kopia");
-  };
-
-  systemd.services.auto-backup = {
+  systemd.services.system-backup = {
     description = "Regular system backup";
     startAt = "*-*-* 04:00:00";
     serviceConfig = { User = "root"; };
     environment = {
-      PATH = lib.mkForce (pkgs.lib.strings.makeBinPath (with pkgs; [ openssh_hpn ]));
+      # Bypass check when accessing 'previously unknown repo'
+      # /root/.ssh isn't persisted, so after every reboot the repo will be 'unkown'
+      BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK = "yes";
     };
     script = ''
-      ${pkgs.kopia}/bin/kopia snapshot /per
+      ${borg}/bin/borg create \
+        --rsh 'ssh -F ${stateloc + "/ssh/config"}' \
+        -e /per/dgn \
+        -p \
+        u309918@u309918.your-storagebox.de:/home/backups::'sock-backup-{now}' \
+          /per
     '';
-    # WANT^ target '/per' ought to be configurable by-system
+    # WANT^ '/per' and '/per/dgn' ought to be configurable by-system
   };
 };
 
