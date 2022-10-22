@@ -191,7 +191,7 @@ in {
     serviceConfig = { User = "root"; };
     environment = {
       # Bypass check when accessing 'previously unknown repo'
-      # /root/.ssh isn't persisted, so after every reboot the repo will be 'unkown'
+      # /root/.ssh isn't persisted, so after every reboot the repo will be 'unknown'
       BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK = "yes";
     };
     script = ''
