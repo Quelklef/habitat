@@ -455,20 +455,40 @@ obs = {
 };
 
 # =============================================================================
-discord = {
+discord = let
 
   # See github.com/NixOS/nixpkgs/issues/94806 and reddit.com/r/NixOS/comments/i5bpjy
-  # To update: download .tar.gz from discord.gg, read filename, then bump version below
-  environment.systemPackages =
-    let
-      version = "0.0.20";
-      discord = pkgs.discord.overrideAttrs (_: {
-        src = builtins.fetchTarball
-          { url = "https://dl.discordapp.net/apps/linux/${version}/discord-${version}.tar.gz";
-            sha256 = "0qaczvp79b4gzzafgc5ynp6h4nd2ppvndmj6pcs1zys3c0hrabpv";
-          };
-      });
-    in [ discord ];
+  # use 'get-current-discord-version' to bump version number and hash
+  ver = "0.0.21";
+  sha = "1pw9q4290yn62xisbkc7a7ckb1sa5acp91plp2mfpg7gp7v60zvz";
+  discord = pkgs.discord.overrideAttrs (_: {
+    src = builtins.fetchTarball
+      { url = "https://dl.discordapp.net/apps/linux/${ver}/discord-${ver}.tar.gz";
+        sha256 = sha;
+      };
+  });
+
+  # WANT: pin deps here. Where does nix-prefetch-url come from?
+  get-current-discord-version =
+    pkgs.writeScriptBin "get-current-discord-version" ''
+      set -euo pipefail
+      ver=$(
+        curl -s 'https://discord.com/api/download?platform=linux' \
+          | grep -oP '(?<=discord-)[.\d]+(?=\.)' \
+          | head -n1
+      )
+      echo "Using version: $ver"
+      url="https://dl.discordapp.net/apps/linux/$ver/discord-$ver.tar.gz"
+      echo "Using url: $url"
+      sha=$(nix-prefetch-url --unpack "$url")
+      echo
+      echo "version = $ver"
+      echo "sha256  = $sha"
+    '';
+
+in {
+
+  environment.systemPackages = [ discord get-current-discord-version ];
 
   home-manager.users.${user} = {
     xdg.configFile."discord".source = linked (stateloc + "/discord");
