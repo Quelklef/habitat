@@ -137,7 +137,7 @@ generic-system-config = {
   environment.systemPackages = with pkgs; [
     vim wget htop file zip unzip bc silver-searcher colordiff entr pv
     magic-wormhole nix-prefetch nix-prefetch-git ntfs3g sshfs rclone
-    drive bpytop killall peek
+    drive bpytop killall
     ghc nodejs python3 cabal-install  # for one-off uses
     (linkedBin (with pkgs; [ nodejs curl ]) "" ./files/scripts/loom-put.sh)
     (linkedBin [] ''TRASH_LOC=${stateloc + "/trash"}'' ./files/scripts/del.sh)
@@ -424,6 +424,20 @@ keepassxc = {
   home-manager.users.${user} = {
     xdg.configFile."keepassxc".source = linked (stateloc + "/keepassxc/config");
     home.file.".cache/keepassxc".source = linked (stateloc + "/keepassxc/cache");
+  };
+};
+
+# =============================================================================
+peek = {
+  environment.systemPackages = with pkgs; [ peek ];
+  programs.dconf.enable = true;
+};
+
+# =============================================================================
+obs = {
+  environment.systemPackages = with pkgs; [ obs-studio ];
+  home-manager.users.${user} = {
+    xdg.configFile."obs-studio".source = linked (stateloc + "/obs");
   };
 };
 
