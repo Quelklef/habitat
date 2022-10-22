@@ -257,19 +257,32 @@ home-manager-generic = {
 # =============================================================================
 xmonad-wm = let
 
+  latuc = let
+    src = pkgs.fetchFromGitHub {
+        owner = "quelklef";
+        repo = "latuc";
+        rev = "8735720dfa292baa4ffbb072cef9c41ad991cc40";
+        sha256 = "sha256-vpYwbP8aPWneST/ORhtCGMOlRVMgt4KkXC2Zc9Lc5dc=";
+      };
+    in pkgs.writeScriptBin "latuc" ''
+      echo "$1" | ${import src { inherit pkgs; }}/bin/latuc
+    '';
+
   nifty = let
+    src = /per/dev/nifty-launcher;
+    /*
     src = pkgs.fetchFromGitHub {
         owner = "quelklef";
         repo = "nifty-launcher";
-        rev = "469c51e3cb02feaeca5d247f7792978b7d22fa09";
-        sha256 = "sha256-+L78mEk5uLpOObLpN+DP4DYICu8AJunu9B/XapajEGI=";
+        rev = "fc7e2264824e2fdc76ec3c16c4d35b6597346ba5";
+        sha256 = "sha256-U+Ll3dE2uj4W3RvApF3U2z2V94DWSWEF6badH+MopuY=";
       };
+    */
     nifty-state = stateloc + "/nifty-launcher/";
     in pkgs.writeScriptBin "nifty" ''
       ${import src {}}/bin/nifty \
         ${nifty-state + "nifty.js"} \
-        1>>${nifty-state + "log.log"} \
-        2>>${nifty-state + "log.log"}
+        2>&1 | tee ${nifty-state + "log.log"}
     '';
 
   hpkgs = pkgs.haskellPackages.override {
@@ -290,7 +303,7 @@ xmonad-wm = let
     xmo-ghc
     pkgs.bash pkgs.coreutils pkgs.scrot pkgs.xclip pkgs.acpi pkgs.light
 
-    nifty  # WANT: move this
+    nifty latuc  # WANT: move these
 
     (pkgs.writeScriptBin "alacritty-random"
       (builtins.readFile ./files/alacritty-with-random-theme.sh))
