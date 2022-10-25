@@ -23,7 +23,10 @@ common = common.folded;
 base = {
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
-    (builtins.fetchGit { url = "https://github.com/nixos/nixos-hardware"; } + /lenovo/thinkpad/t14/amd/gen2)
+    (builtins.fetchGit {
+      url = "https://github.com/nixos/nixos-hardware";
+      rev = "0e6593630071440eb89cd97a52921497482b22c6";
+    } + /lenovo/thinkpad/t14/amd/gen2)
   ];
 
   boot.initrd.availableKernelModules = [ "nvme" "xhci_pci" "usb_storage" "sd_mod" "rtsx_pci_sdmmc" ];
