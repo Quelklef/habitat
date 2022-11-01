@@ -221,3 +221,5 @@ function fix-bluetooth {
   sudo modprobe btusb
   sudo hciconfig hci0 up
 }
+
+function stiletto { xrandr --output eDP --auto --output DisplayPort-1 --auto --left-of eDP --rotate left; }
