@@ -419,14 +419,6 @@ firefox = {
 };
 
 # =============================================================================
-thunderbird = {
-  environment.systemPackages = with pkgs; [ thunderbird ];
-  home-manager.users.${user} = {
-    home.file.".thunderbird".source = linked (stateloc + "/thunderbird");
-  };
-};
-
-# =============================================================================
 telegram = {
   environment.systemPackages = with pkgs; [ tdesktop ];
   home-manager.users.${user} = {
