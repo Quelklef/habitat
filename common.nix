@@ -150,6 +150,9 @@ generic-system-config = {
 
   networking.firewall.allowedTCPPorts = [ 8000 ];
 
+  # printing???
+  services.printing.enable = true;
+
 };
 
 # =============================================================================
