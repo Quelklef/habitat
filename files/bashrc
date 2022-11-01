@@ -223,3 +223,8 @@ function fix-bluetooth {
 }
 
 function stiletto { xrandr --output eDP --auto --output DisplayPort-1 --auto --left-of eDP --rotate left; }
+
+function rm {
+  echo 'Refusing to rm. Use "command rm" or "del"'
+  return 1
+}
