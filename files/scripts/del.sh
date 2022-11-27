@@ -18,14 +18,14 @@ function del_one {
 
   mkdir -p "$trash_loc"
 
-  cp -r -- $src $dest
+  cp -r -- "$src" "$dest"
   [ $? = 0 ] || {
     echo >&2 "Failed to copy $src"
-    rm -rf -- $dest
+    rm -rf -- "$dest"
     exit 1
   }
 
-  rm -rf $src
+  rm -rf -- "$src"
   [ $? = 0 ] || {
     echo >&2 "Failed to delete $src. Partial deletion may have ocurred"
     echo >&2 "A copy of $src was made at $dest"
