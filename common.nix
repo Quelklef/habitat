@@ -486,9 +486,24 @@ in {
 
   environment.systemPackages = [ discord get-current-discord-version ];
 
-  home-manager.users.${user} = {
-    xdg.configFile."discord".source = linked (stateloc + "/discord");
-  };
+  home-manager.users.${user} =
+    let
+      # file/directory names to persist from discord/
+      persistThese = [
+        "Local Storage"
+        "Session Storage"
+        "Cookies"
+        "Network Persistent State"
+        "Preferences"
+      ];
+    in {
+      xdg.configFile =
+        pkgs.lib.lists.foldl
+          (soFar: persistThis: soFar // {
+            ${"discord/" + persistThis}.source =
+              linked (stateloc + "/discord/" + persistThis);
+          }) {} persistThese;
+    };
 
 };
 
