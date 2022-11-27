@@ -135,12 +135,12 @@ in {
 };
 
 # =============================================================================
-disable-screenpad = {
+screen-init = {
   home-manager.users.${user} = {
     xsession.enable = true;
     xsession.initExtra = ''
-      # This is a bit of a hack. Ideally, invocation would be handled by systemd, not xsession
-      xrandr --output HDMI-1 --off
+      # Hacky! I don't think xsession is the right place for this.
+      sleep 1 && xrandr --output HDMI-2 --auto --primary --output HDMI-1 --auto --rotate right --below HDMI-2
     '';
   };
 };
