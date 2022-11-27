@@ -145,11 +145,4 @@ screen-init = {
   };
 };
 
-# =============================================================================
-redshift = {
-  services.redshift.enable = true;
-  location.latitude = 37.8715;
-  location.longitude = -122.2730;
-};
-
 }; in folded
