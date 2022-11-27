@@ -1,6 +1,7 @@
 { stateloc # Opt-in state directory location
 , secrets  # Password hashes, etc
 , user     # User name
+, host     # Host name (computer name)
 }:
 
 if !(builtins.isString stateloc)
@@ -202,7 +203,7 @@ in {
         --rsh 'ssh -F ${stateloc + "/ssh/config"}' \
         -e /per/dgn \
         -p \
-        u309918@u309918.your-storagebox.de:/home/backups::'sock-backup-{now}' \
+        u309918@u309918.your-storagebox.de:/home/backups::'${host}-backup-{now}' \
           /per
     '';
     # WANT^ '/per' and '/per/dgn' ought to be configurable by-system

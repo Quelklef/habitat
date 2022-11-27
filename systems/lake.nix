@@ -1,12 +1,13 @@
 { lib, config, pkgs, modulesPath, ... }@args: let
 
 user = "lark";
+host = "lake";
 
 common =
   import ../common.nix
   { stateloc = builtins.toString /per/state;
     secrets = (import /per/secrets.nix).nixos;
-    inherit user;
+    inherit user host;
   }
   args;
 
