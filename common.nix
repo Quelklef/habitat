@@ -287,15 +287,12 @@ xmonad-wm = let
     '';
 
   nifty = let
-    src = /per/dev/nifty-launcher;
-    /*
     src = pkgs.fetchFromGitHub {
         owner = "quelklef";
         repo = "nifty-launcher";
-        rev = "fc7e2264824e2fdc76ec3c16c4d35b6597346ba5";
-        sha256 = "sha256-U+Ll3dE2uj4W3RvApF3U2z2V94DWSWEF6badH+MopuY=";
+        rev = "d1eb570732e2fa0e3e08a199f4695eb4dcde0cf5";
+        sha256 = "1akmbvkasdv8s9h9xww3ccn85kj08h4bknbxjv7ab4bx95avspfq";
       };
-    */
     nifty-state = stateloc + "/nifty-launcher/";
     in pkgs.writeScriptBin "nifty" ''
       ${import src {}}/bin/nifty \
@@ -303,10 +300,17 @@ xmonad-wm = let
         2>&1 | tee ${nifty-state + "log.log"}
     '';
 
+  xmonad-src = pkgs.fetchFromGitHub {
+    owner = "quelklef";
+    repo = "xmonad-contrib";
+    rev = "51ff8d00025991348c2b330b1a3aa601abd70374";
+    sha256 = "1wb8yf0g7y95h1cg05dqvl1mx05dkspc85gmd0a73iihi6h5mind";
+  };
+
   hpkgs = pkgs.haskellPackages.override {
     overrides = hself: hsuper: {
       xmonad-contrib =
-        hself.callCabal2nix "xmonad-contrib" /per/dev/xmonad-contrib {};
+        hself.callCabal2nix "xmonad-contrib" xmonad-src {};
     };
   };
 
