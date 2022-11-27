@@ -2,14 +2,12 @@
 
 user = "sock";
 host = "shoe";
+perloc = builtins.toString /per;
 
 common =
   import ../common.nix
-  { stateloc = builtins.toString /per/state;
-    secrets = (import /per/secrets.nix).nixos;
-    inherit user host;
-  }
-  args;
+    { inherit perloc user host; }
+    args;
 
 inherit (common.mylib) linked;
 
@@ -64,16 +62,6 @@ base2 = {
   networking.hostName = host;
   system.stateVersion = "22.05";
   time.timeZone = "America/Los_Angeles";
-
-  environment.etc."nixos/configuration.nix".text = "import /per/config/systems/${host}.nix";
-  # ^ nb
-  # This causes the warning "something's wrong at /nix/store/XXX...XXX.pl line 120."
-  # I don't think it's an issue.
-  # If anything does go wrong, can always manually '-I nixos-config='
-
-  environment.interactiveShellInit = ''
-    export NIX_PATH="$NIX_PATH:secrets=/per/secrets.nix"
-  '';
 
   # Disable ipv6; it's messing with npm n stuff
   boot.kernel.sysctl."net.ipv6.conf.eth0.disable_ipv6" = true;

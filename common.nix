@@ -1,22 +1,24 @@
-{ stateloc # Opt-in state directory location
-, secrets  # Password hashes, etc
+{ perloc   # Opt-in state root ("perloc" = "persist" + "location")
 , user     # User name
 , host     # Host name (computer name)
 }:
 
-if !(builtins.isString stateloc)
+if !(builtins.isString perloc)
 then builtins.throw ''
-  The supplied state location '${builtins.toString stateloc}' is a ${builtins.typeOf stateloc}, but must be a string. This is to mitigate the risk of accidentally copying the entire state location to the nix store, should this nix expression mistakenly coercing the path it to a string. (This has happened before!)
+  The supplied state location '${builtins.toString perloc}' is a ${builtins.typeOf perloc}, but must be a string. This is to mitigate the risk of accidentally copying the entire state location to the nix store, should this nix expression mistakenly coercing the path it to a string. (This has happened before!)
 ''
 else if !(
-  builtins.substring 0 1 stateloc == "/"
-  && builtins.substring (builtins.stringLength stateloc - 1) (builtins.stringLength stateloc) stateloc != "/"
+  builtins.substring 0 1 perloc == "/"
+  && builtins.substring (builtins.stringLength perloc - 1) (builtins.stringLength perloc) perloc != "/"
 ) then builtins.throw ''
-  The state location must start with a slash and must not end with a slash; the supplied value '${builtins.toString stateloc}' does not respect this
+  The state location must start with a slash and must not end with a slash; the supplied value '${builtins.toString perloc}' does not respect this
 ''
 else
 
 { lib, config, pkgs, ... }: let
+
+stateloc = perloc + "/state";
+secrets = (import (perloc + "/secrets.nix")).nixos;
 
 mylib = rec {
 
@@ -154,6 +156,16 @@ generic-system-config = {
   # printing???
   services.printing.enable = true;
 
+};
+
+# =============================================================================
+nixos-bootstrapping = {
+  environment.etc."nixos/configuration.nix".text =
+    "import ${perloc}/config/systems/${host}.nix";
+
+  environment.interactiveShellInit = ''
+    export NIX_PATH="$NIX_PATH:secrets=${perloc}/secrets.nix"
+  '';
 };
 
 # =============================================================================
