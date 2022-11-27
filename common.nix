@@ -216,12 +216,11 @@ in {
     script = ''
       ${borg}/bin/borg create \
         --rsh 'ssh -F ${stateloc + "/ssh/config"}' \
-        -e /per/dgn \
+        -e ${perloc}/dgn \
         -p \
         u309918@u309918.your-storagebox.de:/home/backups::'${host}-backup-{now}' \
-          /per
+          ${perloc}
     '';
-    # WANT^ '/per' and '/per/dgn' ought to be configurable by-system
   };
 };
 
