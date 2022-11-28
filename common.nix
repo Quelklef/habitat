@@ -222,6 +222,11 @@ in {
           ${perloc}
     '';
   };
+
+  home-manager.users.${user}.programs.bash.bashrcExtra = ''
+    export BORG_REPO='u309918@u309918.your-storagebox.de:/home/backups'
+    alias my-borg="borg --rsh 'ssh -F ${stateloc + "/ssh/config"}'"
+  '';
 };
 
 # =============================================================================
