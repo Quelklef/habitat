@@ -516,7 +516,6 @@ in {
         "Local Storage"
         "Session Storage"
         "Cookies"
-        "Network Persistent State"
         "Preferences"
       ];
     in {
