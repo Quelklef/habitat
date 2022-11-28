@@ -216,8 +216,8 @@ in {
     script = ''
       ${borg}/bin/borg create \
         --rsh 'ssh -F ${stateloc + "/ssh/config"}' \
-        -e ${perloc}/dgn \
-        -p \
+        --exclude ${perloc}/dgn \
+        --progress \
         u309918@u309918.your-storagebox.de:/home/backups::'${host}-backup-{now}' \
           ${perloc}
     '';
