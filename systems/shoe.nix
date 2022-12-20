@@ -35,7 +35,7 @@ base = {
   fileSystems."/" = { device = "rpool/eyd/root"; fsType = "zfs"; };
   fileSystems."/nix" = { device = "rpool/eyd/nix"; fsType = "zfs"; };
   fileSystems."/per" = { device = "rpool/eyd/per"; fsType = "zfs"; };
-  fileSystems."/boot" = { device = "/dev/disk/by-uuid/DBF4-C77A"; fsType = "vfat"; };
+  fileSystems."/boot" = { device = "/dev/disk/by-uuid/9D4D-35FA"; fsType = "vfat"; };
 
   swapDevices = [ { device = "/dev/disk/by-label/swap"; } ];
 
