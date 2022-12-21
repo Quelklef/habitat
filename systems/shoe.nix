@@ -60,6 +60,7 @@ base2 = {
   networking.hostName = host;
   system.stateVersion = "22.05";
   time.timeZone = "America/Los_Angeles";
+  touchpad.transformationMatrix = "3 0 0 0 3 0 0 0 1";
 };
 
 }; in folded

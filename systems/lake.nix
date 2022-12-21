@@ -61,6 +61,7 @@ base = {
   networking.hostName = "lake";
   system.stateVersion = "22.05";
   time.timeZone = "America/Los_Angeles";
+  touchpad.transformationMatrix = "2 0 0 0 2 0 0 0 1";
 };
 
 # =============================================================================
