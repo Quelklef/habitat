@@ -283,8 +283,8 @@ xmonad-wm = let
     src = pkgs.fetchFromGitHub {
         owner = "quelklef";
         repo = "latuc";
-        rev = "8735720dfa292baa4ffbb072cef9c41ad991cc40";
-        sha256 = "sha256-vpYwbP8aPWneST/ORhtCGMOlRVMgt4KkXC2Zc9Lc5dc=";
+        rev = "d9c312a05f283f4eaf735278f8d609f8697fea28";
+        sha256 = "1yxswpm8g7n5q8ackqak6c72a2rkj8acyk98jbzr3dih54pm5il4";
       };
     in pkgs.writeScriptBin "latuc" ''
       echo "$1" | ${import src { inherit pkgs; }}/bin/latuc
