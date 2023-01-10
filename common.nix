@@ -196,7 +196,14 @@ dragon = {
 
 # =============================================================================
 # System backups
+#
+# System restore steps:
+# - Reset box password on Hetzner
+# - Run: borg --rsh 'ssh -p23' list <borg-repo>
+# - Take note of desired archive
+# - Run: borg --rsh 'ssh -p23' extract <borg-repo>::<archive-name> --progress
 borg = let
+  borg-repo = "u309918@u309918.your-storagebox.de:/home/backups";
   borg = pkgs.borgbackup;
 in {
   environment.systemPackages = [ borg ];
@@ -217,13 +224,12 @@ in {
         --rsh 'ssh -F ${stateloc + "/ssh/config"}' \
         --exclude ${perloc}/dgn \
         --progress \
-        u309918@u309918.your-storagebox.de:/home/backups::'${host}-backup-{now}' \
-          ${perloc}
+        ${borg-repo}::'${host}-backup-{now}' ${perloc}
     '';
   };
 
   home-manager.users.${user}.programs.bash.bashrcExtra = ''
-    export BORG_REPO='u309918@u309918.your-storagebox.de:/home/backups'
+    export BORG_REPO='${borg-repo}'
     alias my-borg="borg --rsh 'ssh -F ${stateloc + "/ssh/config"}'"
   '';
 };
