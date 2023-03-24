@@ -268,10 +268,12 @@ home-manager-init = {
   home-manager.users.root = {
     targets.genericLinux.enable = true;
     xdg.enable = true;
+    manual.manpages.enable = false;  # https://discourse.nixos.org/t/x/11012
   };
   home-manager.users.${user} = {
     targets.genericLinux.enable = true;
     xdg.enable = true;
+    manual.manpages.enable = false;  # https://discourse.nixos.org/t/x/11012
   };
 };
 

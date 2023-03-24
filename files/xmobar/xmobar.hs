@@ -34,7 +34,7 @@ config = defaultConfig
       , " "
       ]
   , alignSep = "||"
-  , font = "xft:monospace:size=8"
+  , font = "monospace 8"
   , commands =
       [ Run $ Lowercase (Date "%a %Y-%m-%d %H:%M:%S %z" "date" 7)
       , Run XMonadLog
