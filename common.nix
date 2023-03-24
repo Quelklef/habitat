@@ -142,7 +142,7 @@ generic-system-config = {
     drive bpytop killall
     ghc nodejs python3 cabal-install  # for one-off uses
     (linkedBin (with pkgs; [ nodejs curl ]) "" ./files/scripts/loom-put.sh)
-    (linkedBin [] ''TRASH_LOC=${stateloc + "/trash"}'' ./files/scripts/del.sh)
+    (linkedBin [] ''TRASH_LOC=$HOME/.trash'' ./files/scripts/del.sh)
   ];
 
   environment.interactiveShellInit = ''
