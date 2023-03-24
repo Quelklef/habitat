@@ -436,7 +436,10 @@ git = {
 # =============================================================================
 chrome = {
   environment.systemPackages = with pkgs; [ google-chrome ];
-  # Chrome is made available but its state is not persisted
+  home-manager.users.${user} = {
+    xdg.configFile."google-chrome".source = linked (stateloc + "/google-chrome");
+  };
+  # nb Persisted for Scott Chrome profile
 };
 
 # =============================================================================
