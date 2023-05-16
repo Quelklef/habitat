@@ -180,6 +180,9 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
     -- launch terminal
     bind' "M-<Return>" $ spawn terminal
 
+    -- restart xmonad
+    bind' "M-C-r" $ spawn "xmonad --restart"
+
     -- kill focused window
     bind' "M-q" kill
 
