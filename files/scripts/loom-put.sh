@@ -6,11 +6,13 @@ SECRET=$(nix eval --impure --expr '(import <secrets>).notion-loombot-secret' | c
 
 function help {
   echo 'Call with 3 arguments (prio, title, body)'
-  echo 'Prio is one of: dlc, dl, kim, here'
-  echo ' dlc : deadline + consequences'
-  echo ' dl  : deadline'
-  echo ' kim : keep in mind'
-  echo ' here: here for when you need'
+  echo 'Prio is one of:'
+  echo '  dlc  : deadline + consequences'
+  echo '  dl   : deadline'
+  echo '  kim  : keep in mind'
+  echo '  kimu : keep in mind (ugh)'
+  echo '  jho  : just hangin out'
+  echo '  here : here for when you need'
   exit 1
 }
 
@@ -24,6 +26,8 @@ case "$prio" in
   dlc)  prio='deadline + consequences' ;;
   dl)   prio='deadline' ;;
   kim)  prio='keep in mind' ;;
+  kimu) prio='keep in mind (ugh)' ;;
+  jho ) prio='just hangin out' ;;
   here) prio='here for when you need' ;;
   *) help ;;
 esac 
