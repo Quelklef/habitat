@@ -382,21 +382,46 @@ in lib.mkIf true {
   programs.light.enable = true;
   users.users.${user}.extraGroups = [ "video" ];
 
-  environment.systemPackages = [
+  environment.systemPackages = let
+    src = toString ./files;
+  in [
 
     (pkgs.writeScriptBin "my-xmonad" ''${my-xmonad}/bin/xmonad "$@"'')
     (pkgs.writeScriptBin "my-xmobar" ''${my-xmobar}/bin/xmobar "$@"'')
 
-    # Script to rebuild + rerun config on change to lib/
-    # This will not work for changes to xmonad-contrib!
-    (pkgs.writeScriptBin "xmonad-lib-devt" ''
+    # Rebuilds and reruns xmonad on config change
+    # Does not react to changes to xmonad-contrib!
+    (pkgs.writeScriptBin "xmonad-devt" ''
       path_append=${pkgs.lib.strings.makeBinPath (with pkgs; [ entr stylish-haskell ])}
       export PATH=''${PATH:+$PATH}''${PATH:+:}''${path_append}
-      src=${toString ./files}
-      find $src/{xmonad,xmobar} -name '*.hs' | entr bash -c "stylish-haskell -i \$(find $src/{xmonad,xmobar} -name '*.hs')" &
-      find $src/xmonad -name '*.hs' | entr -s '${my-xmonad}/bin/xmonad --recompile && ${my-xmonad}/bin/xmonad --restart' &
-      find $src/xmobar -name '*.hs' | entr -sr 'pkill xmobar; ${my-xmobar}/bin/xmobar' &
-      wait
+
+      find ${src}/xmonad -name '*.hs' | entr bash -c '
+        clear
+        echo "Formatting" && stylish-haskell -i $(find ${src}/xmonad -name \*.hs) || exit 1
+        echo "Reupping xmonad"
+        ${my-xmonad}/bin/xmonad --recompile || exit 1
+        ${my-xmonad}/bin/xmonad --restart
+      '
+    '')
+
+    # Rebuilds and reruns xmobar on config change
+    (pkgs.writeScriptBin "xmobar-devt" ''
+      path_append=${pkgs.lib.strings.makeBinPath (with pkgs; [ entr stylish-haskell ])}
+      export PATH=''${PATH:+$PATH}''${PATH:+:}''${path_append}
+
+      # Holy shit so for some reason xmobar only seems to work properly the SECOND time it's
+      # started after being recompiled
+      find ${src}/xmobar -name '*.hs' | entr -r bash -c '
+        clear
+        echo "Formatting" && stylish-haskell -i $(find ${src}/xmobar -name \*.hs) || exit 1
+        echo "Reupping xmobar ... please wait until the SECOND execution of xmobar"
+        pkill xmobar
+        ${my-xmobar}/bin/xmobar --recompile &
+        pid=$! ; sleep 3 ; kill $pid
+        echo "Second execution!"
+        ${my-xmobar}/bin/xmobar
+        echo "ok"
+      '
     '')
 
   ];

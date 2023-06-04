@@ -3,16 +3,21 @@
 
 import           Codec.Binary.UTF8.String (decodeString, encodeString)
 import           Control.Concurrent       (threadDelay)
-import           Control.Exception        (SomeException, catch)
+import           Control.Exception        (SomeException (..), catch, handle)
 import           Control.Monad            (forever, void)
 import           Data.Char                (toLower)
 import           Data.Foldable            (fold)
+import           Data.Function            ((&))
 import           Data.List                (intercalate)
+import           System.Exit              (ExitCode (..))
+import           System.IO                (hClose, hGetLine)
+import           System.IO.Error          (isEOFError)
 import           System.Posix.Signals     (Handler (..), Signal, SignalInfo,
                                            installHandler, sigUSR2)
+import           System.Process           (runInteractiveProcess,
+                                           waitForProcess)
 import           Text.RawString.QQ        (r)
 import           Xmobar
-import           XMonad.Util.Run          (runProcessWithInput)
 
 main :: IO ()
 main = xmobar config
@@ -113,15 +118,12 @@ config = defaultConfig
   |]
 
 
--- <rant>
--- Why the hell is Exec a typeclass and not a datatype?
--- As far as I can tell, swapping it out for a datatype would greatly simplify the API
--- </rant>
+-- <rant>Why the hell is Exec a typeclass and not a datatype?</rant>
 
 
 -- |
 --
--- Runs a bash command at a given frequrency, producing its stdout
+-- Runs a bash command at a given frequency, producing its stdout
 --
 -- Upon receiving SIGUSR2, runs the command immediately
 data Cmd = Cmd
@@ -148,9 +150,36 @@ everySeconds :: Int -> IO () -> IO ()
 everySeconds n act = forever (act >> threadDelay (n * 1000000))
 
 runBash :: String -> IO String
-runBash cmd = decodeString <$> runProcessWithInput "bash" ["-c", cmd] ""
-  -- Can't just use System.Process.readProcess; see https://github.com/xmonad/xmonad/issues/229#issuecomment-660493853
-  -- Not quite sure why decodeString is needed for unicode to work, but w/e
+runBash cmd = do
+
+  {-
+
+  Implementation based on [1]
+
+  Be very careful making changes to this function! So far it's undergone
+  at least three different iterations to deal with various issues; namely:
+
+  - It straight up not working
+  - Unicode not being properly handled
+  - Zombie processes being left behind
+
+  [1]: <https://codeberg.org/xmobar/xmobar/src/commit/b5e397b1fdb9867b1d4ac599c88ef8b6354b5782/src/Xmobar/Plugins/Command.hs>
+
+  -}
+
+  (hStdin, hStdout, hStderr, pid) <- runInteractiveProcess "/usr/bin/env" ["bash", "-c", cmd] Nothing Nothing
+  hClose hStdin
+  exitCode <- waitForProcess pid
+  case exitCode of
+    ExitSuccess -> do
+      result <- hGetLine hStdout
+        & handle (\(err :: IOError) -> pure $ if isEOFError err then "" else "<err: hGetLine failed with an IOError other than an eof error>")
+        & handle (\(_ :: SomeException) -> pure "<err: hGetLine failed with some exception (not an IOError)>")
+      hClose hStdout >> hClose hStderr
+      pure result
+    _ -> do
+      hClose hStdout >> hClose hStderr
+      pure "<err: nonzero exit code>"
 
 
 -- | Lowercases the output of an Exec instance
