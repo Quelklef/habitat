@@ -472,10 +472,10 @@ chrome = {
 
 # =============================================================================
 firefox = {
-  environment.systemPackages = with pkgs; [ firefox ];
-  home-manager.users.${user} = {
-    home.file.".mozilla/firefox".source = linked (stateloc + "/firefox");
-  };
+  environment.systemPackages = [
+    (pkgs.writeScriptBin "firefox" ''${pkgs.firefox}/bin/firefox -profile ${linked (stateloc + "/firefox-profile")} "$@"'')
+    (pkgs.writeScriptBin "firefox-alt" ''${pkgs.firefox}/bin/firefox -profile ${linked (stateloc + "/firefox-alt-profile")} "$@"'')
+  ];
 };
 
 # =============================================================================
