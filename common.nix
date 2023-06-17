@@ -128,7 +128,7 @@ generic-system-config = {
 
   # nix config
   nixpkgs.config.allowUnfree = true;
-  nix.autoOptimiseStore = true;
+  nix.settings.auto-optimise-store = true;
   nix.settings.keep-outputs = true;
   nix.settings.keep-derivations = true;
   nix.extraOptions = ''
@@ -172,12 +172,12 @@ nixos-bootstrapping = {
 
 # =============================================================================
 nix-caches = {
-  nix = {
-    binaryCaches = [
+  nix.settings = {
+    substituters = [
       "https://cache.nixos.org/"
       "https://shpadoinkle.cachix.org"
     ];
-    binaryCachePublicKeys = [
+    trusted-public-keys = [
       "shpadoinkle.cachix.org-1:aRltE7Yto3ArhZyVjsyqWh1hmcCf27pYSmO1dPaadZ8="
     ];
   };
