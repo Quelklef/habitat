@@ -286,6 +286,24 @@ home-manager-generic = {
 };
 
 # =============================================================================
+notifications = {
+  environment.systemPackages = [
+    pkgs.libnotify  # provides notify-send
+  ];
+
+  # Modified from <https://github.com/nix-community/home-manager/blob/9ba7b3990eb1f4782ea3f5fe7ac4f3c88dd7a32c/modules/services/dunst.nix#L181-L195>
+  systemd.user.services.dunst = {
+    description = "dunst notification daemon";
+    wantedBy = [ "graphical-session.target" ];
+    serviceConfig = {
+      Type = "dbus";
+      BusName = "org.freedesktop.Notifications";
+      ExecStart = "${pkgs.dunst}/bin/dunst -config ${linked ./files/dunstrc}";
+    };
+  };
+};
+
+# =============================================================================
 xmonad-wm = let
 
   latuc = let
