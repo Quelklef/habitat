@@ -135,6 +135,10 @@ generic-system-config = {
     experimental-features = nix-command flakes
   '';
 
+  nixpkgs.config.permittedInsecurePackages = [
+    "python-2.7.18.6"  # reached end of life
+  ];
+
   # plug-in packages
   environment.systemPackages = with pkgs; [
     vim wget htop file zip unzip bc silver-searcher colordiff entr pv
