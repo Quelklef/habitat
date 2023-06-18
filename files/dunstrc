@@ -24,7 +24,7 @@
     # dynamic width from 0 to 300
     # width = (0, 300)
     # constant width of 300
-    width = 400
+    width = (250, 400)
 
     # The maximum height of a single notification, excluding the frame.
     height = 300
@@ -92,7 +92,7 @@
 
     # Defines width in pixels of frame around the notification window.
     # Set to 0 to disable.
-    frame_width = 2
+    frame_width = 1
 
     # Defines color of the frame around the notification window.
     frame_color = "#C06"
@@ -163,7 +163,7 @@
     #   %n  progress value if set without any extra characters
     #   %%  Literal %
     # Markup is allowed
-    format = "<b>%s</b> - <i>%a</i>\n%b"
+    format = "<b>%s</b>\n%b\n\n<i>%a</i>"
 
     # Alignment of message text.
     # Possible values are "left", "center" and "right".
@@ -313,23 +313,25 @@
 [urgency_low]
     # IMPORTANT: colors have to be defined in quotation marks.
     # Otherwise the "#" and following would be interpreted as a comment.
-    background = "#ccc"
-    foreground = "#333"
+    background = "#282a36"
+    foreground = "#6272a4"
+    frame_color = "#535563"
     timeout = 10
     # Icon for notifications with low urgency, uncomment to enable
     #default_icon = /path/to/icon
 
 [urgency_normal]
-    background = "#efefef"
-    foreground = "#333"
+    background = "#282a36"
+    foreground = "#bd93f9"
+    frame_color = "#535563"
     timeout = 10
     # Icon for notifications with normal urgency, uncomment to enable
     #default_icon = /path/to/icon
 
 [urgency_critical]
-    background = "#900000"
-    foreground = "#ffffff"
-    frame_color = "#ff0000"
+    background = "#ff5555"
+    foreground = "#f8f8f2"
+    frame_color = "#ff5555"
     timeout = 0
     # Icon for notifications with critical urgency, uncomment to enable
     #default_icon = /path/to/icon
