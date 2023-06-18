@@ -143,7 +143,7 @@ generic-system-config = {
   environment.systemPackages = with pkgs; [
     vim wget htop file zip unzip bc silver-searcher colordiff entr pv
     magic-wormhole nix-prefetch nix-prefetch-git ntfs3g sshfs rclone
-    drive bpytop killall
+    drive btop killall
     ghc nodejs python3 cabal-install  # for one-off uses
     (linkedBin (with pkgs; [ nodejs curl ]) "" ./files/scripts/loom-put.sh)
     (linkedBin [] ''TRASH_LOC=$HOME/.trash'' ./files/scripts/del.sh)
@@ -311,14 +311,22 @@ notifications = {
 xmonad-wm = let
 
   latuc = let
-    src = pkgs.fetchFromGitHub {
+    original = pkgs.fetchFromGitHub {
         owner = "quelklef";
         repo = "latuc";
         rev = "d9c312a05f283f4eaf735278f8d609f8697fea28";
         sha256 = "1yxswpm8g7n5q8ackqak6c72a2rkj8acyk98jbzr3dih54pm5il4";
       };
+
+    # Force `base` requirement to match the package set
+    patched = pkgs.runCommand "latuc-modified" {} ''
+      cp -r ${original}/. . && chmod +w -R .
+      ${pkgs.gnused}/bin/sed -Ei 's/base \^>=[0-9\.]+/base \^>=4.16.0.0/g' ./*.cabal
+      mkdir -p $out && cp -r ./* $out
+    '';
+
     in pkgs.writeScriptBin "latuc" ''
-      echo "$1" | ${import src { inherit pkgs; }}/bin/latuc
+      echo "$1" | ${import patched { inherit pkgs; }}/bin/latuc
     '';
 
   nifty = let
@@ -335,17 +343,28 @@ xmonad-wm = let
         2>&1 | tee ${nifty-state + "log.log"}
     '';
 
-  xmonad-src = pkgs.fetchFromGitHub {
-    owner = "quelklef";
-    repo = "xmonad-contrib";
-    rev = "51ff8d00025991348c2b330b1a3aa601abd70374";
-    sha256 = "1wb8yf0g7y95h1cg05dqvl1mx05dkspc85gmd0a73iihi6h5mind";
-  };
+  xmonad-contrib-src =
+    let
+      original = pkgs.fetchFromGitHub {
+        owner = "quelklef";
+        repo = "xmonad-contrib";
+        rev = "51ff8d00025991348c2b330b1a3aa601abd70374";
+        sha256 = "1wb8yf0g7y95h1cg05dqvl1mx05dkspc85gmd0a73iihi6h5mind";
+      };
+
+      # suppress -Werror
+      # FIXME: upstream into quelklef/xmonad-contrib
+      patched = pkgs.runCommand "xmonad-contrib-patched" {} ''
+        cp -r ${original}/. . && chmod +w -R .
+        ${pkgs.gnused}/bin/sed -i 's/-Werror/-Wwarn/g' ./XMonad/WorkspaceLayout/*.hs
+        mkdir -p $out && mv ./* $out
+      '';
+    in patched;
 
   hpkgs = pkgs.haskellPackages.override {
     overrides = hself: hsuper: {
       xmonad-contrib =
-        hself.callCabal2nix "xmonad-contrib" xmonad-src {};
+        hself.callCabal2nix "xmonad-contrib" xmonad-contrib-src {};
     };
   };
 

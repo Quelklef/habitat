@@ -20,14 +20,20 @@ hook global WinSetOption filetype=python %{
   set buffer tabstop 4
 }
 
+# On space, deselect all but the last character of the current selection
+map global normal <space> ,
+
 # Use <a-y> and <a-Y> to yank to system clipboard
 map global normal <a-y> 'y:nop %sh{ printf %s "$kak_main_reg_dquote" | xsel --input --clipboard }<ret>:echo "Yanked to system clipboard"<ret>'
 map global normal <a-Y> 'Y:nop %sh{ printf %s "$kak_main_reg_dquote" | xsel --input --clipboard }<ret>:echo "Yanked to system clipboard"<ret>'
 
-# v We use a register + p/P instead of !/<a-!> because it !/<a-!>
-# v act differently from p/P when pasting full lines of code
+# Paste from system clipboard
 map global normal <a-p> ':reg x %sh{ xsel --output --clipboard }<ret>"xp:echo "Pasted from system clipboard"<ret>'
 map global normal <a-P> ':reg x %sh{ xsel --output --clipboard }<ret>"xP:echo "Pasted from system clipboard"<ret>'
+
+# On non-system paste, do not select pasted content
+map global normal p \"pZp\"pz
+map global normal P \"pZP\"pz
 
 # Center screen after z, n, <a-n>, N, <a-N>
 map global normal z zvc
@@ -47,20 +53,8 @@ map global normal , r
 # use <a-s> to split on newline then drop blank lines
 map global normal <a-s> s\n<ret>hs[^\n]<ret>l
 
-# allow GL for Gl, etc
-map global goto L l
-map global goto G g
-map global goto K k
-map global goto L l
-map global goto H h
-map global goto I i
-map global goto J j
-map global goto E e
-map global goto T t
-map global goto B b
-map global goto C c
-map global goto A a
-map global goto F f
+# extend selection with X
+map global normal X Jx
 
 # <a-l> to rewrite current line
 # <a-L> to rewrite line from cursor
