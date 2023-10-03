@@ -88,7 +88,7 @@
     horizontal_padding = 8
 
     # Padding between text and icon.
-    text_icon_padding = 0
+    text_icon_padding = 12
 
     # Defines width in pixels of frame around the notification window.
     # Set to 0 to disable.
@@ -163,7 +163,7 @@
     #   %n  progress value if set without any extra characters
     #   %%  Literal %
     # Markup is allowed
-    format = "<b>%s</b>\n%b\n\n<i>%a</i>"
+    format = "<b>%s</b>\n\n%b\n\n<i>%a</i>"
 
     # Alignment of message text.
     # Possible values are "left", "center" and "right".
@@ -211,10 +211,10 @@
     # Scale small icons up to this size, set to 0 to disable. Helpful
     # for e.g. small files or high-dpi screens. In case of conflict,
     # max_icon_size takes precedence over this.
-    min_icon_size = 32
+    min_icon_size = 48
 
     # Scale larger icons down to this size, set to 0 to disable
-    max_icon_size = 64
+    max_icon_size = 48
 
     # Paths to default icons (only neccesary when not using recursive icon lookup)
     icon_path = /usr/share/icons/gnome/16x16/status/:/usr/share/icons/gnome/16x16/devices/
