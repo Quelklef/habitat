@@ -141,10 +141,20 @@ generic-system-config = {
 
   # plug-in packages
   environment.systemPackages = with pkgs; [
-    vim wget htop file zip unzip bc silver-searcher colordiff entr pv
-    magic-wormhole nix-prefetch nix-prefetch-git ntfs3g sshfs rclone
-    drive btop killall
+    vim
+    wget
+    killall
+    jq
+    htop btop
+    zip unzip
+    silver-searcher ripgrep
+    colordiff
+    entr
+    magic-wormhole
+    nix-prefetch nix-prefetch-git
+    sshfs  # for ./files/dragon.sh (FIXME)
     ghc nodejs python3 cabal-install  # for one-off uses
+    nushell
     (linkedBin (with pkgs; [ nodejs curl ]) "" ./files/scripts/loom-put.sh)
     (linkedBin [] ''TRASH_LOC=$HOME/.trash'' ./files/scripts/del.sh)
   ];

@@ -220,11 +220,21 @@ function fix-bluetooth {
   sudo hciconfig hci0 up
 }
 
+# Laptop with vertical second monitor
 function xrandr.stiletto { xrandr --output eDP --auto --output DisplayPort-1 --auto --left-of eDP --rotate left; }
+# Laptop plugged into living room TV
 function xrandr.serena { xrandr --output eDP --auto --output HDMI-A-0 --auto --left-of eDP; }
 
 function rm {
-  echo 'Refusing to rm. Use "command rm" or "del"'
+  echo "Refusing to rm. Use 'command rm' or 'del'"
   return 1
 }
 
+function ag {
+  echo "Use 'rg' or 'command ag'"
+  return 1
+}
+
+function tt {
+  nu -e "source /per/state/tt/tt.nu"
+}
