@@ -30,7 +30,8 @@ config = defaultConfig
       , "||"
       , let sep = "<fc=#555>  •  </fc>"
         in intercalate sep $
-            [ "<action=`perf.switch && pkill --signal SIGUSR2 xmobar`>%cpu%</action>"
+            [ "%timer%"
+            , "<action=`perf.switch && pkill --signal SIGUSR2 xmobar`>%cpu%</action>"
             , "%bri%", "%vol%"
             , "%battery-hi%<fc=black,pink>%battery-lo%</fc>"
             , "%uptime%"
@@ -49,6 +50,7 @@ config = defaultConfig
       , Run volume
       , Run brightness
       , Run cpu
+      , Run timerStatus
       ]
   }
 
@@ -115,6 +117,17 @@ config = defaultConfig
 
   cpu = Cmd "cpu" 10 [r|
     echo -n "cpu $(perf.which)"
+  |]
+
+  -- Show a colored bar whenever I'm on the clock
+  timerStatus = Cmd "timer" 2 [r|
+    if [ $(cat /per/state/tt/tt.json | jq '.timer != null') = true ]; then
+      padding=16
+      bar=''; for (( i = 0; i < $padding; i++ )); do bar="${bar}—"; done
+      echo -n "<fc=#58CB46,#58CB46>${bar}🕑${bar}</fc>"
+    else
+      echo -n '×'
+    fi
   |]
 
 
