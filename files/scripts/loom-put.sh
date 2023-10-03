@@ -46,7 +46,7 @@ payload=$(cat <<EOF
       "parent": { "database_id": "4608ac8f08a540a1ad9ab993e632f3f1" },
       "properties": {
         "Title": { "title": [{ "text": { "content": ${json_title} } }] },
-        "Priority": { "select": { "name": ${json_prio} } },
+        "Current priority": { "select": { "name": ${json_prio} } },
         "Loom time": { "date": {
           "start": ${json_now},
           "end": "9999-01-01T00:00:00Z"
