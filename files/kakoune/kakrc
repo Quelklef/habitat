@@ -62,7 +62,7 @@ map global normal <a-l> <semicolon>giGlc
 map global normal <a-L> <semicolon>Glc
 
 # Wrap lines
-addhl global/ wrap
+addhl global/wrapping wrap -word -indent -marker "…"
 
 # Detect .envrc and bashrc as bash
 hook global BufCreate .*\.envrc %{ set buffer filetype sh }
