@@ -660,20 +660,17 @@ nixops = {
 };
 
 # =============================================================================
-z = {
-  # https://github.com/rupa/z
+# https://github.com/ajeetdsouza/zoxide
+zoxide = let
+  zoxide = pkgs.zoxide;
+in {
+  environment.systemPackages = [ zoxide ];
   home-manager.users.${user} = {
+    xdg.dataFile."zoxide".source = linked (stateloc + "/zoxide");
     programs.bash = {
       enable = true;
-      # This has to happen specifically in the home-manager bashrc, idk why
       bashrcExtra = ''
-        export _Z_DATA=${stateloc + "/z/zfile"}
-        export _Z_OWNER=${user}
-        mkdir -p "$(dirname "$_Z_DATA")"
-        source ${builtins.fetchurl
-                    { url = "https://raw.githubusercontent.com/rupa/z/master/z.sh";
-                      sha256 = "03lvs6wfd5sd10z4ygm5v5smvgnqzgkka0qkjkjkryqssf647r4q";
-                    }}
+        eval "$( ${zoxide}/bin/zoxide init bash )"
       '';
     };
   };
