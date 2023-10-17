@@ -177,8 +177,11 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
 
   compile conf . execWriter $ do
 
-    -- launch terminal
+    -- launch terminal (bash)
     bind' "M-<Return>" $ spawn terminal
+
+    -- launch terminal (nushell)
+    bind' "M-S-<Return>" $ spawn "alacritty -e nu"
 
     -- restart xmonad
     bind' "M-C-r" $ spawn "xmonad --restart"

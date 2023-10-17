@@ -235,6 +235,3 @@ function ag {
   return 1
 }
 
-function tt {
-  nu -e "source /per/state/tt/tt.nu"
-}

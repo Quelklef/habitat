@@ -154,7 +154,6 @@ generic-system-config = {
     nix-prefetch nix-prefetch-git
     sshfs  # for ./files/dragon.sh (FIXME)
     ghc nodejs python3 cabal-install  # for one-off uses
-    nushell
     (linkedBin (with pkgs; [ nodejs curl ]) "" ./files/scripts/loom-put.sh)
     (linkedBin [] ''TRASH_LOC=$HOME/.trash'' ./files/scripts/del.sh)
   ];
@@ -543,6 +542,14 @@ keepassxc = {
   home-manager.users.${user} = {
     xdg.configFile."keepassxc".source = linked (stateloc + "/keepassxc/config");
     home.file.".cache/keepassxc".source = linked (stateloc + "/keepassxc/cache");
+  };
+};
+
+# =============================================================================
+nushell = {
+  environment.systemPackages = with pkgs; [ nushell ];
+  home-manager.users.${user} = {
+    xdg.configFile."nushell".source = linked (stateloc + "/nushell");
   };
 };
 
