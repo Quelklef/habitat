@@ -120,11 +120,24 @@ config = defaultConfig
   |]
 
   -- Show a colored bar whenever I'm on the clock
-  timerStatus = Cmd "timer" 2 [r|
-    if [ $(cat /per/state/tt/tt.json | jq '.timer != null') = true ]; then
-      padding=16
-      bar=''; for (( i = 0; i < $padding; i++ )); do bar="${bar}—"; done
-      echo -n "<fc=#58CB46,#58CB46>${bar}🕑${bar}</fc>"
+  timerStatus = Cmd "timer" 7 [r|
+    timer_info=$(cat /per/state/tt/tt.json | jq .timer)
+    if [ "$timer_info" != null ]; then
+      timer_start=$( echo "$timer_info" | jq -r .start )
+      timer_duration=$( echo "$timer_info" | jq -r .start | node -e '
+        const d = new Date(require("fs").readFileSync(0));
+        const dur_ms = (+new Date) - (+d);
+        const dur_sec = Math.round(dur_ms / 1000);
+        const ss = dur_sec % 60;
+        const mm = Math.floor(dur_sec / 60) % 60;
+        const hh = Math.floor(dur_sec / (60 * 60));
+        const to_s = xx => ("" + xx).padStart(2, "0");
+        console.log(`${to_s(hh)}:${to_s(mm)}:${to_s(ss)}`);
+      ' )
+      timer_bucket=$( echo "$timer_info" | jq -r .bucket )
+      col=darkgreen
+      pad="<fc=$col,$col>"; for (( i = 0; i < 4; i++ )); do pad="${pad}—"; done; pad="${pad}</fc>"
+      echo -n "${pad}<fc=white,$col>🕑 ${timer_bucket} ${timer_duration}</fc>${pad}"
     else
       echo -n '×'
     fi
