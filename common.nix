@@ -763,4 +763,13 @@ in {
 
 };
 
+# =============================================================================
+steam = {
+  environment.systemPackages = [ pkgs.steam ];
+  home-manager.users.${user} = {
+    xdg.dataFile."Steam".source = linked (stateloc + "/steam/home-.local-share-Steam");
+    home.file.".steam".source = linked (stateloc + "/steam/home-.steam");
+  };
+};
+
 }; in result
