@@ -154,6 +154,7 @@ generic-system-config = {
     nix-prefetch nix-prefetch-git
     sshfs  # for ./files/dragon.sh (FIXME)
     ghc nodejs python3 cabal-install  # for one-off uses
+    tmate
     (linkedBin (with pkgs; [ nodejs curl ]) "" ./files/scripts/loom-put.sh)
     (linkedBin [] ''TRASH_LOC=$HOME/.trash'' ./files/scripts/del.sh)
   ];
@@ -170,6 +171,30 @@ generic-system-config = {
 
   # Disable ipv6; it's messing with npm n stuff
   boot.kernel.sysctl."net.ipv6.conf.eth0.disable_ipv6" = true;
+
+  # From sam
+  programs.tmux.extraConfig = ''
+    # act like vim
+    set-window-option -g mode-keys vi
+    setw -g mode-keys vi
+    bind h select-pane -L
+    bind j select-pane -D
+    bind k select-pane -U
+    bind l select-pane -R
+    #bind-key -r C-h select-window -t :-
+    #bind-key -r C-l select-window -t :+
+    bind -T copy-mode-vi v send-keys -X begin-selection
+    bind -T copy-mode-vi y send-keys -X copy-selection
+
+    # scroll text, not commands, select text within panes
+    set-option -g mouse off
+
+    # fast escape
+    set-option -g escape-time 0
+
+    # I can't read messages in 750ms
+    set-option -g display-time 2000
+  '';
 
 };
 
