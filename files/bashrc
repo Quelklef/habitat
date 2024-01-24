@@ -235,3 +235,4 @@ function ag {
   return 1
 }
 
+alias rg='clear && rg '

@@ -140,7 +140,7 @@ mkConfig = def
   , terminal = "alacritty"
   , normalBorderColor = "#000000"
   , focusedBorderColor = "#CC0066"
-  , borderWidth = 3
+  , borderWidth = 2
   , clickJustFocuses = False
   , keys = myKeys
   , handleEventHook = handleEventHook def <> Hacks.windowedFullscreenFixEventHook
@@ -259,14 +259,14 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
     let andRefreshXmobar = (<> "&& pkill --signal SIGUSR2 xmobar")
 
     -- volume
-    bind' "<XF86AudioRaiseVolume>" $ spawn . andRefreshXmobar $ "pactl set-sink-volume @DEFAULT_SINK@ +5%"
-    bind' "<XF86AudioLowerVolume>" $ spawn . andRefreshXmobar $ "pactl set-sink-volume @DEFAULT_SINK@ -5%"
+    bind' "<XF86AudioRaiseVolume>" $ spawn . andRefreshXmobar $ "pactl set-sink-volume @DEFAULT_SINK@ +1%"
+    bind' "<XF86AudioLowerVolume>" $ spawn . andRefreshXmobar $ "pactl set-sink-volume @DEFAULT_SINK@ -1%"
     bind' "<XF86AudioMute>"        $ spawn . andRefreshXmobar $ "pactl set-sink-mute   @DEFAULT_SINK@ toggle"
     bind' "<XF86AudioMicMute>"     $ spawn . andRefreshXmobar $ "pactl set-source-mute @DEFAULT_SOURCE@ toggle"
 
     -- brightness
-    bind' "<XF86MonBrightnessUp>"   $ spawn . andRefreshXmobar $ "light -A 10"
-    bind' "<XF86MonBrightnessDown>" $ spawn . andRefreshXmobar $ "light -U 10"
+    bind' "<XF86MonBrightnessUp>"   $ spawn . andRefreshXmobar $ "light -A 1"
+    bind' "<XF86MonBrightnessDown>" $ spawn . andRefreshXmobar $ "light -U 1"
 
   where
 
