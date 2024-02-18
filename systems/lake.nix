@@ -65,13 +65,19 @@ base = {
 };
 
 # =============================================================================
-screen-init = {
-  home-manager.users.${user} = {
-    xsession.enable = true;
-    xsession.initExtra = ''
-      # Hacky! I don't think xsession is the right place for this.
-      sleep 1 && xrandr --output HDMI-2 --auto --primary --output HDMI-1 --auto --rotate right --below HDMI-2
-    '';
+screen-stuff = {
+  home-manager.users.${user}.programs.bash.bashrcExtra = ''
+    # Run once system has booted
+    function booted {
+      # Sets displays
+      xrandr --output HDMI-2 --auto \
+             --output HDMI-1 --off
+      exit 0
+    }
+  '';
+  environment.sessionVariables = {
+    # Fucking fuck. Works around alacritty's DPI-sensitive font scaling
+    "WINIT_X11_SCALE_FACTOR" = "2";
   };
 };
 
