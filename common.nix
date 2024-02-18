@@ -280,6 +280,7 @@ in {
       ${borg}/bin/borg create \
         --rsh 'ssh -F ${stateloc + "/ssh/config"}' \
         --exclude ${perloc}/dgn \
+        --exclude ${perloc}/work/live247/music/blobs/ \
         --exclude ${perloc}/dev/zoom-dl/files \
         --progress \
         ${borg-repo}::'${host}-backup-{now}' ${perloc}
