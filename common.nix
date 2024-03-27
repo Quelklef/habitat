@@ -282,6 +282,7 @@ in {
         --exclude ${perloc}/dgn \
         --exclude ${perloc}/work/live247/music/blobs/ \
         --exclude ${perloc}/dev/zoom-dl/files \
+        --exclude ${perloc}/dev/zoom-dl/files.copy \
         --progress \
         ${borg-repo}::'${host}-backup-{now}' ${perloc}
     '';
