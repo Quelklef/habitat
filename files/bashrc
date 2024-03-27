@@ -136,6 +136,10 @@ function __prompt {
 
   PS1+=$(ps1_prefix)
   PS1+=${T_FG_CYAN}'\w'
+
+  local git_branch=$(git rev-parse --symbolic-full-name --abbrev-ref HEAD 2>/dev/null)
+  [ -n "$git_branch" ] && PS1+=" ${T_FG_YELLOW}[⎇ ${git_branch}]"
+
   PS1+=${nl}
   PS1+=${rule}${T_BOLD}${T_FG_RED}'λ'${T_RESET}' '
 
