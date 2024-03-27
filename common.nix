@@ -549,10 +549,16 @@ git = {
       user.name = "Maynard";
       user.email = "me@maynards.site";
       init.defaultBranch = "main";
+
+      # idk why this is needed, but whatever
       core.sshCommand = ''
         ssh -F '${stateloc + "/ssh/config"}'
       '';
-      # ^ nb idk why this is needed, but w/e
+
+      # Use difftastic for diffing
+      # No purescript support though :-(
+      diff.external = "${pkgs.difftastic}/bin/difft";
+      alias.showd = "show --ext-diff";
     };
   };
 };
