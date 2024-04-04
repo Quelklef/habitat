@@ -17,6 +17,18 @@ else
 
 { lib, config, pkgs, ... }: let
 
+system = builtins.currentSystem;
+
+# nixpkgs 23.05.1092.c7ff1b9b956
+# FIXME: upgrade use-sites to 23.11
+pkgs_2305 =
+  import (pkgs.fetchFromGitHub {
+      owner = "nixos";
+      repo = "nixpkgs";
+      rev = "c7ff1b9b95620ce8728c0d7bd501c458e6da9e04";
+      hash = "sha256-J1bX9plPCFhTSh6E3TWn9XSxggBh/zDD4xigyaIQBy8=";
+    }) { inherit system; };
+
 stateloc = perloc + "/state";
 secrets = (import (perloc + "/secrets.nix")).nixos;
 
@@ -320,7 +332,8 @@ home-manager-init = {
   imports = [
     (let home-manager = builtins.fetchGit
       { url = "https://github.com/nix-community/home-manager/";
-        rev = "87d30c164849a7471d99749aa4d2d28b81564f69";
+        ref = "release-23.11";
+        rev = "f33900124c23c4eca5831b9b5eb32ea5894375ce";
       };
     in import "${home-manager}/nixos")
   ];
@@ -328,11 +341,13 @@ home-manager-init = {
     targets.genericLinux.enable = true;
     xdg.enable = true;
     manual.manpages.enable = false;  # https://discourse.nixos.org/t/x/11012
+    home.stateVersion = config.system.stateVersion;  # FIXME: should really be set per-system
   };
   home-manager.users.${user} = {
     targets.genericLinux.enable = true;
     xdg.enable = true;
     manual.manpages.enable = false;  # https://discourse.nixos.org/t/x/11012
+    home.stateVersion = config.system.stateVersion;  # FIXME: should really be set per-system
   };
 };
 
@@ -381,7 +396,7 @@ xmonad-wm = let
     '';
 
     in pkgs.writeScriptBin "latuc" ''
-      echo "$1" | ${import patched { inherit pkgs; }}/bin/latuc
+      echo "$1" | ${import patched { pkgs = pkgs_2305; }}/bin/latuc
     '';
 
   nifty = let
@@ -551,9 +566,7 @@ git = {
       init.defaultBranch = "main";
 
       # idk why this is needed, but whatever
-      core.sshCommand = ''
-        ssh -F '${stateloc + "/ssh/config"}'
-      '';
+      core.sshCommand = "ssh -F '${stateloc + "/ssh/config"}'";
 
       # Use difftastic for diffing
       # No purescript support though :-(
@@ -591,7 +604,7 @@ keepassxc = {
 
 # =============================================================================
 nushell = {
-  environment.systemPackages = with pkgs; [ nushell ];
+  environment.systemPackages = [ pkgs_2305.nushell ];
   home-manager.users.${user} = {
     xdg.configFile."nushell".source = linked (stateloc + "/nushell");
   };
@@ -696,7 +709,7 @@ alacritty = {
 
 # =============================================================================
 nixops = {
-  environment.systemPackages = with pkgs; [ nixops ];
+  environment.systemPackages = [ pkgs_2305.nixops ];
   nixpkgs.config.permittedInsecurePackages = [ "python2.7-pyjwt-1.7.1" ];
   home-manager.users.${user} = {
     home.file.".nixops".source = linked (stateloc + "/nixops");
