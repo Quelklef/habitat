@@ -581,14 +581,6 @@ firefox = {
 };
 
 # =============================================================================
-telegram = {
-  environment.systemPackages = with pkgs; [ tdesktop ];
-  home-manager.users.${user} = {
-    xdg.dataFile."TelegramDesktop".source = linked (stateloc + "/telegram");
-  };
-};
-
-# =============================================================================
 keepassxc = {
   environment.systemPackages = with pkgs; [ keepassxc ];
   home-manager.users.${user} = {
