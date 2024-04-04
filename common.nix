@@ -5,7 +5,7 @@
 
 if !(builtins.isString perloc)
 then builtins.throw ''
-  The supplied state location '${builtins.toString perloc}' is a ${builtins.typeOf perloc}, but must be a string. This is to mitigate the risk of accidentally copying the entire state location to the nix store, should this nix expression mistakenly coercing the path it to a string. (This has happened before!)
+  The supplied state location '${builtins.toString perloc}' is a ${builtins.typeOf perloc}, but must be a string. (Path values are not allowed; this is to mitigate the risk of accidentally copying the entire state location to the nix store, should the path value be coerced to a string. This has happened before!)
 ''
 else if !(
   builtins.substring 0 1 perloc == "/"
