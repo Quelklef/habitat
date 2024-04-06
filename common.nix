@@ -352,11 +352,14 @@ home-manager-init = {
 };
 
 # =============================================================================
-home-manager-generic = {
-  home-manager.users.${user} = {
-    home.file.".background-image".source = ./files/background.png;
-    home.file.".ssh".source = linked (stateloc + "/ssh");
-  };
+home-ssh = {
+  home-manager.users.${user}.home.file.".ssh".source = linked (stateloc + "/ssh");
+};
+
+# =============================================================================
+background-image = {
+  home-manager.users.${user}.home.file.".background-image".source = ./files/background.png;
+  services.xserver.desktopManager.wallpaper.mode = "fill";
 };
 
 # =============================================================================
