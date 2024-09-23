@@ -167,6 +167,7 @@ generic-system-config = {
     sshfs  # for ./files/dragon.sh (FIXME)
     ghc nodejs python3 cabal-install  # for one-off uses
     tmate
+    pmutils  # pm-suspend used in nifty-launcher (FIXME)
     (linkedBin (with pkgs; [ nodejs curl ]) "" ./files/scripts/loom-put.sh)
     (linkedBin [] ''TRASH_LOC=$HOME/.trash'' ./files/scripts/del.sh)
   ];
@@ -574,7 +575,11 @@ git = {
       # Use difftastic for diffing
       # No purescript support though :-(
       diff.external = "${pkgs.difftastic}/bin/difft";
-      alias.showd = "show --ext-diff";
+      alias."my-show" = "show --ext-diff";
+
+      # Have 'git detach' enter into detached HEAD state
+      alias."my-detach" = ''!bash -c 'git checkout "$(git rev-parse HEAD)"' '';
+      advice.detachedHead = false;  # Don't display help when entering detached HEAD
     };
   };
 };

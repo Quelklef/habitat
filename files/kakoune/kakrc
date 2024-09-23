@@ -1,6 +1,7 @@
 # Set colors
-colorscheme tomorrow-night
+#colorscheme tomorrow-night
 set-face global Default rgb:c5c8c6,default,default  # inherit transparent background
+colorscheme kaleidoscope-light
 
 # Use a cat instead of clippy
 set global ui_options ncurses_assistant=cat
