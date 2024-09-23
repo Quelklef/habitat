@@ -758,9 +758,10 @@ in {
   security.wrappers.${scriptname} = {
     source = pkgs.writeScript scriptname ''
       #!${pkgs.bash}/bin/bash
-      gov="$1"
-      for i in {0..7}; do
-        sudo cpufreq-set -g "$gov" -c $i
+      max_cpu=$( cpufreq-info | grep -Po '(?<=CPU )\d+' | tail -n1 )
+      governor="$1"
+      for (( i = 0; i <= $max_cpu; i++ )); do
+        sudo cpufreq-set -g "$governor" -c $i
       done
     '';
     setuid = true;  # nb Set +s so it can be run from ulauncher
