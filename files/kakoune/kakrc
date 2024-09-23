@@ -77,3 +77,5 @@ hook global BufCreate .*\.ejs %{ set buffer filetype html }
 
 add-highlighter global/ number-lines
 
+# Show trailing whitespace in red
+add-highlighter global/show-trailing-whitespaces regex '\h+$' 0:Error
