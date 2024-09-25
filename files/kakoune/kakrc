@@ -1,7 +1,17 @@
-# Set colors
-#colorscheme tomorrow-night
-set-face global Default rgb:c5c8c6,default,default  # inherit transparent background
-colorscheme kaleidoscope-light
+
+set-face global Default rgb:c5c8c6,default,default  # inherit transparent background of terminal
+
+# Default colorscheme
+colorscheme tomorrow-night
+
+# This file gets programmatically overwritten overwrite the color scheme
+#
+# Note: Writing to this file will only affect the color scheme of newly-created kak
+# sessions. To get existing sessions to load the new color scheme, you have to manually
+# tell them to with something like:
+# $ kak -l | while read sess; do echo 'source /path/to/the/file.kak' | kak -p $sess; done
+try %{ source ~/.config/kak/current-color-scheme.kak } catch %{ }
+
 
 # Use a cat instead of clippy
 set global ui_options ncurses_assistant=cat
