@@ -174,7 +174,6 @@ generic-system-config = {
     entr
     magic-wormhole
     nix-prefetch nix-prefetch-git
-    sshfs  # for ./files/dragon.sh (FIXME)
     ghc nodejs python3 cabal-install  # for one-off uses
     tmate
     pmutils  # pm-suspend used in nifty-launcher (FIXME)
@@ -248,12 +247,15 @@ nix-caches = {
 # =============================================================================
 # Remote directory
 dragon = {
-  # Allows sshfs to use allow_root
-  programs.fuse.userAllowOther = true;
-
   environment.interactiveShellInit = ''
     [ -n "$BASH" ] && source ${builtins.toString ./files/dragon.sh}
   '';
+
+  # Runtime dependency of dragon.sh
+  environment.systemPackages = [ sshfs ];
+
+  # Allows sshfs to use allow_root
+  programs.fuse.userAllowOther = true;
 };
 
 # =============================================================================
