@@ -181,6 +181,7 @@ generic-system-config = {
 
   # printing???
   services.printing.enable = true;
+  services.avahi = { enable = true; nssmdns = true; openFirewall = true; };  # auto-discover printers on the local network
 
   # Disable ipv6; it's messing with npm n stuff
   boot.kernel.sysctl."net.ipv6.conf.eth0.disable_ipv6" = true;
