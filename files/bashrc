@@ -163,7 +163,6 @@ export LESS_TERMCAP_us=$'\E[01;32m'
 export VISUAL=kak
 export EDITOR="$VISUAL"
 
-export TERM=alacritty
 export TERMINAL=$TERM
 
 # enable aliases on sudo

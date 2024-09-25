@@ -135,9 +135,7 @@ main =
 mkConfig :: XConfig _
 mkConfig = def
   { modMask = mod4Mask  -- super
-  -- , terminal = "alacritty-random"
-        -- WANT^ alacritty random themes are not working for some reason
-  , terminal = "alacritty"
+  , terminal = "wezterm"
   , normalBorderColor = "#000000"
   , focusedBorderColor = "#CC0066"
   , borderWidth = 2
@@ -181,7 +179,7 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
     bind' "M-<Return>" $ spawn terminal
 
     -- launch terminal (nushell)
-    bind' "M-S-<Return>" $ spawn "alacritty -e nu"
+    bind' "M-S-<Return>" $ spawn (terminal <> " -e nu")
 
     -- restart xmonad
     bind' "M-C-r" $ spawn "xmonad --restart"

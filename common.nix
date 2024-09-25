@@ -455,9 +455,6 @@ xmonad-wm = let
     pkgs.bash pkgs.coreutils pkgs.scrot pkgs.xclip pkgs.acpi pkgs.light
 
     nifty latuc  # WANT: move these
-
-    (pkgs.writeScriptBin "alacritty-random"
-      (builtins.readFile ./files/alacritty-with-random-theme.sh))
   ];
 
   my-xmonad = pkgs.writeScriptBin "xmonad" ''
@@ -697,22 +694,10 @@ kakoune = {
 };
 
 # =============================================================================
-alacritty = {
-  environment.systemPackages = with pkgs; [ alacritty ];
+wezterm = {
+  environment.systemPackages = with pkgs; [ wezterm ];
   home-manager.users.${user} = {
-    xdg.configFile."alacritty/alacritty.yml".source = linked ./files/alacritty.yml;
-    xdg.configFile."alacritty/themes" = {
-      recursive = true;
-      source =
-        let fetched =
-          pkgs.fetchFromGitHub
-            { owner = "eendroroy";
-              repo = "alacritty-theme";
-              rev = "e8757f9a6537d74947ee7a8f390a627c01390563";
-              sha256 = "1mb5ijzhgjd8blxf35v42hkq1iri0w6ymczzlvrfdq359ij16wrv";
-            };
-        in "${fetched}/themes";
-    };
+    xdg.configFile."wezterm/wezterm.lua".source = linked ./files/wezterm.lua;
   };
 };
 
