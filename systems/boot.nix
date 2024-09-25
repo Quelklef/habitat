@@ -101,7 +101,7 @@ base2 = {
   */
 
   # Modify touchpad speeds
-  services.xserver.libinput.touchpad = {
+  services.libinput.touchpad = {
     transformationMatrix = "2 0 0 0 2 0 0 0 1";
     # accelProfile = "flat";  # Disable acceleration
   };

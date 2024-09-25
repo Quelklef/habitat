@@ -20,13 +20,23 @@ else
 system = builtins.currentSystem;
 
 # nixpkgs 23.05.1092.c7ff1b9b956
-# FIXME: upgrade use-sites to 23.11
+# FIXME: upgrade use-sites
 pkgs_2305 =
   import (pkgs.fetchFromGitHub {
       owner = "nixos";
       repo = "nixpkgs";
       rev = "c7ff1b9b95620ce8728c0d7bd501c458e6da9e04";
       hash = "sha256-J1bX9plPCFhTSh6E3TWn9XSxggBh/zDD4xigyaIQBy8=";
+    }) { inherit system; };
+
+# nixpkgs 23.11.4315.c68a9fc85c2c
+# FIXME: upgrade use-sites
+pkgs_2311 =
+  import (pkgs.fetchFromGitHub {
+      owner = "nixos";
+      repo = "nixpkgs";
+      rev = "c68a9fc85c2cb3a313be6ff40511635544dde8da";
+      hash = "sha256-UblFdWQ2MMZNzD9C/w8+7RjAJ2QIbebbzHUniQ/a44o=";
     }) { inherit system; };
 
 stateloc = perloc + "/state";
@@ -109,7 +119,7 @@ generic-system-config = {
   hardware.pulseaudio.enable = true;
 
   # mouse n touchpad
-  services.xserver.libinput = {
+  services.libinput = {
     enable = true;
     touchpad.tappingDragLock = false;
     touchpad.accelSpeed = "0";
@@ -181,7 +191,7 @@ generic-system-config = {
 
   # printing???
   services.printing.enable = true;
-  services.avahi = { enable = true; nssmdns = true; openFirewall = true; };  # auto-discover printers on the local network
+  services.avahi = { enable = true; nssmdns4 = true; openFirewall = true; };  # auto-discover printers on the local network
 
   # Disable ipv6; it's messing with npm n stuff
   boot.kernel.sysctl."net.ipv6.conf.eth0.disable_ipv6" = true;
@@ -334,8 +344,8 @@ home-manager-init = {
   imports = [
     (let home-manager = builtins.fetchGit
       { url = "https://github.com/nix-community/home-manager/";
-        ref = "release-23.11";
-        rev = "f33900124c23c4eca5831b9b5eb32ea5894375ce";
+        ref = "release-24.05";
+        rev = "2f23fa308a7c067e52dfcc30a0758f47043ec176";
       };
     in import "${home-manager}/nixos")
   ];
@@ -436,7 +446,7 @@ xmonad-wm = let
       '';
     in patched;
 
-  hpkgs = pkgs.haskellPackages.override {
+  hpkgs = pkgs_2311.haskellPackages.override {
     overrides = hself: hsuper: {
       xmonad-contrib =
         hself.callCabal2nix "xmonad-contrib" xmonad-contrib-src {};
@@ -470,18 +480,14 @@ xmonad-wm = let
 
 in lib.mkIf true {
 
-  services.xserver = {
-    displayManager.defaultSession = "none+xmonad";
-    windowManager = {
-      session = [{
-        name = "xmonad";
-        start = ''
-          systemd-cat -t xmonad -- ${my-xmonad}/bin/xmonad &
-          waitPID=$!
-        '';
-      }];
-    };
-  };
+  services.displayManager.defaultSession = "none+xmonad";
+  services.xserver.windowManager.session = [{
+    name = "xmonad";
+    start = ''
+      systemd-cat -t xmonad -- ${my-xmonad}/bin/xmonad &
+      waitPID=$!
+    '';
+  }];
 
   home-manager.users.${user} = {
     home.file.".xmonad/xmonad.hs".source = linked ./files/xmonad/xmonad.hs;
@@ -544,16 +550,16 @@ in lib.mkIf true {
 # =============================================================================
 lightdm = {
 
-  services.xserver.displayManager = {
-    lightdm = {
-      enable = true;
-      background = ./files/background.png;
-    };
+  services.xserver.displayManager.lightdm = {
+    enable = true;
+    background = ./files/background.png;
+  };
 
-    # Use auto-login instead of greeter
+  # Use auto-login instead of greeter
+  services.xserver.displayManager.lightdm.greeter.enable = false;
+  services.displayManager = {
     autoLogin.enable = true;
     autoLogin.user = user;
-    lightdm.greeter.enable = false;
   };
 
 };
