@@ -29,16 +29,6 @@ pkgs_2305 =
       hash = "sha256-J1bX9plPCFhTSh6E3TWn9XSxggBh/zDD4xigyaIQBy8=";
     }) { inherit system; };
 
-# nixpkgs 23.11.4315.c68a9fc85c2c
-# FIXME: upgrade use-sites
-pkgs_2311 =
-  import (pkgs.fetchFromGitHub {
-      owner = "nixos";
-      repo = "nixpkgs";
-      rev = "c68a9fc85c2cb3a313be6ff40511635544dde8da";
-      hash = "sha256-UblFdWQ2MMZNzD9C/w8+7RjAJ2QIbebbzHUniQ/a44o=";
-    }) { inherit system; };
-
 stateloc = perloc + "/state";
 secrets = (import (perloc + "/secrets.nix")).nixos;
 
@@ -427,20 +417,23 @@ xmonad-wm = let
       original = pkgs.fetchFromGitHub {
         owner = "quelklef";
         repo = "xmonad-contrib";
-        rev = "51ff8d00025991348c2b330b1a3aa601abd70374";
-        sha256 = "1wb8yf0g7y95h1cg05dqvl1mx05dkspc85gmd0a73iihi6h5mind";
+        rev = "bccf2ef778dd215bda19332bc060476fc7d55a69";
+        sha256 = "0pza9kb4prp2cvx7s041pfr2znai39cqq01zk28ad3bizr596is9";
       };
 
-      # suppress -Werror
-      # FIXME: upstream into quelklef/xmonad-contrib
+      # Suppress -Werror (FIXME: upstream into quelklef/xmonad-contrib)
+      # Also, forcibly lower the xmonad version bound from 0.18 to 0.17.2 (which is the
+      # version in nixpkgs). The only breaking change between the two is dropping
+      # support for GHC 8.4, which I doubt affects us.
       patched = pkgs.runCommand "xmonad-contrib-patched" {} ''
         cp -r ${original}/. . && chmod +w -R .
         ${pkgs.gnused}/bin/sed -i 's/-Werror/-Wwarn/g' ./XMonad/WorkspaceLayout/*.hs
+        ${pkgs.gnused}/bin/sed -i 's/xmonad >= 0.18.0/xmonad >= 0.17.0/g' ./xmonad-contrib.cabal
         mkdir -p $out && mv ./* $out
       '';
     in patched;
 
-  hpkgs = pkgs_2311.haskellPackages.override {
+  hpkgs = pkgs.haskellPackages.override {
     overrides = hself: hsuper: {
       xmonad-contrib =
         hself.callCabal2nix "xmonad-contrib" xmonad-contrib-src {};
