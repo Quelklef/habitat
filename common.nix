@@ -166,7 +166,6 @@ generic-system-config = {
     nix-prefetch nix-prefetch-git
     ghc nodejs python3 cabal-install  # for one-off uses
     tmate
-    pmutils  # pm-suspend used in nifty-launcher (FIXME)
     (linkedBin (with pkgs; [ nodejs curl ]) "" ./files/scripts/loom-put.sh)
     (linkedBin [] ''TRASH_LOC=$HOME/.trash'' ./files/scripts/del.sh)
   ];
@@ -242,7 +241,7 @@ dragon = {
   '';
 
   # Runtime dependency of dragon.sh
-  environment.systemPackages = [ sshfs ];
+  environment.systemPackages = [ pkgs.sshfs ];
 
   # Allows sshfs to use allow_root
   programs.fuse.userAllowOther = true;
@@ -385,18 +384,7 @@ notifications = {
 };
 
 # =============================================================================
-xmonad-wm = let
-
-  latuc = let
-    original = pkgs.fetchFromGitHub {
-        owner = "quelklef";
-        repo = "latuc";
-        rev = "9929f933a030c1dea72164e79a75ca4a27706752";
-        sha256 = "1cz9i5fp220y8xac9r8c1k811v22z1pbbd6am116cbvvxn81a3py";
-      };
-    in pkgs.writeScriptBin "latuc" ''
-      echo "$1" | ${import original { inherit pkgs; }}/bin/latuc
-    '';
+nifty = let
 
   nifty = let
     src = pkgs.fetchFromGitHub {
@@ -411,6 +399,47 @@ xmonad-wm = let
         ${nifty-state + "nifty.js"} \
         2>&1 | tee ${nifty-state + "log.log"}
     '';
+
+  latuc = let
+    original = pkgs.fetchFromGitHub {
+        owner = "quelklef";
+        repo = "latuc";
+        rev = "9929f933a030c1dea72164e79a75ca4a27706752";
+        sha256 = "1cz9i5fp220y8xac9r8c1k811v22z1pbbd6am116cbvvxn81a3py";
+      };
+    in pkgs.writeScriptBin "latuc" ''
+      echo "$1" | ${import original { inherit pkgs; }}/bin/latuc
+    '';
+
+in {
+  environment.systemPackages = [
+    # nifty-launcher
+    nifty
+    # runtime dependencies
+    latuc
+    pkgs.pmutils  # For pm-suspend
+  ];
+};
+
+
+# =============================================================================
+xmonad-wm = let
+
+  # == XMobar == #
+
+  # Runtime dependencies. These unfortunately will leak into the system PATH (WANT: fix)
+  xmobar-deps = [
+    (pkgs.haskellPackages.ghcWithPackages (p: with p; [ xmobar raw-strings-qq ]))
+    pkgs.bash pkgs.coreutils pkgs.acpi
+  ];
+
+  my-xmobar = pkgs.writeScriptBin "xmobar" ''
+    export PATH=${pkgs.lib.strings.makeBinPath xmobar-deps}''${PATH:+:}''${PATH:+$PATH}
+    exec ${pkgs.xmobar}/bin/xmobar "$@"
+  '';
+
+
+  # == XMonad == #
 
   xmonad-contrib-src =
     let
@@ -433,36 +462,23 @@ xmonad-wm = let
       '';
     in patched;
 
-  hpkgs = pkgs.haskellPackages.override {
+  xmonad-hpkgs = pkgs.haskellPackages.override {
     overrides = hself: hsuper: {
-      xmonad-contrib =
-        hself.callCabal2nix "xmonad-contrib" xmonad-contrib-src {};
+      xmonad-contrib = hself.callCabal2nix "xmonad-contrib" xmonad-contrib-src {};
     };
   };
 
-  xmo-ghc = hpkgs.ghcWithPackages (p: with p; [
-    xmonad xmonad-utils xmonad-contrib
-    xmobar raw-strings-qq temporary
-  ]);
-
-  # Runtime dependencies for the xmonad/xmobar configs
-  # These unfortunately will get leaked into the system PATH (WANT: fix)
-  xmo-deps = [
-    xmo-ghc
-    pkgs.bash pkgs.coreutils pkgs.scrot pkgs.xclip pkgs.acpi pkgs.light
-
-    nifty latuc  # WANT: move these
+  # Runtime dependencies. These unfortunately will leak into the system PATH (WANT: fix)
+  xmonad-deps = [
+    (xmonad-hpkgs.ghcWithPackages (p: with p; [ xmonad xmonad-utils xmonad-contrib lens ]))
+    my-xmobar
+    pkgs.bash pkgs.coreutils pkgs.scrot pkgs.xclip pkgs.light
   ];
 
   my-xmonad = pkgs.writeScriptBin "xmonad" ''
-    export PATH=${pkgs.lib.strings.makeBinPath xmo-deps}''${PATH:+:}''${PATH:+$PATH}
+    export PATH=${pkgs.lib.strings.makeBinPath xmonad-deps}''${PATH:+:}''${PATH:+$PATH}
     export XMONAD_XMESSAGE=${pkgs.coreutils}/bin/true  # disable xmonad error popup
-    exec ${hpkgs.xmonad}/bin/xmonad "$@"
-  '';
-
-  my-xmobar = pkgs.writeScriptBin "xmobar" ''
-    export PATH=${pkgs.lib.strings.makeBinPath xmo-deps}''${PATH:+:}''${PATH:+$PATH}
-    exec ${hpkgs.xmobar}/bin/xmobar "$@"
+    exec ${xmonad-hpkgs.xmonad}/bin/xmonad "$@"
   '';
 
 in lib.mkIf true {
