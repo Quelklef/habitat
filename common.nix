@@ -642,7 +642,6 @@ discord = let
       };
   });
 
-  # WANT: pin deps here. Where does nix-prefetch-url come from?
   get-current-discord-version =
     pkgs.writeScriptBin "get-current-discord-version" ''
       set -euo pipefail
