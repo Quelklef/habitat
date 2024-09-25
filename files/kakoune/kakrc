@@ -1,6 +1,4 @@
 
-set-face global Default rgb:c5c8c6,default,default  # inherit transparent background of terminal
-
 # Default colorscheme
 colorscheme tomorrow-night
 
@@ -11,6 +9,10 @@ colorscheme tomorrow-night
 # tell them to with something like:
 # $ kak -l | while read sess; do echo 'source /path/to/the/file.kak' | kak -p $sess; done
 try %{ source ~/.config/kak/current-color-scheme.kak } catch %{ }
+
+# Inherit text+background color from terminal
+# In particular this inherits background transparency!
+set-face global Default default,default
 
 
 # Use a cat instead of clippy
