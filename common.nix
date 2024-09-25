@@ -399,19 +399,11 @@ xmonad-wm = let
     original = pkgs.fetchFromGitHub {
         owner = "quelklef";
         repo = "latuc";
-        rev = "d9c312a05f283f4eaf735278f8d609f8697fea28";
-        sha256 = "1yxswpm8g7n5q8ackqak6c72a2rkj8acyk98jbzr3dih54pm5il4";
+        rev = "9929f933a030c1dea72164e79a75ca4a27706752";
+        sha256 = "1cz9i5fp220y8xac9r8c1k811v22z1pbbd6am116cbvvxn81a3py";
       };
-
-    # Force `base` requirement to match the package set
-    patched = pkgs.runCommand "latuc-modified" {} ''
-      cp -r ${original}/. . && chmod +w -R .
-      ${pkgs.gnused}/bin/sed -Ei 's/base \^>=[0-9\.]+/base \^>=4.16.0.0/g' ./*.cabal
-      mkdir -p $out && cp -r ./* $out
-    '';
-
     in pkgs.writeScriptBin "latuc" ''
-      echo "$1" | ${import patched { pkgs = pkgs_2305; }}/bin/latuc
+      echo "$1" | ${import original { inherit pkgs; }}/bin/latuc
     '';
 
   nifty = let
