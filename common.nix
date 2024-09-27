@@ -390,8 +390,8 @@ nifty = let
     src = pkgs.fetchFromGitHub {
         owner = "quelklef";
         repo = "nifty-launcher";
-        rev = "d1eb570732e2fa0e3e08a199f4695eb4dcde0cf5";
-        sha256 = "1akmbvkasdv8s9h9xww3ccn85kj08h4bknbxjv7ab4bx95avspfq";
+        rev = "e6ad9a9aba5415e1dbc77fcbe060051a3dfe17bb";
+        sha256 = "0p9kk4l8ai4xj66rym1njb178lhikcaklrjslkyjkhlclld3a8cr";
       };
     nifty-state = stateloc + "/nifty-launcher/";
     in pkgs.writeScriptBin "nifty" ''
