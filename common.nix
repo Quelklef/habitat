@@ -606,6 +606,16 @@ firefox = {
     (pkgs.writeScriptBin "firefox" ''${pkgs.firefox}/bin/firefox -profile ${linked (stateloc + "/firefox-profile")} "$@"'')
     (pkgs.writeScriptBin "firefox-alt" ''${pkgs.firefox}/bin/firefox -profile ${linked (stateloc + "/firefox-alt-profile")} "$@"'')
   ];
+
+  # This sets the cursor theme for everything, not just Firefox; however, I am only setting the cursor
+  # theme in the first place because some cursors were broken on Firefox.
+  home-manager.users.${user}.home.pointerCursor = {
+    gtk.enable = true;
+    x11.enable = true;
+    package = pkgs.posy-cursors;
+    name = "Posy_Cursor_Black_125_175";
+    size = 28;
+  };
 };
 
 # =============================================================================
