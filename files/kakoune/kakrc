@@ -87,7 +87,9 @@ hook global BufCreate .*\.purs %{ set buffer filetype haskell }
 # Detect .ejs (Embedded Javascript) as HTML
 hook global BufCreate .*\.ejs %{ set buffer filetype html }
 
+# Show line numbers
 add-highlighter global/ number-lines
 
 # Show trailing whitespace in red
 add-highlighter global/show-trailing-whitespaces regex '\h+$' 0:Error
+
