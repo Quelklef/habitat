@@ -393,11 +393,10 @@ nifty = let
         rev = "e6ad9a9aba5415e1dbc77fcbe060051a3dfe17bb";
         sha256 = "0p9kk4l8ai4xj66rym1njb178lhikcaklrjslkyjkhlclld3a8cr";
       };
-    nifty-state = stateloc + "/nifty-launcher/";
     in pkgs.writeScriptBin "nifty" ''
       ${import src {}}/bin/nifty \
-        ${nifty-state + "nifty.js"} \
-        2>&1 | tee ${nifty-state + "log.log"}
+        ${builtins.toString ./files/nifty-launcher/nifty.js} \
+        2>&1 | tee ${stateloc + "/nifty-launcher/log.log"}
     '';
 
   latuc = let
