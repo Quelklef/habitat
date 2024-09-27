@@ -426,7 +426,7 @@ xmonad-wm = let
 
   # == XMobar == #
 
-  # Runtime dependencies. These unfortunately will leak into the system PATH (WANT: fix)
+  # Runtime dependencies
   xmobar-deps = [
     (pkgs.haskellPackages.ghcWithPackages (p: with p; [ xmobar raw-strings-qq ]))
     pkgs.bash pkgs.coreutils pkgs.acpi
@@ -467,7 +467,8 @@ xmonad-wm = let
     };
   };
 
-  # Runtime dependencies. These unfortunately will leak into the system PATH (WANT: fix)
+  # Runtime dependencies
+  # Unfortunately, these will leak into the PATH of all children processes (ie, most processes) (WANT: fix)
   xmonad-deps = [
     (xmonad-hpkgs.ghcWithPackages (p: with p; [ xmonad xmonad-utils xmonad-contrib lens ]))
     my-xmobar
