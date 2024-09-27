@@ -394,10 +394,16 @@ nifty = let
         sha256 = "0p9kk4l8ai4xj66rym1njb178lhikcaklrjslkyjkhlclld3a8cr";
       };
     in pkgs.writeScriptBin "nifty" ''
+      export PATH=${pkgs.lib.strings.makeBinPath runtime-deps}''${PATH:+:}''${PATH:+$PATH}
       ${import src {}}/bin/nifty \
         ${builtins.toString ./files/nifty-launcher/nifty.js} \
         2>&1 | tee ${stateloc + "/nifty-launcher/log.log"}
     '';
+
+  runtime-deps = [
+    latuc
+    pkgs.pmutils  # For pm-suspend
+  ];
 
   latuc = let
     original = pkgs.fetchFromGitHub {
@@ -411,13 +417,7 @@ nifty = let
     '';
 
 in {
-  environment.systemPackages = [
-    # nifty-launcher
-    nifty
-    # runtime dependencies
-    latuc
-    pkgs.pmutils  # For pm-suspend
-  ];
+  environment.systemPackages = [ nifty ];
 };
 
 
