@@ -38,11 +38,17 @@ config.window_background_opacity = 0.97
 config.window_close_confirmation = "NeverPrompt"
 
 
--- I don't know, in detail, what this setting does.
---
--- However, without it, Kak does not seem to receive shift+space keypresses: the input
--- sequence '<shift down>ab cd<shift up>' produces 'ABCD' instead of 'AB CD'. Super annoying!
-config.enable_csi_u_key_encoding = true
+-- Play nice with XMonad when zooming with <c-plus> and <c-minus>
+config.adjust_window_size_when_changing_font_size = false
+
+
+-- Setting this fixes <s-space>
+config.enable_kitty_keyboard = true
+-- When pressing <s-space> on...
+--   Alacritty                            - terminal prints " "  , kak sees <space>    ✅
+--   Wezterm (default)                    - terminal prints " "  , kak sees <a-[>      ❌
+--   Wezterm w/ enable_csi_u_key_encoding - terminal prints ";2u", kak sees <s-space>  ❌
+--   Wezterm w/ enable_kitty_keyboard     - terminal prints " "  , kak sees <s-space>  ✅
 
 
 return config

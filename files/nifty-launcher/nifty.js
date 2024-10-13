@@ -132,6 +132,12 @@ const getStandardItems = function() {
     icon: util.mkIcon('./icons/copy-to-clipboard.png'),
   }));
 
+  items.push(nifty.lib.mkSimple({
+    text: 'Copy: ¢ (cents symbol)',
+    exec: () => util.copyToClipboard('¢'),
+    icon: util.mkIcon('./icons/copy-to-clipboard.png'),
+  }));
+
 
   // Dark/Light mode
 

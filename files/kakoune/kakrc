@@ -1,4 +1,6 @@
 
+## == Colors == ##
+
 # Default colorscheme
 colorscheme tomorrow-night
 
@@ -8,12 +10,17 @@ colorscheme tomorrow-night
 # sessions. To get existing sessions to load the new color scheme, you have to manually
 # tell them to with something like:
 # $ kak -l | while read sess; do echo 'source /path/to/the/file.kak' | kak -p $sess; done
-try %{ source ~/.config/kak/current-color-scheme.kak } catch %{ }
+evaluate-commands %sh{
+  targ=~/.config/kak/current-color-scheme.kak
+  [ -e "$targ" ] && echo source "$targ" || echo nop
+}
 
 # Inherit text+background color from terminal
 # In particular this inherits background transparency!
 set-face global Default default,default
 
+
+## == Settings == ##
 
 # Use a cat instead of clippy
 set global ui_options ncurses_assistant=cat
@@ -21,17 +28,40 @@ set global ui_options ncurses_assistant=cat
 # Set indentation to 2 spaces
 set global indentwidth 2
 set global tabstop 2
+
 # Use spaces, not tabs
-hook global InsertChar \t %{ exec -draft h@ }
+hook global InsertChar \t %{
+  execute-keys -draft h@
+}
 hook global InsertDelete ' ' %{ try %{
   execute-keys -draft 'h<a-h><a-k>\A\h+\z<ret>i<space><esc><lt>'
-}}
+} }
 
-# For python, set indentation to 4 spaces
-hook global WinSetOption filetype=python %{
-  set buffer indentwidth 4
-  set buffer tabstop 4
-}
+# When scrolling, keep some rows+columns visible around the cursor
+set global scrolloff 5,5
+
+# Use a safer (but slower) method for writing to files
+set global writemethod replace
+
+# Wait this many milliseconds before suggesting autocompletions, etc
+set global idle_timeout 100
+
+# Wrap lines
+add-highlighter global/wrapping wrap -word -indent -marker "…"
+
+# Show line numbers
+add-highlighter global/line-numbers number-lines
+
+# Show trailing whitespace in red
+add-highlighter global/show-trailing-whitespaces regex '\h+$' 0:Error
+
+# Initialize the LSP client
+#evaluate-commands %sh{ kak-lsp --kakoune --session "$kak_session" }
+#set global lsp_cmd "kak-lsp -s %val{session} -vvv --log /tmp/kak-lsp.log"
+#lsp-enable
+
+
+## == Keybindings == ##
 
 # On space, deselect all but the last character of the current selection
 map global normal <space> ,
@@ -74,22 +104,22 @@ map global normal X Jx
 map global normal <a-l> <semicolon>giGlc
 map global normal <a-L> <semicolon>Glc
 
-# Wrap lines
-addhl global/wrapping wrap -word -indent -marker "…"
+
+# == Filetypes == #
+
+# For python, set indentation to 4 spaces
+hook global WinSetOption filetype=python %{
+  set buffer indentwidth 4
+  set buffer tabstop 4
+}
 
 # Detect .envrc and bashrc as bash
 hook global BufCreate .*\.envrc %{ set buffer filetype sh }
 hook global BufCreate .*bashrc %{ set buffer filetype sh }
 
 # Detect .purs (Purescript) as haskell
-hook global BufCreate .*\.purs %{ set buffer filetype haskell }
+hook global BufCreate .*\.purs %{ set buffer filetype purescript }
 
 # Detect .ejs (Embedded Javascript) as HTML
 hook global BufCreate .*\.ejs %{ set buffer filetype html }
-
-# Show line numbers
-add-highlighter global/ number-lines
-
-# Show trailing whitespace in red
-add-highlighter global/show-trailing-whitespaces regex '\h+$' 0:Error
 
