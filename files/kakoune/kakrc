@@ -105,7 +105,7 @@ map global normal <a-l> <semicolon>giGlc
 map global normal <a-L> <semicolon>Glc
 
 
-# == Filetypes == #
+# == Filetype-specific options == #
 
 # For python, set indentation to 4 spaces
 hook global WinSetOption filetype=python %{
@@ -122,4 +122,15 @@ hook global BufCreate .*\.purs %{ set buffer filetype purescript }
 
 # Detect .ejs (Embedded Javascript) as HTML
 hook global BufCreate .*\.ejs %{ set buffer filetype html }
+
+# Recognize "-- $> EXPR" GHCiD syntax; see [1]
+# This implementation only works okay. Oh well. I'm pressed for time ATM.
+# [1]: <https://github.com/ndmitchell/ghcid/tree/b7dc5c4ee640b6c8137ecfd0a2b50df278015221#evaluation>
+hook global WinSetOption filetype=haskell %{
+  # Replace the standard line-comment highlighter [2] with one that will end prematurely if it sees '$>'
+  # This way, after it ends, the rest of the line will be highlighted as code.
+  remove-highlighter shared/haskell/line_comment
+  add-highlighter shared/haskell/line_comment region '--(?![!#$%&*+./<>?@\\\^|~=])' '$|\$>' fill comment
+  # [2]: <https://github.com/mawww/kakoune/blob/be82047dbf5f74f123e925b96e0e13962a4e0c09/rc/filetype/haskell.kak#L42>
+}
 
