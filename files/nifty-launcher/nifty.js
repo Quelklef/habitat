@@ -85,35 +85,14 @@ const getStandardItems = function() {
   // Screenshotting
 
   items.push(nifty.lib.mkSimple({
-    text: 'Screenshot: fullscreen, to clipboard',
-    exec: () => util.exec(String.raw`
-      scrot \
-          -q 100 \
-          --file "$HOME/_scrot-tmp.png" \
-          -e 'xclip -selection clipboard -t image/png -i $f; rm $f'
-    `),
+    text: 'Screenshot',
+    exec: () => util.exec(`flameshot gui`),
     icon: util.mkIcon('./icons/screenshot.png'),
   }));
 
   items.push(nifty.lib.mkSimple({
-    text: 'Screenshot: selection, to clipboard',
-    exec: () => util.exec(String.raw`
-      scrot \
-          -q 100 \
-          --file "$HOME/_scrot-tmp.png" \
-          -e 'xclip -selection clipboard -t image/png -i $f; rm $f' \
-          -s -f -l color=#00ff00
-    `),
-    icon: util.mkIcon('./icons/screenshot.png'),
-  }));
-
-  items.push(nifty.lib.mkSimple({
-    text: 'Screenshot: selection, to $HOME',
-    exec: () => util.exec(String.raw`
-      scrot \
-          -q 100 \
-          -s -f -l color=#00ff00
-    `),
+    text: 'Screenshot (fullscreen)',
+    exec: () => util.exec(`flameshot gui --region all`),
     icon: util.mkIcon('./icons/screenshot.png'),
   }));
 

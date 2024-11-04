@@ -402,9 +402,9 @@ nifty = let
 
   runtime-deps = [
     latuc
-    pkgs.pmutils           # For pm-suspend
-    pkgs.scrot pkgs.xclip  # For screenshots
-    pkgs.light             # For brightness control
+    pkgs.pmutils    # For pm-suspend
+    pkgs.flameshot  # For screenshots
+    pkgs.light      # For brightness control
   ];
 
   latuc = let
