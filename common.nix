@@ -402,7 +402,9 @@ nifty = let
 
   runtime-deps = [
     latuc
-    pkgs.pmutils  # For pm-suspend
+    pkgs.pmutils           # For pm-suspend
+    pkgs.scrot pkgs.xclip  # For screenshots
+    pkgs.light             # For brightness control
   ];
 
   latuc = let
@@ -472,7 +474,7 @@ xmonad-wm = let
   xmonad-deps = [
     (xmonad-hpkgs.ghcWithPackages (p: with p; [ xmonad xmonad-utils xmonad-contrib lens ]))
     my-xmobar
-    pkgs.bash pkgs.coreutils pkgs.scrot pkgs.xclip pkgs.light
+    pkgs.bash pkgs.coreutils pkgs.light
   ];
 
   my-xmonad = pkgs.writeScriptBin "xmonad" ''
