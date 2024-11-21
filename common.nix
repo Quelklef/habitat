@@ -379,7 +379,7 @@ nifty = let
   runtime-deps = [
     latuc
     pkgs.pmutils    # For pm-suspend
-    pkgs.flameshot  # For screenshots
+    pkgs.flameshot pkgs.xclip  # For screenshots
     pkgs.light      # For brightness control
   ];
 

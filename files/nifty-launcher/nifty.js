@@ -92,13 +92,16 @@ const getStandardItems = function() {
 
   items.push(nifty.lib.mkSimple({
     text: 'Screenshot',
-    exec: () => util.exec(`flameshot gui`),
+    exec: () => util.exec(`flameshot gui -r | xclip -selection clipboard -t image/png`),
+      // From <https://github.com/flameshot-org/flameshot/issues/635#issuecomment-2302675095>
+      // There may be a better solution available though? Something abut a daemon?
     icon: util.mkIcon('./icons/screenshot.png'),
   }));
 
   items.push(nifty.lib.mkSimple({
     text: 'Screenshot (fullscreen)',
-    exec: () => util.exec(`flameshot gui --region all`),
+    exec: () => util.exec(`flameshot gui -r --region all | xclip -selection clipboard -t image/png`),
+      // <https://github.com/flameshot-org/flameshot/issues/635#issuecomment-2302675095>
     icon: util.mkIcon('./icons/screenshot.png'),
   }));
 
