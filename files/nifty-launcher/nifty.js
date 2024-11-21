@@ -27,6 +27,12 @@ const getStandardItems = function() {
   }));
 
   items.push(nifty.lib.mkSimple({
+    text: 'Telegram',
+    exec: () => util.exec('telegram-desktop'),
+    icon: util.mkIcon('./icons/telegram.png'),
+  }));
+
+  items.push(nifty.lib.mkSimple({
     text: 'KeePassXC',
     exec: () => util.exec('keepassxc'),
     icon: util.mkIcon('./icons/keepass.png'),

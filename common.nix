@@ -795,4 +795,12 @@ steam = {
   };
 };
 
+# =============================================================================
+telegram = {
+  environment.systemPackages = [ pkgs.tdesktop ];
+  home-manager.users.${user} = {
+    xdg.dataFile."TelegramDesktop/tdata".source = linked (stateloc + "/telegram");
+  };
+};
+
 }; in result
