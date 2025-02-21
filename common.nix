@@ -170,6 +170,11 @@ generic-system-config = {
     (linkedBin [] ''TRASH_LOC=$HOME/.trash'' ./files/scripts/del.sh)
   ];
 
+  # plug-in fonts
+  fonts.packages = with pkgs; [
+    corefonts  # Microsoft Core fonts for the Web. Surprised these aren't enabled by default!
+  ];
+
   environment.interactiveShellInit = ''
     # source bashrc on bash only
     [ -n "$BASH" ] && source ${builtins.toString ./files/bashrc}
