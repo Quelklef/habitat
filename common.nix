@@ -570,6 +570,11 @@ git = {
       # Have 'git detach' enter into detached HEAD state
       alias."my-detach" = ''!bash -c 'git checkout "$(git rev-parse HEAD)"' '';
       advice.detachedHead = false;  # Don't display help when entering detached HEAD
+
+      # Beautiful 'git log'. From Mason :)
+      alias."my-log" = ''
+        !bash -c 'git log --oneline --abbrev=0 --graph --all $(git reflog show --format=%H stash 2> /dev/null)'
+      '';
     };
   };
 };
