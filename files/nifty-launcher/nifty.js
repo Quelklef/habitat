@@ -38,23 +38,28 @@ const getStandardItems = function() {
     icon: util.mkIcon('./icons/keepass.png'),
   }));
 
-  items.push(nifty.lib.mkSimple({
-    text: 'Chrome',
-    exec: () => util.exec('google-chrome-stable'),
-    icon: util.mkIcon('./icons/chrome.png'),
-  }));
+  {
+    // Disables welcome screen, etc
+    const lessAnnoying = "--disable-fre --no-default-browser-check --no-first-run";
 
-  items.push(nifty.lib.mkSimple({
-    text: 'Chrome (transient)',
-    exec: () => util.exec('google-chrome-stable --user-data-dir=chrome-temp-profile'),
-    icon: util.mkIcon('./icons/chrome.png'),
-  }));
+    items.push(nifty.lib.mkSimple({
+      text: 'Chrome',
+      exec: () => util.exec(`google-chrome-stable ${lessAnnoying}`),
+      icon: util.mkIcon('./icons/chrome.png'),
+    }));
 
-  items.push(nifty.lib.mkSimple({
-    text: 'Chrome (transient + insecure)',
-    exec: () => util.exec('google-chrome-stable --user-data-dir=chrome-temp-profile --disable-web-security'),
-    icon: util.mkIcon('./icons/chrome.png'),
-  }));
+    items.push(nifty.lib.mkSimple({
+      text: 'Chrome (transient)',
+      exec: () => util.exec(`google-chrome-stable ${lessAnnoying} --user-data-dir=chrome-temp-profile`),
+      icon: util.mkIcon('./icons/chrome.png'),
+    }));
+
+    items.push(nifty.lib.mkSimple({
+      text: 'Chrome (transient + insecure)',
+      exec: () => util.exec(`google-chrome-stable ${lessAnnoying} --user-data-dir=chrome-temp-profile --disable-web-security`),
+      icon: util.mkIcon('./icons/chrome.png'),
+    }));
+  }
 
   items.push(nifty.lib.mkSimple({
     text: 'Peek',
