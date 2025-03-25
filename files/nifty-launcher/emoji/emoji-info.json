@@ -271,7 +271,9 @@
     "face",
     "inexpressive",
     "meh",
-    "unexpressive"
+    "unexpressive",
+    "annoy",
+    "annoyed"
   ],
   "😶": [
     "face without mouth",
@@ -534,21 +536,31 @@
     "face",
     "mouth",
     "open",
-    "sympathy"
+    "sympathy",
+    "aghast",
+    "surprise",
+    "surprised",
+    "stunned"
   ],
   "😯": [
     "hushed face",
     "face",
     "hushed",
     "stunned",
-    "surprised"
+    "surprised",
+    "aghast",
+    "surprise"
   ],
   "😲": [
     "astonished face",
     "astonished",
     "face",
     "shocked",
-    "totally"
+    "totally",
+    "aghast",
+    "surprise",
+    "surprised",
+    "stunned"
   ],
   "😳": [
     "flushed face",
@@ -575,19 +587,31 @@
     "face",
     "frown",
     "mouth",
-    "open"
+    "open",
+    "aghast",
+    "surprise",
+    "surprised",
+    "stunned"
   ],
   "😧": [
     "anguished face",
     "anguished",
-    "face"
+    "face",
+    "aghast",
+    "surprise",
+    "surprised",
+    "stunned"
   ],
   "😨": [
     "fearful face",
     "face",
     "fear",
     "fearful",
-    "scared"
+    "scared",
+    "aghast",
+    "surprise",
+    "surprised",
+    "stunned"
   ],
   "😰": [
     "anxious face with sweat",
@@ -626,7 +650,11 @@
     "munch",
     "scared",
     "scream",
-    "Munch"
+    "Munch",
+    "aghast",
+    "surprise",
+    "surprised",
+    "stunned"
   ],
   "😖": [
     "confounded face",
@@ -8141,7 +8169,10 @@
     "forbidden",
     "no",
     "not",
-    "denied"
+    "denied",
+    "cancel",
+    "x",
+    "cross"
   ],
   "🚳": [
     "no bicycles",

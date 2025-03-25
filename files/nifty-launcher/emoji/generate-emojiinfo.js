@@ -47,8 +47,12 @@ async function main() {
 
   // -- Transform -- //
 
-  // Special modificatoins
- emojis['🤨'].terms.add('suspicious'); 
+  // Special modifications
+  emojis['🤨'].terms.add('suspicious');
+  emojis['😑'].terms.add('annoy').add('annoyed');
+  emojis['🚫'].terms.add('no').add('cancel').add('x').add('cross');
+  for (const em of ['😮', '😮', '😯', '😲', '😧', '😦', '😧', '😨', '😱'])
+    emojis[em].terms.add('aghast').add('surprise').add('surprised').add('stunned');
 
   // Filter
   const toRemove = new Set();
