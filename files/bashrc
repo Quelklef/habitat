@@ -223,6 +223,10 @@ function fix-bluetooth {
   sudo hciconfig hci0 up
 }
 
+function connect-to-hotspot {
+  nmcli d wifi list --rescan yes > /dev/null && nmcli d wifi connect '🐦'
+}
+
 function rm {
   echo "Refusing to rm. Use 'command rm' or 'del'"
   return 1
