@@ -641,7 +641,7 @@ obs = {
 discord = let
 
   # See github.com/NixOS/nixpkgs/issues/94806 and reddit.com/r/NixOS/comments/i5bpjy
-  # use 'get-current-discord-version' to bump version number and hash
+  # use 'get-latest-discord-version' to bump version number and hash
   ver = "0.0.25";
   sha = "12yrhlbigpy44rl3icir3jj2p5fqq2ywgbp5v3m1hxxmbawsm6wi";
   discord = pkgs.discord.overrideAttrs (_: {
@@ -651,8 +651,8 @@ discord = let
       };
   });
 
-  get-current-discord-version =
-    pkgs.writeScriptBin "get-current-discord-version" ''
+  get-latest-discord-version =
+    pkgs.writeScriptBin "get-latest-discord-version" ''
       set -euo pipefail
       ver=$(
         curl -s 'https://discord.com/api/download?platform=linux' \
@@ -670,7 +670,7 @@ discord = let
 
 in {
 
-  environment.systemPackages = [ discord get-current-discord-version ];
+  environment.systemPackages = [ discord get-latest-discord-version ];
 
   home-manager.users.${user} =
     let
