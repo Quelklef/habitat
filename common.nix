@@ -263,36 +263,88 @@ Remarks:
   so use 'borg --rsh "ssh -p23"'
 
 */
-borg = let
+system-backups = let
   borg-repo = "u309918@u309918.your-storagebox.de:/home/backups";
   borg = pkgs.borgbackup;
+  unit-name = "system-backup";
 in {
-  environment.systemPackages = [ borg ];
 
-  systemd.services.system-backup = {
+  systemd.services.${unit-name} = {
     description = "Regular system backup";
+
     startAt = "*-*-* 04:00:00";
 
     environment = {
-      # Bypass check when accessing 'previously unknown repo'
-      # /root/.ssh isn't persisted, so after every reboot the repo will be 'unknown'
+      # Point borg to the repo
+      BORG_REPO = borg-repo;
+      # Point borg to the SSH config
+      BORG_RSH = "ssh -F ${perloc}/state/ssh/config";
+      # Bypass check when accessing "previously unknown repo"
+      # /root/.ssh isn't persisted, so after every reboot the repo will be "unknown"
       BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK = "yes";
     };
+
+    path = [
+      pkgs.libnotify  # for notify-send
+      pkgs.util-linux  # for runuser
+    ];
+
     script = ''
-      ${borg}/bin/borg create \
-        --rsh 'ssh -F ${stateloc + "/ssh/config"}' \
+      set -x +e
+
+      user_name=${lib.escapeShellArg user}
+      user_uid=$(id -u "$user_name")
+
+      send_notif() {
+        runuser -u "$user_name" -- \
+          env \
+            DISPLAY=:0 \
+            DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/"$user_uid"/bus \
+            notify-send "$@"
+      }
+
+      my_borg() {
+        ${lib.getExe borg} "$@"
+        local exit_code=$?
+
+        # Send a notif so I see how the backup went when I next get on my computer
+        send_notif -t 86400000 -a ${lib.escapeShellArg unit-name} \
+          "'borg $1' $( case $exit_code in 0) echo 'completed ✅';; *) echo "FAILED ❌❌ with status $exit_code";; esac )"
+
+        if [ $exit_code != 0 ]; then exit 1; fi
+      }
+
+      # -- #
+
+      # Perform system backup
+      my_borg create \
         --exclude ${perloc}/dgn \
         --exclude ${perloc}/work/live247/music/blobs/ \
         --exclude ${perloc}/dev/zoom-dl/files \
         --exclude ${perloc}/dev/zoom-dl/files.copy \
         --progress \
-        ${borg-repo}::'${host}-backup-{now}' ${perloc}
+        ::'${host}-backup-{now}' ${perloc}
+
+      # Prune backup repo
+      my_borg prune \
+        --keep-within 4d \
+        --keep-daily 14 \
+        --keep-weekly 104 \
+        --keep-monthly -1 \
+        --progress \
+        --stats
+
+      # Optimize backup repo
+      my_borg compact --progress --cleanup-commits
     '';
   };
+
+  environment.systemPackages = [ borg ];
 
   home-manager.users.${user}.programs.bash.bashrcExtra = ''
     export BORG_REPO=${pkgs.lib.escapeShellArg borg-repo}
   '';
+
 };
 
 # =============================================================================
