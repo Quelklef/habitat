@@ -162,11 +162,8 @@ generic-system-config = {
     silver-searcher ripgrep
     colordiff
     entr
-    magic-wormhole
     nix-prefetch nix-prefetch-git
     ghc nodejs python3 cabal-install  # for one-off uses
-    tmate
-    (linkedBin (with pkgs; [ nodejs curl ]) "" ./files/scripts/loom-put.sh)
     (linkedBin [] ''TRASH_LOC=$HOME/.trash'' ./files/scripts/del.sh)
   ];
 
