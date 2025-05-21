@@ -227,29 +227,40 @@ dragon = {
 
 # =============================================================================
 # System backups
-#
+
 /*
 
 System restore instructions:
 
-- First use 'borg list <borg-repo>' to list available
-  archives
-- Then use EITHER
-  - 'sudo borg extract --progress <borg-repo>::<archive-name> ./local/path'
-    to directly download a chosen archive to local; or
-  - 'sudo borg mount <borg-repo>::<archive-name> ./local/path'
-    to mount an archive locally.
-    One can follow this up by extracting with rsync, which
-    is incremental ('borg extract' is not)
-  Sudo is necessary (I think?) because some archive paths will
+- Enter a superuser shell
+
+  This is necessary (I think?) because some archive paths will
   be sudo-owned. Not really positive tho.
 
-REMARKS:
-- If on an existing machine, can use 'my-borg' in place
-  of 'borg' and '$BORG_REPO' in place of '<borg-repo>'
-- If on a *new* machine, will need to reset the Hetzner
-  box password and then use borg manually. Hetzner boxes
-  use port 23, so you'll need to use 'borg --rsh "ssh -p23"'
+- Set BORG_REPO or ensure its value is correct
+
+- Run 'borg list' to list available archives
+
+- Then use EITHER
+
+  - 'borg extract --progress ::<archive-name> ./local/path'
+    to directly download a chosen archive to local; OR
+
+  - 'borg mount ::<archive-name> ./local/path'
+    to mount an archive locally.
+
+    One can follow this up by extracting with rsync, which
+    is incremental ('borg extract' is not)
+
+
+Remarks:
+
+- If running this process from a machine not authenticated
+  to the Hetzner box, you will need to reset the Hetzner box password
+  and go from there.
+
+  Note that Hetzner boxes expose SSH on port 23,
+  so use 'borg --rsh "ssh -p23"'
 
 */
 borg = let
