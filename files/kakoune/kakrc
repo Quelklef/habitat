@@ -55,6 +55,10 @@ add-highlighter global/line-numbers number-lines
 # Show trailing whitespace in red
 add-highlighter global/show-trailing-whitespaces regex '\h+$' 0:Error
 
+# Highlight the cursor column
+source /per/config/files/kakoune/crosshairs.kak
+cursorcolumn
+
 # Initialize the LSP client
 #evaluate-commands %sh{ kak-lsp --kakoune --session "$kak_session" }
 #set global lsp_cmd "kak-lsp -s %val{session} -vvv --log /tmp/kak-lsp.log"
