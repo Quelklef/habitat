@@ -269,12 +269,10 @@ borg = let
 in {
   environment.systemPackages = [ borg ];
 
-  # nb Some to-be-backed-up files are root-owned, so use borg with root
-
   systemd.services.system-backup = {
     description = "Regular system backup";
     startAt = "*-*-* 04:00:00";
-    serviceConfig = { User = "root"; };
+
     environment = {
       # Bypass check when accessing 'previously unknown repo'
       # /root/.ssh isn't persisted, so after every reboot the repo will be 'unknown'
