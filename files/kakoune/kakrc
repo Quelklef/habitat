@@ -4,17 +4,6 @@
 # Default colorscheme
 colorscheme tomorrow-night
 
-# This file gets programmatically overwritten overwrite the color scheme
-#
-# Note: Writing to this file will only affect the color scheme of newly-created kak
-# sessions. To get existing sessions to load the new color scheme, you have to manually
-# tell them to with something like:
-# $ kak -l | while read sess; do echo 'source /path/to/the/file.kak' | kak -p $sess; done
-evaluate-commands %sh{
-  targ=~/.config/kak/current-color-scheme.kak
-  [ -e "$targ" ] && echo source "$targ" || echo nop
-}
-
 # Inherit text+background color from terminal
 # In particular this inherits background transparency!
 set-face global Default default,default
@@ -138,3 +127,19 @@ hook global WinSetOption filetype=haskell %{
   # [2]: <https://github.com/mawww/kakoune/blob/be82047dbf5f74f123e925b96e0e13962a4e0c09/rc/filetype/haskell.kak#L42>
 }
 
+
+# == Overwrites == #
+
+# Execute $HOME/.config/kak/current-overwrites.kak, if it exists
+#
+# Other processes may write to this file to dynamically extend/overwrite the kakoune
+# config. For instance, this is used to implement dynamic colorscheme changes.
+#
+# Note: Writing to this file will only affect the color scheme of newly-created kak
+# sessions. To get existing sessions to load the new color scheme, you have to manually
+# tell them to with something like:
+# $ kak -l | while read sess; do echo 'source /path/to/overwrites.kak' | kak -p $sess; done
+evaluate-commands %sh{
+  targ=~/.config/kak/current-overwrites.kak
+  [ -e "$targ" ] && echo source "$targ" || echo nop
+}

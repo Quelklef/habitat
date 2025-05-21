@@ -138,11 +138,28 @@ const getStandardItems = function() {
     fs.writeFileSync(`${process.env.HOME}/.config/wezterm/current-color-scheme`, name);
   }
 
-  function setKakouneColorScheme(name) {
+  const kakrcLight = String.raw`
+    # Set colorscheme
+    colorscheme kaleidoscope-light
+
+    # Set crosshair colors
+    set-face global crosshairs_line default,rgb:dddddd+bd
+    set-face global crosshairs_column default,rgb:dddddd+bd
+  `;
+
+  const kakrcDark = String.raw`
+    colorscheme tomorrow-night
+    set-face global crosshairs_line default,rgb:383838+bd
+    set-face global crosshairs_column default,rgb:383838+bd
+  `;
+
+  function setKakouneColorMode(name) {
+    const kakrc = { light: kakrcLight, dark: kakrcDark }[name];
+    const kakrcEscaped = "'" + kakrc.replace(/'/g, "'\\''") + "'";
     util.exec(String.raw`
-      target="$HOME/.config/kak/current-color-scheme.kak"
+      target="$HOME/.config/kak/current-overwrites.kak"
       mkdir -p "$(dirname "$target")" && \
-      echo 'colorscheme ${name}' > "$target" && \
+      echo ${kakrcEscaped} > "$target" && \
       kak -l | while read session_id; do echo "source $target" | kak -p $session_id; done
     `);
   }
@@ -151,7 +168,7 @@ const getStandardItems = function() {
     text: 'Mode: Dark',
     exec: () => {
       setWeztermColorScheme('Wombat');
-      setKakouneColorScheme('tomorrow-night');
+      setKakouneColorMode('dark');
     },
     icon: util.mkIcon('./icons/dark-mode-light-mode.png'),
   }));
@@ -160,7 +177,7 @@ const getStandardItems = function() {
     text: 'Mode: Light',
     exec: () => {
       setWeztermColorScheme('Papercolor Light (Gogh)');
-      setKakouneColorScheme('kaleidoscope-light');
+      setKakouneColorMode('light');
     },
     icon: util.mkIcon('./icons/dark-mode-light-mode.png'),
   }));
