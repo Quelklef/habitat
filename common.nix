@@ -291,8 +291,7 @@ in {
   };
 
   home-manager.users.${user}.programs.bash.bashrcExtra = ''
-    export BORG_REPO='${borg-repo}'
-    alias my-borg="borg --rsh 'ssh -F ${stateloc + "/ssh/config"}'"
+    export BORG_REPO=${pkgs.lib.escapeShellArg borg-repo}
   '';
 };
 
