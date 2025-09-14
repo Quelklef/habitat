@@ -742,6 +742,7 @@ in {
         "Session Storage"
         "Cookies"
         "Preferences"
+        "settings.json"
       ];
     in {
       xdg.configFile =
