@@ -136,6 +136,11 @@ hook global WinSetOption filetype=haskell %{
   # [2]: <https://github.com/mawww/kakoune/blob/be82047dbf5f74f123e925b96e0e13962a4e0c09/rc/filetype/haskell.kak#L42>
 }
 
+# Highlight Mation remarks
+hook global WinSetOption filetype=purescript %{
+  add-highlighter window/mation-remark regex 'remark\s+("[^"\n]*"?)' 1:cyan+bi
+}
+
 
 # == Overwrites == #
 
