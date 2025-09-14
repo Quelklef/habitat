@@ -58,7 +58,6 @@ base = {
 
   boot.supportedFilesystems = [ "zfs" ];
   #boot.loader.grub.device = "/dev/nvme0n1";
-  boot.kernelPackages = pkgs.zfs.latestCompatibleLinuxPackages;
 
   networking.hostName = host;
   networking.hostId = "cc00ffee";  # required by ZFS

@@ -104,10 +104,6 @@ generic-system-config = {
 
   security.sudo.wheelNeedsPassword = false;
 
-  # sound
-  sound.enable = true;
-  hardware.pulseaudio.enable = true;
-
   # mouse n touchpad
   services.libinput = {
     enable = true;
@@ -378,8 +374,7 @@ home-manager-init = {
   imports = [
     (let home-manager = builtins.fetchGit
       { url = "https://github.com/nix-community/home-manager/";
-        ref = "release-24.05";
-        rev = "2f23fa308a7c067e52dfcc30a0758f47043ec176";
+        rev = "f21d9167782c086a33ad53e2311854a8f13c281e";  # branch release-25.05
       };
     in import "${home-manager}/nixos")
   ];
@@ -448,6 +443,7 @@ nifty = let
     pkgs.pmutils    # For pm-suspend
     pkgs.flameshot pkgs.xclip  # For screenshots
     pkgs.light      # For brightness control
+    pkgs.pulseaudio # For pactl
   ];
 
   latuc = let
@@ -474,7 +470,10 @@ xmonad-wm = let
   # Runtime dependencies
   xmobar-deps = [
     (pkgs.haskellPackages.ghcWithPackages (p: with p; [ xmobar raw-strings-qq ]))
-    pkgs.bash pkgs.coreutils pkgs.acpi
+    pkgs.bash
+    pkgs.coreutils
+    pkgs.acpi
+    pkgs.alsa-utils
   ];
 
   my-xmobar = pkgs.writeScriptBin "xmobar" ''
@@ -517,7 +516,10 @@ xmonad-wm = let
   xmonad-deps = [
     (xmonad-hpkgs.ghcWithPackages (p: with p; [ xmonad xmonad-utils xmonad-contrib lens ]))
     my-xmobar
-    pkgs.bash pkgs.coreutils pkgs.light
+    pkgs.bash
+    pkgs.coreutils
+    pkgs.light
+    pkgs.pulseaudio  # For 'pactl'
   ];
 
   my-xmonad = pkgs.writeScriptBin "xmonad" ''
