@@ -83,12 +83,12 @@ main =
 
   gridInit :: Grid.Init
   gridInit =
-    let dims = Grid.Dims { Grid.width = 9, Grid.height = 4 }
+    let dims = Grid.Dims { Grid.width = 8, Grid.height = 1 }
         mapping = fold
           [ dims & Grid.grid' (\coord -> show (Grid.x coord))
-          , Grid.column dims 0 "!"
-          , Grid.column dims 5 "~"
-          , Grid.column dims 6 "κ"
+          -- , Grid.column dims 0 "!"
+          -- , Grid.column dims 3 "~"
+          -- , Grid.column dims 6 "κ"
           ]
     in Grid.Init
         { Grid.initMapping = Grid.SomeMapping mapping
