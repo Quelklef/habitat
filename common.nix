@@ -235,7 +235,7 @@ System restore instructions:
 - Enter a superuser shell
 
   This is necessary (I think?) because some archive paths will
-  be sudo-owned. Not really positive tho.
+  be root-owned. Not really positive tho.
 
 - Set BORG_REPO or ensure its value is correct
 
