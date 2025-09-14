@@ -272,7 +272,12 @@ in {
   systemd.services.${unit-name} = {
     description = "Regular system backup";
 
+    # Start automatically at 4:00 AM every day
     startAt = "*-*-* 04:00:00";
+
+    # On failure (eg, if computer asleep), retry every 15min til success
+    serviceConfig.Restart = "on-failure";
+    serviceConfig.RestartSec = 15 * 60;
 
     environment = {
       # Point borg to the repo
