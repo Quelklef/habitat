@@ -859,6 +859,14 @@ in {
 };
 
 # =============================================================================
+anki = {
+  environment.systemPackages = [ pkgs.anki ];
+  home-manager.users.${user} = {
+    xdg.dataFile."Anki2".source = linked (stateloc + "/anki");
+  };
+};
+
+# =============================================================================
 steam = {
   programs.steam.enable = true;
   home-manager.users.${user} = {

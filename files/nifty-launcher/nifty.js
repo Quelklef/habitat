@@ -62,6 +62,12 @@ const getStandardItems = function() {
   }
 
   items.push(nifty.lib.mkSimple({
+    text: 'Anki',
+    exec: () => util.exec('anki'),
+    icon: util.mkIcon('./icons/anki.png'),
+  }));
+
+  items.push(nifty.lib.mkSimple({
     text: 'Peek',
     exec: () => util.exec('peek'),
     icon: util.mkIcon('./icons/screenshot.png'),
