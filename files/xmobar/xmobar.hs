@@ -42,7 +42,8 @@ config = defaultConfig
   , alignSep = "||"
   , font = "monospace 8"
   , commands =
-      [ Run $ Lowercase (Date "%a %Y-%m-%d %H:%M:%S %z" "date" 7)
+      -- [ Run $ Lowercase (Date "%a %Y-%m-%d %H:%M:%S %z" "date" 7)
+      [ Run $ Lowercase (Date "%a %Y-%m-%d" "date" 7)
       , Run XMonadLog
       , Run $ Lowercase (Uptime [] 300)
       , Run battery_hi
