@@ -70,18 +70,21 @@ base = {
 };
 
 # =============================================================================
-# Higher-level stuff
-base2 = {
-
-  # Set time zone
+# Set the time zone
+time-zone = {
   time.timeZone = "America/Los_Angeles";
+};
 
-  # The screen is 4k (3840x2400), but that makes things tiny
-  # For now, take the easy way out: just use it as 1920x1200
-  # This makes stuff blurry; better would be to configure the system for hidpi
+# =============================================================================
+# The screen is 4k (3840x2400), which makes things tiny if left unaddressed
+recon-with-hidpi = {
+
+  # On X, upscale the screen
+  # This is the easy way out and makes things blurry. Better would be to
+  # configure for hidpi
   services.xserver.virtualScreen = { x = 1920; y = 1200; };
 
-  # Increase TTY font size to account for 4k screen
+  # On TTYs, increase the font size
   services.kmscon.extraConfig = ''
     font-size=24
   '';
@@ -89,30 +92,15 @@ base2 = {
     lib.mkIf (!config.services.kmscon.enable)
     [ "Machine '${host}' expects services.kmscon to be enabled, but it is not. TTY fonts may be uncomfortably small." ];
 
-  /*
-  services.xserver.dpi = 180;
-  environment.variables = {
-    GDK_SCALE = "2";
-    GDK_DPI_SCALE = "0.5";
-    _JAVA_OPTIONS = "-Dsun.java2d.uiScale=2";
-  };
+};
 
-  # Set Xft.dpi and increase cursor size
-  services.xserver.displayManager.sessionCommands = ''
-    ${pkgs.xorg.xrdb}/bin/xrdb -merge <<EOF
-      Xft.dpi: 180
-      Xcursor.theme: Adwaita
-      Xcursor.size: 48
-    EOF
-  '';
-  */
-
-  # Modify touchpad speeds
+# =============================================================================
+# Modify touchpad speeds
+touchpad-sensitivity = {
   services.libinput.touchpad = {
     transformationMatrix = "2 0 0 0 2 0 0 0 1";
     # accelProfile = "flat";  # Disable acceleration
   };
-
 };
 
 }; in folded
