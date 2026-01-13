@@ -187,7 +187,7 @@ generic-system-config = {
 # =============================================================================
 nixos-bootstrapping = {
   environment.etc."nixos/configuration.nix".text =
-    "import ${perloc}/config/systems/${host}.nix";
+    "import ${perloc}/config/machines/${host}.nix";
 
   environment.interactiveShellInit = ''
     export NIX_PATH="$NIX_PATH:secrets=${perloc}/secrets.nix"
