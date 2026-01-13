@@ -324,7 +324,10 @@
     "groan",
     "relief",
     "whisper",
-    "whistle"
+    "whistle",
+    "sigh",
+    "puff out",
+    "breath out"
   ],
   "🤥": [
     "lying face",
@@ -769,7 +772,8 @@
     "face",
     "fairy tale",
     "fantasy",
-    "monster"
+    "monster",
+    "devil"
   ],
   "👺": [
     "goblin",
@@ -777,7 +781,8 @@
     "face",
     "fairy tale",
     "fantasy",
-    "monster"
+    "monster",
+    "devil"
   ],
   "👻": [
     "ghost",

@@ -51,8 +51,14 @@ async function main() {
   emojis['🤨'].terms.add('suspicious');
   emojis['😑'].terms.add('annoy').add('annoyed');
   emojis['🚫'].terms.add('no').add('cancel').add('x').add('cross');
+  emojis['😮‍💨'].terms.add('sigh').add('puff out').add('breath out');
   for (const em of ['😮', '😮', '😯', '😲', '😧', '😦', '😧', '😨', '😱'])
     emojis[em].terms.add('aghast').add('surprise').add('surprised').add('stunned');
+  emojis['👺'].terms.add('devil');
+  emojis['👹'].terms.add('devil');
+  emojis['👿'].terms.add('imp').add('frowning imp').add('devil').add('frowning devil');
+  emojis['😈'].terms.add('imp').add('smiling imp').add('devil').add('smiling devil');
+  emojis['🗑️'].terms.add('trash');
 
   // Filter
   const toRemove = new Set();
