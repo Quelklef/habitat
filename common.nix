@@ -356,17 +356,14 @@ work-stuff = {
 };
 
 # =============================================================================
-# fixes unicode not working on a tty
-tty-unicode-fix = {
-  security.wrappers.fbterm = {
-    setuid = true;
-    owner = "root";
-    group = "root";
-    source = "${pkgs.fbterm}/bin/fbterm";
+# Use kmscon for TTYs
+# It works better (with unicode, with kakoune, ...)
+# It also provides more customization options, such as font size
+better-ttys = {
+  services.kmscon = {
+    enable = true;
+    autologinUser = user;
   };
-  environment.interactiveShellInit = ''
-    grep -q /dev/tty <(tty) && exec fbterm
-  '';
 };
 
 # =============================================================================

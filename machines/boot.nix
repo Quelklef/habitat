@@ -81,6 +81,14 @@ base2 = {
   # This makes stuff blurry; better would be to configure the system for hidpi
   services.xserver.virtualScreen = { x = 1920; y = 1200; };
 
+  # Increase TTY font size to account for 4k screen
+  services.kmscon.extraConfig = ''
+    font-size=24
+  '';
+  warnings =
+    lib.mkIf (!config.services.kmscon.enable)
+    [ "Machine '${host}' expects services.kmscon to be enabled, but it is not. TTY fonts may be uncomfortably small." ];
+
   /*
   services.xserver.dpi = 180;
   environment.variables = {
