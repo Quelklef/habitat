@@ -748,8 +748,10 @@ in {
       xdg.configFile =
         pkgs.lib.lists.foldl
           (soFar: persistThis: soFar // {
-            ${"discord/" + persistThis}.source =
-              linked (stateloc + "/discord/" + persistThis);
+            ${"discord/" + persistThis} = {
+              source = linked (stateloc + "/discord/" + persistThis);
+              force = true;  # Overwrite target file if exists
+            };
           }) {} persistThese;
     };
 
