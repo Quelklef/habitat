@@ -746,13 +746,17 @@ in {
       ];
     in {
       xdg.configFile =
-        pkgs.lib.lists.foldl
-          (soFar: persistThis: soFar // {
-            ${"discord/" + persistThis} = {
-              source = linked (stateloc + "/discord/" + persistThis);
-              force = true;  # Overwrite target file if exists
-            };
-          }) {} persistThese;
+        pkgs.lib.trivial.pipe persistThese [
+          (map (persistThis:
+            lib.attrsets.nameValuePair
+              ("discord/" + persistThis)
+              {
+                source = linked (stateloc + "/discord/" + persistThis);
+                force = true;  # Overwrite target file if exists
+              }
+          ))
+          builtins.listToAttrs
+        ];
     };
 
 };
