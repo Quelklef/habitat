@@ -372,7 +372,7 @@ home-manager-init = {
   imports = [
     (let home-manager = builtins.fetchGit
       { url = "https://github.com/nix-community/home-manager/";
-        rev = "f21d9167782c086a33ad53e2311854a8f13c281e";  # branch release-25.05
+        rev = "82fb7dedaad83e5e279127a38ef410bcfac6d77c";  # branch release-25.11
       };
     in import "${home-manager}/nixos")
   ];
@@ -670,7 +670,8 @@ firefox = {
 
 # =============================================================================
 keepassxc = {
-  environment.systemPackages = with pkgs; [ keepassxc ];
+  # Using a downgraded version because 2.7.11 breaks Auto-Type for me
+  environment.systemPackages = [ pkgs_2305.keepassxc ];
   home-manager.users.${user} = {
     xdg.configFile."keepassxc".source = linked (stateloc + "/keepassxc/config");
     home.file.".cache/keepassxc".source = linked (stateloc + "/keepassxc/cache");
@@ -884,7 +885,7 @@ steam = {
 
 # =============================================================================
 telegram = {
-  environment.systemPackages = [ pkgs.tdesktop ];
+  environment.systemPackages = [ pkgs.telegram-desktop ];
   home-manager.users.${user} = {
     xdg.dataFile."TelegramDesktop/tdata".source = linked (stateloc + "/telegram");
   };
