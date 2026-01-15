@@ -705,8 +705,8 @@ discord = let
 
   # See github.com/NixOS/nixpkgs/issues/94806 and reddit.com/r/NixOS/comments/i5bpjy
   # use 'get-latest-discord-version' to bump version number and hash
-  ver = "0.0.25";
-  sha = "12yrhlbigpy44rl3icir3jj2p5fqq2ywgbp5v3m1hxxmbawsm6wi";
+  ver = "0.0.120";
+  sha = "149pgd9vzwsy1rhhxpv3gb1n0lcqlxxdxsqy5j2qsvr2k18n0x0f";
   discord = pkgs.discord.overrideAttrs (_: {
     src = builtins.fetchTarball
       { url = "https://dl.discordapp.net/apps/linux/${ver}/discord-${ver}.tar.gz";
