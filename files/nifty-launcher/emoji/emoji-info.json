@@ -583,7 +583,8 @@
     "cry",
     "proud",
     "resist",
-    "sad"
+    "sad",
+    "almost crying"
   ],
   "😦": [
     "frowning face with open mouth",
@@ -733,7 +734,10 @@
     "fantasy",
     "horns",
     "smile",
-    "devil"
+    "devil",
+    "imp",
+    "smiling imp",
+    "smiling devil"
   ],
   "👿": [
     "angry face with horns",
@@ -741,7 +745,9 @@
     "devil",
     "face",
     "fantasy",
-    "imp"
+    "imp",
+    "frowning imp",
+    "frowning devil"
   ],
   "💀": [
     "skull",
@@ -7585,7 +7591,8 @@
     "file cabinet"
   ],
   "🗑️": [
-    "wastebasket"
+    "wastebasket",
+    "trash"
   ],
   "🔒": [
     "locked",

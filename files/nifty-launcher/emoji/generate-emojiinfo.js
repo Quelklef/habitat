@@ -59,6 +59,7 @@ async function main() {
   emojis['👿'].terms.add('imp').add('frowning imp').add('devil').add('frowning devil');
   emojis['😈'].terms.add('imp').add('smiling imp').add('devil').add('smiling devil');
   emojis['🗑️'].terms.add('trash');
+  emojis['🥹'].terms.add('almost crying');
 
   // Filter
   const toRemove = new Set();
