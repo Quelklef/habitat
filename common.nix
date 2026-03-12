@@ -880,4 +880,93 @@ telegram = {
   };
 };
 
+# =============================================================================
+clvx-keyboard =
+{
+
+  # Use flat acceleration for the CLVX touchpad
+  #
+  # The touchpad seemed to have different sensitivity over Bluetooth as
+  # compared to USB. The problem appears to be that the keyboard emits
+  # slightly different event streams on BT as compared to USB, which
+  # causes adaptive acceleration to behave differently. The fix is to
+  # use flat acceleration instead.
+  environment.etc."libinput/quirks.d/90-clvx-touchpad.quirks".text = ''
+    [CLVX Touchpad]
+    MatchVendor=0x36f7
+    MatchProduct=0x5755
+    MatchUdevType=touchpad
+    AttrAccelProfile=flat
+    AttrAccelSpeed=0.2
+  '';
+
+  # Patch bluez to fix mangling of UHID GET_REPORT_REPLY payloads
+  #
+  # We discovered an off-by-one error in bluez. This error causes some UHID
+  # GET_REPORT_REPLY payloads to become mangled. Observed behaviour is that
+  # impacted single-byte payloads are dropped entirely. Predicted behaviour is
+  # that all impacted payloads have the final byte truncated.
+  #
+  # Issue tracker: <https://github.com/bluez/bluez/pull/1960>
+  #
+  # This issue manifests as the CLVX keyboard touchpad not working properly
+  # when the keyboard is connected over Bluetooth. The exact causal chain is
+  # as follows:
+  #
+  # * The kbd connects to the computer
+  # * As part of device initialization, the kernel requests a feature report
+  #   from the kbd for Report ID 07. This report is for attributes Contact Max
+  #   and Button Type.
+  #   The kernel does not make this request directly, but instead routes it
+  #   through bluez. It sends a UHID_GET_REPORT request to bluez.
+  # * Bluez receives the UHID_GET_REPORT request
+  # * Bluez sends an ATT request to the kbd asking for Report ID 07.
+  #   ATT is a low-level wire protocol
+  # * The kbd receives the request and issues a response, sending back the
+  #   value 0x25. This is a single byte whose nibbles are 0b0010 and 0b0101,
+  #   which indicate:
+  #     * Contact Max=5, meaning the touchpad can handle up to 5 simultaneous touches
+  #     * Button Type=2, meaning the touchpad is a "pad with separate button
+  #       areas" (per ChatGPT). What's most important is just that this is nonzero.
+  # * Bluez receives this response and prepares to return it to the kernel
+  #   During this step, it wrongly truncates the payload from 0x25 to 0x00
+  # * Bluez returns the report data to the kernel. The return format is Report ID plus
+  #   report payload. Since the payload was truncated, this is 0x07 0x00
+  # * The kernel receives this report and interprets it faithfully as indicating:
+  #     * Contact Max=0
+  #     * Button Type=0, indicating the touchpad is a clickpad
+  # * Accordingly, the kernel sets INPUT_PROP_BUTTONPAD on the device
+  # * Downstream consumers (eg, libinput) faithfully treat the device as a clickpad
+  # * This causes all touchpad clicks to fail
+  hardware.bluetooth.package = pkgs.bluez.overrideAttrs (old: {
+    postPatch = (old.postPatch or "") + ''
+      python3 <<'PY'
+      from pathlib import Path
+
+      print("Applying BlueZ fix: preserve payload for numbered UHID GET_REPORT_REPLY")
+
+      p = Path("src/shared/uhid.c")
+      s = p.read_text()
+
+      prefix = (
+          "\tif (number) {\n"
+          "\t\trsp->data[len++] = number;\n"
+      )
+      addition = "\t\trsp->size++;\n"
+      suffix = "\t\trsp->size += MIN(size, sizeof(rsp->data) - 1);\n"
+
+      needle = prefix + suffix
+      replacement = prefix + addition + suffix
+
+      if needle not in s:
+          raise SystemExit("needle not found in src/shared/uhid.c")
+
+      p.write_text(s.replace(needle, replacement, 1))
+      PY
+    '';
+  });
+
+};
+
+
 }; in result
