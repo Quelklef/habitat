@@ -45,7 +45,7 @@ mylib = rec {
      Integral to the success of opt-in state!
   2. Linking scripts and program configuration, so that a change can
      be seen immediately without requiring a rebuild.
-     Also see 'linkedBin'
+     Also see 'linked-script'
 
   */
   linked = path:
@@ -56,27 +56,16 @@ mylib = rec {
 
   /*
 
-  Like 'link', but:
-  1. Appends the given 'packages' to PATH
-  2. Executes the given 'env' before running the script
-  3. Removes the filename from the script name (eg, .sh)
-
-  Example:
-    linkedBin
-      (with pkgs; [ mypkg ])
-      "SOME_VAR=some-val"
-      ./my-script.sh
+  Like 'linked', but:
+   . Removes extension from script name (eg, my-script.sh -> my-script)
+   . Writes script to $out/bin/$name instead of just $out
 
   */
-  linkedBin = packages: env: path:
-    with lib;
-    let name = lib.pipe path [ toString baseNameOf (strings.splitString ".") lists.head ];
-    in pkgs.writeScriptBin name ''
-      #!/usr/bin/env bash
-      _path_append=${lib.strings.makeBinPath packages}
-      [ -n "$_path_append" ] && PATH="''${PATH:+''${PATH}:}''${_path_append}"
-      ${env + "\n"}
-      source ${linked path}
+  linked-script = path:
+    let bin-name = lib.pipe path
+      [ toString baseNameOf (lib.strings.splitString ".") lib.lists.init (builtins.concatStringsSep ".") ];
+    in pkgs.writers.writeBashBin bin-name ''
+      exec ${linked path} "$@"
     '';
 
 };
@@ -160,7 +149,7 @@ generic-system-config = {
     entr
     nix-prefetch nix-prefetch-git
     ghc nodejs python3 cabal-install  # for one-off uses
-    (linkedBin [] ''TRASH_LOC=$HOME/.trash'' ./files/scripts/del.sh)
+    (linked-script ./files/scripts/del.sh)
   ];
 
   # plug-in fonts

@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-trash_loc=$TRASH_LOC
+trash_loc=${TRASH_LOC:-$HOME/.trash}
 
 function del_one {
   src=$1
