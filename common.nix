@@ -607,7 +607,7 @@ git = {
     enable = true;
     config = {
       user.name = "Maynard";
-      user.email = "me@maynards.site";
+      user.email = "maynard@sent.com";
       init.defaultBranch = "main";
 
       # idk why this is needed, but whatever
