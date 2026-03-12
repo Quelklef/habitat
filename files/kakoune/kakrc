@@ -103,8 +103,8 @@ map global normal C :comment-line<ret>
 # <s-r> to reflow current paragraph
 # <a-r> to reflow selected text
 # Note: if 'fmt' is not working well, maybe try 'par'? See <https://discuss.kakoune.com/t/x/289>
-map global normal R '"rZ<a-i>p|fmt --width 95<ret>"rz'  # Use a register to save+load cursor state
-map global normal <a-r> '|fmt --width 95<ret>'
+map global normal R '"rZ<a-i>p|fmt --width 60<ret>"rz'  # Use a register to save+load cursor state
+map global normal <a-r> '|fmt --width 60<ret>'
 
 
 # == Filetype-specific options == #
