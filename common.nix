@@ -147,9 +147,11 @@ generic-system-config = {
     silver-searcher ripgrep
     colordiff
     entr
+    bat
     nix-prefetch nix-prefetch-git
     ghc nodejs python3 cabal-install  # for one-off uses
     (linked-script ./files/scripts/del.sh)
+    pavucontrol
   ];
 
   # plug-in fonts
