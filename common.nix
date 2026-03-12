@@ -900,6 +900,11 @@ clvx-keyboard =
     AttrAccelSpeed=0.2
   '';
 
+  # Link in the touchpad accel tuning script
+  environment.systemPackages = [
+    (linked-script ./files/scripts/tune-accel.sh)
+  ];
+
   # Patch bluez to fix mangling of UHID GET_REPORT_REPLY payloads
   #
   # We discovered an off-by-one error in bluez. This error causes some UHID
