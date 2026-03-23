@@ -1,3 +1,7 @@
+#
+# Boot: Thinkpad P16s Gen2 AMD
+#
+
 { lib, config, pkgs, modulesPath, ... }@args: let
 
 user = "sock";
