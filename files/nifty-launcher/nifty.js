@@ -195,17 +195,25 @@ const getStandardItems = function() {
     util.exec(`echo 'font: { size: ${size} }' > ~/.config/alacritty/current-font-size.yml`);
   }
 
-  items.push(nifty.lib.mkSimple({
-    text: 'Layout: One',
-    exec: () => {
-      util.exec('xrandr --output eDP-1 --auto --mode 1920x1200 --output HDMI-1 --off');
-      setAlacrittyFontSize(6);
-    },
-    icon: util.mkIcon('./icons/screen-layout.png'),
-  }));
+  for (const [resolutionStr, comment] of [
+    ["3840x2400", '4k'],
+    ["1920x1200", 'normal lg'],
+    ["1680x1050", 'normal sm'],
+    ["1440x900", 'small lg'],
+    ["1280x800", 'small sm'],
+  ]) {
+    items.push(nifty.lib.mkSimple({
+      text: `Display: Internal${comment ? ', ' + comment : ''} (${resolutionStr})`,
+      exec: () => {
+        util.exec(`xrandr --output eDP-1 --auto --mode ${resolutionStr} --output HDMI-1 --off`);
+        setAlacrittyFontSize(6);
+      },
+      icon: util.mkIcon('./icons/screen-layout.png'),
+    }));
+  }
 
   items.push(nifty.lib.mkSimple({
-    text: 'Layout: Other',
+    text: 'Display: External',
     exec: () => {
       util.exec('xrandr --output HDMI-1 --auto --output eDP-1 --off');
       setAlacrittyFontSize(9);
