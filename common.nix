@@ -763,8 +763,7 @@ wezterm = {
 
 # =============================================================================
 nixops = {
-  environment.systemPackages = [ pkgs_2305.nixops ];
-  nixpkgs.config.permittedInsecurePackages = [ "python2.7-pyjwt-1.7.1" ];
+  environment.systemPackages = [ pkgs.nixops_unstable_full ];
   home-manager.users.${user} = {
     home.file.".nixops".source = linked (stateloc + "/nixops");
   };
