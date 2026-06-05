@@ -167,7 +167,7 @@ generic-system-config = {
 
   networking.firewall.allowedTCPPorts = [ 8000 ];
 
-  # printing???
+  # configure printing
   services.printing.enable = true;
   services.avahi = { enable = true; nssmdns4 = true; openFirewall = true; };  # auto-discover printers on the local network
 
@@ -510,7 +510,7 @@ xmonad-wm = let
     exec ${xmonad-hpkgs.xmonad}/bin/xmonad "$@"
   '';
 
-in lib.mkIf true {
+in {
 
   services.displayManager.defaultSession = "none+xmonad";
   services.xserver.windowManager.session = [{
@@ -726,6 +726,7 @@ in {
         "Local Storage"
         "Session Storage"
         "Cookies"
+        "Cookies-journal"
         "Preferences"
         "settings.json"
       ];

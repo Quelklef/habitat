@@ -132,7 +132,7 @@ function __prompt {
   for (( i = $SHLVL; i > $nul_shlvl; i-- )); do
     PS1+=${T_FG_YELLOW}'↑';
   done
-  [ "$SHLVL" -gt "$nul_shlvl" ]&& PS1+=' '
+  [ "$SHLVL" -gt "$nul_shlvl" ] && PS1+=' '
 
   PS1+=$(ps1_prefix)
   PS1+=${T_FG_CYAN}'\w'
