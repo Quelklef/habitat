@@ -111,6 +111,7 @@ generic-system-config = {
     # ^ seems to be needed for some networks
   environment.etc."NetworkManager/system-connections".source =
     linked (stateloc + "/etc.NetworkManager.system-connections");
+  networking.firewall.allowedTCPPorts = [ 8000 ];
 
   # compositor; basically optional
   services.picom.enable = true;
@@ -164,8 +165,6 @@ generic-system-config = {
     # source bashrc on bash only
     [ -n "$BASH" ] && source ${builtins.toString ./files/bashrc}
   '';
-
-  networking.firewall.allowedTCPPorts = [ 8000 ];
 
   # configure printing
   services.printing.enable = true;
