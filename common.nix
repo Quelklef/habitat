@@ -762,6 +762,14 @@ nixops = {
 };
 
 # =============================================================================
+show-script = {
+  environment.systemPackages = [
+    pkgs.bat pkgs.eza  # runtime deps
+    (linked-script ./files/scripts/show.sh)
+  ];
+};
+
+# =============================================================================
 # https://github.com/ajeetdsouza/zoxide
 zoxide = let
   zoxide = pkgs.zoxide;
