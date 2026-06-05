@@ -102,14 +102,6 @@ generic-system-config = {
     mouse.accelSpeed = "0";
   };
 
-  # bluetooth
-  hardware.bluetooth.enable = true;
-  # To connect:
-  # > bluetoothctl
-  # > scan on
-  # turn on device discovery mode
-  # > connect <hex>
-
   # enable x
   services.xserver.enable = true;
 
@@ -183,6 +175,12 @@ nixos-bootstrapping = {
   environment.interactiveShellInit = ''
     export NIX_PATH="$NIX_PATH:secrets=${perloc}/secrets.nix"
   '';
+};
+
+# =============================================================================
+bluetooth = {
+  hardware.bluetooth.enable = true;
+  services.blueman.enable = true;  # GUI controls: run 'blueman-manager'
 };
 
 # =============================================================================
