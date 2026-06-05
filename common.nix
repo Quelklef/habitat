@@ -893,14 +893,21 @@ clvx-keyboard =
   # slightly different event streams on BT as compared to USB, which
   # causes adaptive acceleration to behave differently. The fix is to
   # use flat acceleration instead.
-  environment.etc."libinput/quirks.d/90-clvx-touchpad.quirks".text = ''
-    [CLVX Touchpad]
-    MatchVendor=0x36f7
-    MatchProduct=0x5755
-    MatchUdevType=touchpad
-    AttrAccelProfile=flat
-    AttrAccelSpeed=0.2
-  '';
+  services.xserver = {
+    config = lib.mkAfter ''
+      Section "InputClass"
+        Identifier "CLVX Touchpad Acceleration"
+        MatchDriver "libinput"
+        MatchProduct "CLVX"
+        MatchProduct "Touchpad"
+        Option "AccelProfile" "flat"
+        Option "AccelSpeed" "0.2"
+      EndSection
+    '';
+
+    # Write config to /etc/X11/xorg.conf; optional but helps with debugging.
+    exportConfiguration = true;
+  };
 
   # Link in the touchpad accel tuning script
   environment.systemPackages = [
