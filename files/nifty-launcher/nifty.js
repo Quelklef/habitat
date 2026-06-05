@@ -62,6 +62,12 @@ const getStandardItems = function() {
   }
 
   items.push(nifty.lib.mkSimple({
+    text: 'Blueman-Manager',
+    exec: () => util.exec('blueman-manager'),
+    icon: util.mkIcon('./icons/bluetooth.png'),
+  }));
+
+  items.push(nifty.lib.mkSimple({
     text: 'Anki',
     exec: () => util.exec('anki'),
     icon: util.mkIcon('./icons/anki.png'),
