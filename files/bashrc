@@ -114,7 +114,7 @@ function __prompt {
 
   # The expected value for $SHLVL on terminal startup
   # This is relatively fragile and can change with system changes
-  local nul_shlvl=3
+  local nul_shlvl=1
 
   local t_err=
   [ "$exit" = 0 ] && t_err=${T_FG_GREEN} || t_err=${T_FG_BOLD}${T_FG_RED}
