@@ -141,9 +141,18 @@ generic-system-config = {
     entr
     bat
     nix-prefetch nix-prefetch-git
-    ghc nodejs python3 cabal-install  # for one-off uses
     (linked-script ./files/scripts/del.sh)
     pavucontrol
+    numbat
+    expect  # for 'unbuffer'
+    tree
+    magic-wormhole
+
+    # programming langauges for one-off uses
+    python3
+    nodejs
+    ghc cabal-install
+    purescript spago
   ];
 
   # plug-in fonts
