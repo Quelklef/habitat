@@ -303,8 +303,7 @@ in {
       # Perform system backup
       my_borg create \
         --exclude ${perloc}/dgn \
-        --exclude ${perloc}/work/live247/music/blobs/ \
-        --exclude ${perloc}/work/live247/sample-media/ \
+        --exclude 'sh:${perloc}/work/live247/sample-media/generated/*.mp4' \
         --exclude ${perloc}/dev/zoom-dl/files \
         --exclude ${perloc}/dev/zoom-dl/files.copy \
         --progress \
