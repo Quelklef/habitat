@@ -333,13 +333,6 @@ in {
 };
 
 # =============================================================================
-work-stuff = {
-  # tailscale
-  services.tailscale.enable = true;
-  networking.firewall.checkReversePath = "loose";
-};
-
-# =============================================================================
 # Use kmscon for TTYs
 # It works better (with unicode, with kakoune, ...)
 # It also provides more customization options, such as font size
