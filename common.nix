@@ -186,13 +186,7 @@ bluetooth = {
 # =============================================================================
 nix-caches = {
   nix.settings = {
-    substituters = [
-      "https://cache.nixos.org/"
-      "https://shpadoinkle.cachix.org"
-    ];
-    trusted-public-keys = [
-      "shpadoinkle.cachix.org-1:aRltE7Yto3ArhZyVjsyqWh1hmcCf27pYSmO1dPaadZ8="
-    ];
+    substituters = [ "https://cache.nixos.org/" ];
   };
 };
 
