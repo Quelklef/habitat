@@ -239,3 +239,14 @@ function ag {
 }
 
 alias rg='clear && rg '
+
+# The built-in 'watch' command just do not be working sometimes
+function watch {
+  sleep_dur=${WATCH_DELAY:-1}
+
+  while true; do
+    output=$( "$@" )
+    clear; echo "$output"
+    sleep "$sleep_dur"
+  done
+}
