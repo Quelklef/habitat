@@ -124,24 +124,18 @@ const getStandardItems = function() {
 
 
   // Copy to cliboard
+  {
+    const symbols = {
+      zws: String.fromCharCode(8203),
+      nbsp: String.fromCharCode(160),
+      cent: '¢',
+      section: '§',
+    };
 
-  items.push(nifty.lib.mkSimple({
-    text: 'Copy: ZWS (zero-width space)',
-    exec: () => util.copyToClipboard(String.fromCharCode(8203)),
-    icon: util.mkIcon('./icons/copy-to-clipboard.png'),
-  }));
-
-  items.push(nifty.lib.mkSimple({
-    text: 'Copy: NBSP (non-breaking space)',
-    exec: () => util.copyToClipboard(String.fromCharCode(160)),
-    icon: util.mkIcon('./icons/copy-to-clipboard.png'),
-  }));
-
-  items.push(nifty.lib.mkSimple({
-    text: 'Copy: ¢ (cents symbol)',
-    exec: () => util.copyToClipboard('¢'),
-    icon: util.mkIcon('./icons/copy-to-clipboard.png'),
-  }));
+    for (const [desc, content] of Object.entries(symbols)) {
+      items.push(clipboard(content, `Copy: ${desc} (${content})`));
+    }
+  }
 
 
   // Dark/Light mode
@@ -337,11 +331,11 @@ nifty.run(query => {
 
 });
 
-function clipboard(text) {
+function clipboard(copyText, displayText = copyText) {
   return nifty.lib.mkSimple({
-    text,
-    exec: () => util.copyToClipboard(text),
-    isSticky: true
+    text: displayText,
+    exec: () => util.copyToClipboard(copyText),
+    icon: util.mkIcon('./icons/copy-to-clipboard.png'),
   });
 }
 
