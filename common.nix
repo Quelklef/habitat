@@ -883,6 +883,31 @@ telegram = {
 };
 
 # =============================================================================
+openai-codex = let
+  pkgs-latest =
+    import (pkgs.fetchFromGitHub {
+        owner = "nixos";
+        repo = "nixpkgs";
+        rev = "1fdb5dac24142c6499620a4e009ad31f3d12ea4f";
+        sha256 = "028nkjrkmy2j6m6ss5808j2xw77gxp5jgf4kcvis03sqj1hc56aq";
+      }) { inherit system; };
+
+  codex = pkgs-latest.codex;
+in {
+  environment.systemPackages = [ codex ];
+  home-manager.users.${user} = {
+    home.file.".codex".source = linked (stateloc + "/codex");
+  };
+};
+
+# =============================================================================
+claude-code = {
+  environment.systemPackages = [
+    pkgs.claude-code
+  ];
+};
+
+# =============================================================================
 clvx-keyboard =
 {
 
