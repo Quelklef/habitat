@@ -170,6 +170,13 @@ generic-system-config = {
   services.printing.enable = true;
   services.avahi = { enable = true; nssmdns4 = true; openFirewall = true; };  # auto-discover printers on the local network
 
+  # Allows services (such as audio players) to request realtime priority
+  # Also resolves a boot-time warning on machine boot2
+  security.rtkit.enable = true;
+
+  # Reports machine battery/power status to user-land apps
+  # Also resolves a boot-time warning on machine boot2
+  services.upower.enable = true;
 
 };
 
