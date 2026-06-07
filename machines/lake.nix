@@ -13,8 +13,6 @@ common =
     { inherit perloc user host; }
     args;
 
-inherit (common.mylib) linked;
-
 folded = { imports = lib.attrsets.attrValues parts; };
 
 parts = {

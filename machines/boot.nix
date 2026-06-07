@@ -13,8 +13,6 @@ common =
     { inherit perloc user host; }
     args;
 
-inherit (common.mylib) linked;
-
 nixos-hardware =
   builtins.fetchGit {
     url = "https://github.com/nixos/nixos-hardware";
