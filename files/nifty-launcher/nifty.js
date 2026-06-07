@@ -136,6 +136,7 @@ const getStandardItems = function() {
       nbsp: String.fromCharCode(160),
       cent: '¢',
       section: '§',
+      shrug: '¯\\_(ツ)_/¯',
     };
 
     for (const [desc, content] of Object.entries(symbols)) {
@@ -316,9 +317,6 @@ nifty.run(query => {
       },
     })];
   }
-
-  if (query === '/shrug')
-    return [clipboard('¯\\_(ツ)_/¯')];
 
   if (query === '')
     return [];
