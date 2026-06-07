@@ -461,10 +461,42 @@ chrome = {
 };
 
 # =============================================================================
-firefox = {
+firefox = let
+
+  # Modifies pkgs.firefox by pinning to a target profile location
+  ff-pin-profile = { app-name, bin-name, profile-loc }:
+    pkgs.symlinkJoin {
+      name = bin-name;
+      paths = [ pkgs.firefox ];
+      nativeBuildInputs = [ pkgs.makeWrapper ];
+      postBuild = ''
+        # Wrap FF binary
+        rm $out/bin/firefox
+        makeWrapper ${pkgs.firefox}/bin/firefox $out/bin/${bin-name} \
+          --add-flags "-profile ${profile-loc}"
+
+        # Modify .desktop entries
+        rm $out/share/applications/firefox.desktop
+        cp ${pkgs.firefox}/share/applications/firefox.desktop \
+          $out/share/applications/${bin-name}.desktop
+        substituteInPlace $out/share/applications/${bin-name}.desktop \
+          --replace-fail "Name=Firefox" "Name=${app-name}" \
+          --replace-fail "Exec=firefox" "Exec=$out/bin/${bin-name}"
+      '';
+    };
+
+in {
   environment.systemPackages = [
-    (pkgs.writeScriptBin "firefox" ''${pkgs.firefox}/bin/firefox -profile ${linked (stateloc + "/firefox-profile")} "$@"'')
-    (pkgs.writeScriptBin "firefox-alt" ''${pkgs.firefox}/bin/firefox -profile ${linked (stateloc + "/firefox-alt-profile")} "$@"'')
+    (ff-pin-profile {
+      app-name = "Firefox";
+      bin-name = "firefox";
+      profile-loc = linked (stateloc + "/firefox-profile");
+    })
+    (ff-pin-profile {
+      app-name = "Firefox (Alt)";
+      bin-name = "firefox-alt";
+      profile-loc = linked (stateloc + "/firefox-alt-profile");
+    })
   ];
 
   # This sets the cursor theme for everything, not just Firefox; however, I am only setting the cursor
