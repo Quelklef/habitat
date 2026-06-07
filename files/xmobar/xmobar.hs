@@ -61,6 +61,7 @@ config = defaultConfig
 
   withPrelude :: String -> String
   withPrelude = ([r|
+    # "94" -> "·94%"
     function fmt_percent {
       str="$1"
       for (( i = "${#str}"; i < 3; i++ )); do str="·$str"; done
@@ -81,7 +82,8 @@ config = defaultConfig
   |]
 
   brightness = Cmd "bri" 10 $ withPrelude [r|
-    bri=$(light | xargs printf "%3d")
+    bri=$(brightnessctl -m | cut -d, -f4)
+    bri=${bri%\%}  # strip trailing "%"
     echo -n "bri $(fmt_percent $bri)"
   |]
 

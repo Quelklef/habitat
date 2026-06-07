@@ -302,7 +302,7 @@ nifty.run(query => {
       ),
       exec() {
         if (isBri) {
-          util.exec(`light -S ${value}`);
+          util.exec(`brightnessctl set ${value}%`);
         } else {
           util.exec(`pactl set-sink-volume @DEFAULT_SINK@ ${value}%`);
         }

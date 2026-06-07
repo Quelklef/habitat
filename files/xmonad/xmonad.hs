@@ -263,8 +263,8 @@ myKeys conf@(XConfig { terminal, modMask = mod }) =
     bind' "<XF86AudioMicMute>"     $ spawn . andRefreshXmobar $ "pactl set-source-mute @DEFAULT_SOURCE@ toggle"
 
     -- brightness
-    bind' "<XF86MonBrightnessUp>"   $ spawn . andRefreshXmobar $ "light -A 1"
-    bind' "<XF86MonBrightnessDown>" $ spawn . andRefreshXmobar $ "light -U 1"
+    bind' "<XF86MonBrightnessUp>"   $ spawn . andRefreshXmobar $ "brightnessctl set 5%+"
+    bind' "<XF86MonBrightnessDown>" $ spawn . andRefreshXmobar $ "brightnessctl set 5%-"
 
   where
 

@@ -45,6 +45,7 @@ base = {
   boot.extraModulePackages = [ ];
 
   boot.supportedFilesystems = [ "zfs" ];
+  boot.zfs.forceImportRoot = false;
 
   fileSystems."/" = { device = "rpool/eyd/root"; fsType = "zfs"; };
   fileSystems."/nix" = { device = "rpool/eyd/nix"; fsType = "zfs"; };

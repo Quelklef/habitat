@@ -19,16 +19,6 @@ else
 
 system = builtins.currentSystem;
 
-# nixpkgs 23.05.1092.c7ff1b9b956
-# FIXME: upgrade use-sites
-pkgs_2305 =
-  import (pkgs.fetchFromGitHub {
-      owner = "nixos";
-      repo = "nixpkgs";
-      rev = "c7ff1b9b95620ce8728c0d7bd501c458e6da9e04";
-      hash = "sha256-J1bX9plPCFhTSh6E3TWn9XSxggBh/zDD4xigyaIQBy8=";
-    }) { inherit system; };
-
 stateloc = perloc + "/state";
 secrets = (import (perloc + "/secrets.nix")).nixos;
 
@@ -345,14 +335,13 @@ in {
 };
 
 # =============================================================================
-# Use kmscon for TTYs
-# It works better (with unicode, with kakoune, ...)
-# It also provides more customization options, such as font size
+# Improve TTYs
 better-ttys = {
-  services.kmscon = {
-    enable = true;
-    autologinUser = user;
-  };
+  # Use kmscon, which works better with unicode, kakoune, & probably more, and provides
+  # more customization options, such as font size
+  services.kmscon.enable = true;
+  # Enable auto-login, to skip the login prompt
+  services.getty.autologinUser = user;
 };
 
 # =============================================================================
@@ -360,7 +349,7 @@ home-manager-init = {
   imports = [
     (let home-manager = builtins.fetchGit
       { url = "https://github.com/nix-community/home-manager/";
-        rev = "82fb7dedaad83e5e279127a38ef410bcfac6d77c";  # branch release-25.11
+        rev = "e28654b71096e08c019d4861ca26acb646f583d8";  # branch 'release-26.05'
       };
     in import "${home-manager}/nixos")
   ];
@@ -428,7 +417,7 @@ nifty = let
     latuc
     pkgs.pmutils    # For pm-suspend
     pkgs.flameshot pkgs.xclip  # For screenshots
-    pkgs.light      # For brightness control
+    pkgs.brightnessctl  # for brightness control
     pkgs.pulseaudio # For pactl
   ];
 
@@ -504,7 +493,7 @@ xmonad-wm = let
     my-xmobar
     pkgs.bash
     pkgs.coreutils
-    pkgs.light
+    pkgs.brightnessctl  # for machine brightness control
     pkgs.pulseaudio  # For 'pactl'
   ];
 
@@ -531,11 +520,6 @@ in {
     home.file.".xmonad/lib".source = linked ./files/xmonad/lib;
     xdg.configFile."xmobar/xmobar.hs".source = linked ./files/xmobar/xmobar.hs;
   };
-
-  # These two lines enable a 'light' command which is used in xmonad config to manage backlight
-  # nb. Might require a reboot before 'light' can be used without sudo
-  programs.light.enable = true;
-  users.users.${user}.extraGroups = [ "video" ];
 
   environment.systemPackages = let
     src = toString ./files;
@@ -658,19 +642,10 @@ firefox = {
 
 # =============================================================================
 keepassxc = {
-  # Using a downgraded version because 2.7.11 breaks Auto-Type for me
-  environment.systemPackages = [ pkgs_2305.keepassxc ];
+  environment.systemPackages = [ pkgs.keepassxc ];
   home-manager.users.${user} = {
     xdg.configFile."keepassxc".source = linked (stateloc + "/keepassxc/config");
     home.file.".cache/keepassxc".source = linked (stateloc + "/keepassxc/cache");
-  };
-};
-
-# =============================================================================
-nushell = {
-  environment.systemPackages = [ pkgs_2305.nushell ];
-  home-manager.users.${user} = {
-    xdg.configFile."nushell".source = linked (stateloc + "/nushell");
   };
 };
 
@@ -691,32 +666,30 @@ obs = {
 # =============================================================================
 discord = let
 
-  # See github.com/NixOS/nixpkgs/issues/94806 and reddit.com/r/NixOS/comments/i5bpjy
-  # use 'get-latest-discord-version' to bump version number and hash
-  ver = "0.0.120";
-  sha = "149pgd9vzwsy1rhhxpv3gb1n0lcqlxxdxsqy5j2qsvr2k18n0x0f";
-  discord = pkgs.discord.overrideAttrs (_: {
-    src = builtins.fetchTarball
-      { url = "https://dl.discordapp.net/apps/linux/${ver}/discord-${ver}.tar.gz";
-        sha256 = sha;
-      };
-  });
+  # Manually stay ahead of nixpkgs because sometimes discord forces you to upgrade; see <github.com/NixOS/nixpkgs/issues/94806>
+  # Use 'get-latest-discord-version' to generate new, up-to-date sources
+  discord = pkgs.discord.override {
+    # Version 1.0.141
+    source = builtins.fromJSON (builtins.readFile ./files/discord-sources.json);
+  };
 
   get-latest-discord-version =
     pkgs.writeScriptBin "get-latest-discord-version" ''
       set -euo pipefail
-      ver=$(
-        curl -s 'https://discord.com/api/download?platform=linux' \
-          | grep -oP '(?<=discord-)[.\d]+(?=\.)' \
-          | head -n1
-      )
-      echo "Using version: $ver"
-      url="https://dl.discordapp.net/apps/linux/$ver/discord-$ver.tar.gz"
-      echo "Using url: $url"
-      sha=$(nix-prefetch-url --unpack "$url")
-      echo
-      echo "version = $ver"
-      echo "sha256  = $sha"
+
+      # Create and move into temp workdir
+      workdir=$(${lib.getExe pkgs.mktemp} -d)
+      trap "rm -rf '$workdir'" EXIT HUP INT TERM
+      echo >&2 "Working in $workdir ..."
+      cd "$workdir"
+
+      # Run pkgs.discord updater script
+      cp ${pkgs.discord.passthru.updateScript} ./update.py
+      echo >&2 "Running update.py ..."
+      ${lib.getExe pkgs.python3} ./update.py
+
+      # Process script output and emit
+      ${lib.getExe pkgs.jq} '."linux-stable"' sources.json
     '';
 
 in {
