@@ -178,8 +178,19 @@ nixos-bootstrapping = {
 
 # =============================================================================
 bluetooth = {
+  # Enable bluetooth
   hardware.bluetooth.enable = true;
-  services.blueman.enable = true;  # GUI controls: run 'blueman-manager'
+
+  # Persist bluetooth state
+  systemd.tmpfiles.rules = [ "d ${stateloc}/bluetooth 0700 root root -" ];
+  fileSystems."/var/lib/bluetooth" = {
+    device = "${stateloc}/bluetooth";
+    fsType = "none";
+    options = [ "bind" ];
+  };
+
+  # GUI controls: run 'blueman-manager'
+  services.blueman.enable = true;
 };
 
 # =============================================================================
