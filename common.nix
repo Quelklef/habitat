@@ -411,6 +411,7 @@ nifty = let
     pkgs.flameshot pkgs.xclip  # For screenshots
     pkgs.brightnessctl  # for brightness control
     pkgs.pulseaudio # For pactl
+    pkgs.pavucontrol  # audio manager
   ];
 
   latuc = let

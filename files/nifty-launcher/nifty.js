@@ -62,9 +62,15 @@ const getStandardItems = function() {
   }
 
   items.push(nifty.lib.mkSimple({
-    text: 'Blueman-Manager',
+    text: 'Bluetooth (Blueman-Manager)',
     exec: () => util.exec('blueman-manager'),
     icon: util.mkIcon('./icons/bluetooth.png'),
+  }));
+
+  items.push(nifty.lib.mkSimple({
+    text: 'Audio (pavucontrol)',
+    exec: () => util.exec('pavucontrol'),
+    icon: util.mkIcon('./icons/pulse-audio.png'),
   }));
 
   items.push(nifty.lib.mkSimple({
