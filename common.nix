@@ -115,10 +115,6 @@ generic-system-config = {
     experimental-features = nix-command flakes
   '';
 
-  nixpkgs.config.permittedInsecurePackages = [
-    "python-2.7.18.6"  # reached end of life
-  ];
-
   # plug-in packages
   environment.systemPackages = with pkgs; [
     vim
@@ -354,15 +350,11 @@ home-manager-init = {
     in import "${home-manager}/nixos")
   ];
   home-manager.users.root = {
-    targets.genericLinux.enable = true;
     xdg.enable = true;
-    manual.manpages.enable = false;  # https://discourse.nixos.org/t/x/11012
     home.stateVersion = config.system.stateVersion;  # FIXME: should really be set per-system
   };
   home-manager.users.${user} = {
-    targets.genericLinux.enable = true;
     xdg.enable = true;
-    manual.manpages.enable = false;  # https://discourse.nixos.org/t/x/11012
     home.stateVersion = config.system.stateVersion;  # FIXME: should really be set per-system
   };
 };
