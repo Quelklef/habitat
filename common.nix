@@ -64,9 +64,6 @@ generic-system-config = {
     linked (stateloc + "/etc.NetworkManager.system-connections");
   networking.firewall.allowedTCPPorts = [ 8000 ];
 
-  # compositor; basically optional
-  services.picom.enable = true;
-
   # nix config
   nixpkgs.config.allowUnfree = true;
   nix.settings.auto-optimise-store = true;

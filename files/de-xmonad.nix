@@ -146,6 +146,12 @@ background-image = {
   services.xserver.desktopManager.wallpaper.mode = "fill";
 };
 
+# =============================================================================
+# Enable a compositor
+compositor = {
+  services.picom.enable = true;
+};
+
 };
 
 in folded
