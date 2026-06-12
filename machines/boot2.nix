@@ -129,8 +129,25 @@ touchpad-sensitivity = {
   };
 };
 
+# =============================================================================
+battery-health = {
+  # Replace power-profiles-daemon with TLP
+  services.power-profiles-daemon.enable = false;
+  services.tlp.enable = true;
+  services.tlp.pd.enable = true;  # expose a compatibility layer for apps that expect power-profiles-daemon
+
+  # Cap battery charge to prolong lifespan
+  # This can be:
+  # * temporarily disabled with `sudo tlp fullcharge`, and
+  # * later re-enabled with `sudo tlp setcharge`
+  services.tlp.settings = {
+    START_CHARGE_THRESH_BAT0 = 40;
+    STOP_CHARGE_THRESH_BAT0 = 50;
+  };
+
+  # Add a tray applet for temporarily enabling/disabling the charge threshold
+  imports = [ ../files/battery-charge-threshold-tray-applet.nix ];
+};
+
 }; in folded
-
-
-
 
