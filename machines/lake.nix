@@ -1,5 +1,6 @@
 #
 # Lake: Asus ZenBook 14 UX434FLC-XH77
+# Adopted 2020 Nov
 #
 
 { lib, config, pkgs, modulesPath, ... }@args: let

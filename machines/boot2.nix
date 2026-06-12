@@ -1,5 +1,6 @@
 #
 # Boot2: Thinkpad P16s Gen4 AMD
+# Adopted 2026 May
 #
 
 { lib, config, pkgs, modulesPath, ... }@args: let

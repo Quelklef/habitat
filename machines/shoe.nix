@@ -1,5 +1,6 @@
 #
 # Shoe: Thinkpad T14 Gen2 AMD
+# Adopted 2022 Sep
 #
 
 { lib, config, pkgs, modulesPath, ... }@args: let
