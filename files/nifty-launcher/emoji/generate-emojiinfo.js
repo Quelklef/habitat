@@ -60,6 +60,7 @@ async function main() {
   emojis['😈'].terms.add('imp').add('smiling imp').add('devil').add('smiling devil');
   emojis['🗑️'].terms.add('trash');
   emojis['🥹'].terms.add('almost crying');
+  emojis['🙃'].terms.add('upside down smile').add('smile');
 
   // Filter
   const toRemove = new Set();
